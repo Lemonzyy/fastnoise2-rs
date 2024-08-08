@@ -1,3 +1,3 @@
 Cargo.lock
-/target
-/examples_output
+**/target
+**/examples_output
