@@ -1,3 +1,4 @@
+#![doc = include_str!("../README.md")]
 #![allow(clippy::too_many_arguments)]
 mod error;
 mod metadata;
@@ -9,7 +10,7 @@ use metadata::{format_lookup, MemberValue, METADATA_NAME_LOOKUP, NODE_METADATA};
 use fastnoise2_sys::*;
 use std::ffi::CString;
 
-/// Represents a node in the [FastNoise2 C++ library](https://github.com/Auburn/FastNoise2).
+/// Represents a node in the FastNoise2 C++ library.
 ///
 /// This struct interfaces with the library, which uses metadata to dynamically manage node names and parameters.
 /// For details on available metadata, see the [library documentation](https://github.com/Auburn/FastNoise2/wiki).

@@ -2,6 +2,7 @@
 name = "fastnoise2"
 version = "0.1.0"
 edition = "2021"
+repository.workspace = true
 
 [dependencies]
 fastnoise2-sys = { path = "../fastnoise2-sys" }

@@ -35,6 +35,15 @@ fn main() {
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
+    // SAFETY:
+    // Even though `noise_out` has sufficient capacity and the `noise` node seems correctly configured
+    // (with valid node names and parameter types), undefined behavior may still occur during noise generation.
+    // Potential issues include:
+    // - Incorrect or incomplete parameter setup (e.g., missing source nodes or invalid values).
+    // - Internal errors or limitations in the FastNoise2 library that may not be evident from Rust's type safety
+    //   or runtime checks.
+    // Verify that all node configurations and parameters are correct, and be prepared to handle runtime issues
+    // as detailed in the FastNoise2 documentation.
     let min_max = unsafe {
         noise.gen_uniform_grid_2d_unchecked(
             &mut noise_out,

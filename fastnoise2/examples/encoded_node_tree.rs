@@ -21,6 +21,13 @@ fn main() {
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
+    // SAFETY:
+    // Using `FastNoise::from_encoded_node_tree` is generally safer than manually constructing the node tree with
+    // `FastNoise::from_name` and `FastNoise::set`, as it ensures the nodes and parameters are correctly set by the C++ library's
+    // tools. However, once the node is created, modifying parameters directly using `FastNoise::set` can introduce the same
+    // risks as manually building the node tree. Issues might arise due to incorrect parameter types, missing members, or other
+    // configuration errors. Ensure that all modifications are valid and consult the FastNoise2 documentation for guidance on
+    // parameter types and expected values.
     let min_max = unsafe {
         node.gen_uniform_grid_2d_unchecked(
             &mut noise_out,

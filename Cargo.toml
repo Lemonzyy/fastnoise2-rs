@@ -1,3 +1,6 @@
 [workspace]
 resolver = "2"
 members = ["fastnoise2-sys", "fastnoise2"]
+
+[workspace.package]
+repository = "https://github.com/Lemonzyy/fastnoise2-rs"
