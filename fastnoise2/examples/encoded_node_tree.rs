@@ -4,8 +4,8 @@ use fastnoise2::FastNoise;
 use image::{GrayImage, Luma};
 
 const DEFAULT_ENCODED_NODE_TREE: &str = "DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==";
-const X_SIZE: i32 = 4096;
-const Y_SIZE: i32 = 4096;
+const X_SIZE: i32 = 1024;
+const Y_SIZE: i32 = 1024;
 
 fn main() {
     let encoded_node_tree = std::env::args().nth(1).unwrap_or_else(|| {
@@ -15,10 +15,7 @@ fn main() {
         DEFAULT_ENCODED_NODE_TREE.to_string()
     });
 
-    let Some(node) = FastNoise::from_encoded_node_tree(&encoded_node_tree) else {
-        panic!("Failed to create node");
-    };
-
+    let node = FastNoise::from_encoded_node_tree(&encoded_node_tree).unwrap();
     println!("SIMD level: {}", node.get_simd_level());
 
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];

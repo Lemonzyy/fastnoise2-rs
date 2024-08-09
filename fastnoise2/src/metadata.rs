@@ -1,18 +1,19 @@
-use std::{collections::HashMap, ffi::CStr, sync::LazyLock};
+use std::{any::type_name, collections::HashMap, ffi::CStr, sync::LazyLock};
 
-use crate::FastNoise;
 use fastnoise2_sys::*;
 
+use crate::FastNoise;
+
 #[derive(Debug)]
-pub struct Metadata {
+pub(crate) struct Metadata {
     // pub id: i32,
     // pub name: String,
     pub members: HashMap<String, Member>,
 }
 
 #[derive(Debug)]
-pub struct Member {
-    // pub name: String,
+pub(crate) struct Member {
+    pub name: String,
     pub member_type: MemberType,
     pub index: i32,
     pub enum_names: HashMap<String, i32>,
@@ -27,11 +28,16 @@ pub enum MemberType {
     Hybrid,
 }
 
-pub enum MemberValue<'a> {
-    Float(f32),
-    Int(i32),
-    Enum(&'a str),
-    NodeLookup(&'a FastNoise),
+impl std::fmt::Display for MemberType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Float => f.write_str(type_name::<f32>()),
+            Self::Int => f.write_str(type_name::<i32>()),
+            Self::Enum => f.write_str(type_name::<&str>()),
+            Self::NodeLookup => f.write_str(type_name::<&FastNoise>()),
+            Self::Hybrid => f.write_fmt(format_args!("{} or {}", Self::Float, Self::NodeLookup)),
+        }
+    }
 }
 
 pub(crate) static METADATA_NAME_LOOKUP: LazyLock<HashMap<String, i32>> = LazyLock::new(|| {
@@ -88,7 +94,7 @@ pub(crate) static NODE_METADATA: LazyLock<Vec<Metadata>> = LazyLock::new(|| {
             members.insert(
                 name.clone(),
                 Member {
-                    // name,
+                    name,
                     member_type,
                     index: variable_idx,
                     enum_names,
@@ -108,7 +114,7 @@ pub(crate) static NODE_METADATA: LazyLock<Vec<Metadata>> = LazyLock::new(|| {
             members.insert(
                 name.clone(),
                 Member {
-                    // name,
+                    name,
                     member_type: MemberType::NodeLookup,
                     index: node_lookup_idx,
                     enum_names: HashMap::new(),
@@ -128,7 +134,7 @@ pub(crate) static NODE_METADATA: LazyLock<Vec<Metadata>> = LazyLock::new(|| {
             members.insert(
                 name.clone(),
                 Member {
-                    // name,
+                    name,
                     member_type: MemberType::Hybrid,
                     index: hybrid_idx,
                     enum_names: HashMap::new(),

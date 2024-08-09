@@ -1,12 +1,13 @@
 #![allow(clippy::too_many_arguments)]
+mod error;
 mod metadata;
 
-use std::ffi::CString;
-
-pub use metadata::MemberValue;
-use metadata::{format_lookup, MemberType, METADATA_NAME_LOOKUP, NODE_METADATA};
+pub use error::FastNoiseError;
+pub use metadata::MemberType;
+use metadata::{format_lookup, Member, METADATA_NAME_LOOKUP, NODE_METADATA};
 
 use fastnoise2_sys::*;
+use std::{any::type_name, ffi::CString};
 
 #[derive(Debug)]
 pub struct FastNoise {
@@ -15,11 +16,11 @@ pub struct FastNoise {
 }
 
 impl FastNoise {
-    pub fn from_name(metadata_name: &str) -> Result<Self, String> {
+    pub fn from_name(metadata_name: &str) -> Result<Self, FastNoiseError> {
         let metadata_name = format_lookup(metadata_name);
         let metadata_id = *METADATA_NAME_LOOKUP
             .get(&metadata_name)
-            .ok_or(format!("Failed to find metadata name: {}", metadata_name))?;
+            .ok_or(FastNoiseError::MetadataNameNotFound(metadata_name))?;
         let handle = unsafe { fnNewFromMetadata(metadata_id, 0) };
         Ok(Self {
             handle,
@@ -27,13 +28,14 @@ impl FastNoise {
         })
     }
 
-    pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Option<Self> {
-        let cstring = CString::new(encoded_node_tree).unwrap();
+    pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
+        let cstring =
+            CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
         let node_ptr = unsafe { fnNewFromEncodedNodeTree(cstring.as_ptr(), 0) };
         if node_ptr.is_null() {
-            None
+            Err(FastNoiseError::NodeCreationFailed)
         } else {
-            Some(Self {
+            Ok(Self {
                 handle: node_ptr,
                 metadata_id: unsafe { fnGetMetadataID(node_ptr) },
             })
@@ -44,63 +46,20 @@ impl FastNoise {
         unsafe { fnGetSIMDLevel(self.handle) }
     }
 
-    pub fn set(&self, member_name: &str, value: MemberValue) -> Result<(), String> {
+    #[allow(private_bounds)]
+    pub fn set<T: MemberValue>(
+        &mut self,
+        member_name: &str,
+        value: T,
+    ) -> Result<(), FastNoiseError> {
         let metadata = &NODE_METADATA[self.metadata_id as usize];
         let member_name = format_lookup(member_name);
         let member = metadata
             .members
             .get(&member_name)
-            .ok_or(format!("Failed to find member name: {member_name}"))?;
+            .ok_or(FastNoiseError::MemberNameNotFound(member_name))?;
 
-        match value {
-            MemberValue::Float(v) => match member.member_type {
-                MemberType::Float => {
-                    if !unsafe { fnSetVariableFloat(self.handle, member.index, v) } {
-                        return Err("Failed to set float value".to_string());
-                    }
-                }
-                MemberType::Hybrid => {
-                    if !unsafe { fnSetHybridFloat(self.handle, member.index, v) } {
-                        return Err("Failed to set hybrid float value".to_string());
-                    }
-                }
-                _ => return Err(format!("{member_name} cannot be set to a float value")),
-            },
-            MemberValue::Int(v) => match member.member_type {
-                MemberType::Int => {
-                    if !unsafe { fnSetVariableIntEnum(self.handle, member.index, v) } {
-                        return Err("Failed to set int value".to_string());
-                    }
-                }
-                _ => return Err(format!("{member_name} cannot be set to an int value")),
-            },
-            MemberValue::Enum(v) => match member.member_type {
-                MemberType::Enum => {
-                    let enum_idx = member
-                        .enum_names
-                        .get(&format_lookup(v))
-                        .ok_or(format!("Failed to find enum value: {v}"))?;
-                    if !unsafe { fnSetVariableIntEnum(self.handle, member.index, *enum_idx) } {
-                        return Err("Failed to set enum value".to_string());
-                    }
-                }
-                _ => return Err(format!("{member_name} cannot be set to an enum value")),
-            },
-            MemberValue::NodeLookup(node) => match member.member_type {
-                MemberType::NodeLookup => {
-                    if !unsafe { fnSetNodeLookup(self.handle, member.index, node.handle) } {
-                        return Err("Failed to set node lookup".to_string());
-                    }
-                }
-                MemberType::Hybrid => {
-                    if !unsafe { fnSetHybridNodeLookup(self.handle, member.index, node.handle) } {
-                        return Err("Failed to set hybrid node lookup".to_string());
-                    }
-                }
-                _ => return Err(format!("{member_name} cannot be set to a node lookup")),
-            },
-        }
-        Ok(())
+        value.apply(self, member)
     }
 
     pub fn gen_uniform_grid_2d(
@@ -337,5 +296,87 @@ pub struct OutputMinMax {
 impl OutputMinMax {
     fn new([min, max]: [f32; 2]) -> Self {
         Self { min, max }
+    }
+}
+
+trait MemberValue {
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError>;
+
+    fn invalid_member_type_error(member: &Member) -> FastNoiseError {
+        FastNoiseError::InvalidMemberType {
+            member_name: member.name.clone(),
+            given_type: type_name::<Self>().to_string(),
+            expected_type: member.member_type,
+        }
+    }
+}
+
+impl MemberValue for f32 {
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::Float => {
+                if !unsafe { fnSetVariableFloat(node.handle, member.index, self) } {
+                    return Err(FastNoiseError::SetFloatFailed);
+                }
+            }
+            MemberType::Hybrid => {
+                if !unsafe { fnSetHybridFloat(node.handle, member.index, self) } {
+                    return Err(FastNoiseError::SetHybridFloatFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
+    }
+}
+
+impl MemberValue for i32 {
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::Int => {
+                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, self) } {
+                    return Err(FastNoiseError::SetIntFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
+    }
+}
+
+impl MemberValue for &str {
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::Enum => {
+                let enum_idx = member
+                    .enum_names
+                    .get(&format_lookup(self))
+                    .ok_or(FastNoiseError::EnumValueNotFound(self.to_string()))?;
+                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *enum_idx) } {
+                    return Err(FastNoiseError::SetEnumFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
+    }
+}
+
+impl MemberValue for &FastNoise {
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::NodeLookup => {
+                if !unsafe { fnSetNodeLookup(node.handle, member.index, self.handle) } {
+                    return Err(FastNoiseError::SetNodeLookupFailed);
+                }
+            }
+            MemberType::Hybrid => {
+                if !unsafe { fnSetHybridNodeLookup(node.handle, member.index, self.handle) } {
+                    return Err(FastNoiseError::SetHybridNodeLookupFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
     }
 }

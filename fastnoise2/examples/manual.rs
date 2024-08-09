@@ -1,48 +1,49 @@
 use std::time::Instant;
 
-use fastnoise2::{FastNoise, MemberValue};
+use fastnoise2::{FastNoise, FastNoiseError};
 use image::{GrayImage, Luma};
 
-const X_SIZE: i32 = 512;
-const Y_SIZE: i32 = 512;
+const X_SIZE: i32 = 1024;
+const Y_SIZE: i32 = 1024;
+
+fn new_noise() -> Result<FastNoise, FastNoiseError> {
+    let mut cellular = FastNoise::from_name("CellularDistance")?;
+    cellular.set("ReturnType", "Index0Add1")?;
+    cellular.set("DistanceIndex0", 2)?;
+
+    let mut fractal = FastNoise::from_name("FractalFBm")?;
+    let simplex = FastNoise::from_name("Simplex")?;
+    fractal.set("Source", &simplex)?;
+    fractal.set("Gain", 3.0)?;
+    fractal.set("Lacunarity", 0.6)?;
+
+    let mut add_dim = FastNoise::from_name("AddDimension")?;
+    add_dim.set("Source", &cellular)?;
+    add_dim.set("NewDimensionPosition", 0.5)?;
+
+    let mut max_smooth = FastNoise::from_name("MaxSmooth")?;
+    max_smooth.set("LHS", &fractal)?;
+    max_smooth.set("RHS", &add_dim)?;
+
+    Ok(max_smooth)
+}
 
 fn main() {
-    let cellular = FastNoise::from_name("CellularDistance").unwrap();
-    cellular
-        .set("ReturnType", MemberValue::Enum("Index0Add1"))
-        .unwrap();
-    cellular.set("DistanceIndex0", MemberValue::Int(2)).unwrap();
-
-    let fractal = FastNoise::from_name("FractalFBm").unwrap();
-    let simplex = FastNoise::from_name("Simplex").unwrap();
-    fractal
-        .set("Source", MemberValue::NodeLookup(&simplex))
-        .unwrap();
-    fractal.set("Gain", MemberValue::Float(0.3)).unwrap();
-    fractal.set("Lacunarity", MemberValue::Float(0.6)).unwrap();
-
-    let add_dim = FastNoise::from_name("AddDimension").unwrap();
-    add_dim
-        .set("Source", MemberValue::NodeLookup(&cellular))
-        .unwrap();
-    add_dim
-        .set("NewDimensionPosition", MemberValue::Float(0.5))
-        .unwrap();
-
-    let max_smooth = FastNoise::from_name("MaxSmooth").unwrap();
-    max_smooth
-        .set("LHS", MemberValue::NodeLookup(&fractal))
-        .unwrap();
-    max_smooth
-        .set("RHS", MemberValue::NodeLookup(&add_dim))
-        .unwrap();
-
-    println!("SIMD level: {}", max_smooth.get_simd_level());
+    let noise = new_noise().unwrap();
+    println!("SIMD level: {}", noise.get_simd_level());
 
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
-    let min_max = max_smooth.gen_uniform_grid_2d(&mut noise_out, 0, 0, X_SIZE, Y_SIZE, 0.02, 1337);
+    let min_max = noise.gen_uniform_grid_2d(
+        &mut noise_out,
+        -X_SIZE / 2,
+        -Y_SIZE / 2,
+        X_SIZE,
+        Y_SIZE,
+        0.02,
+        1337,
+    );
     let elapsed = start.elapsed();
 
     println!(
