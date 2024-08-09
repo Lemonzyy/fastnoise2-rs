@@ -7,7 +7,7 @@ pub use metadata::MemberType;
 use metadata::{format_lookup, Member, METADATA_NAME_LOOKUP, NODE_METADATA};
 
 use fastnoise2_sys::*;
-use std::{any::type_name, ffi::CString};
+use std::ffi::CString;
 
 #[derive(Debug)]
 pub struct FastNoise {
@@ -18,9 +18,12 @@ pub struct FastNoise {
 impl FastNoise {
     pub fn from_name(metadata_name: &str) -> Result<Self, FastNoiseError> {
         let metadata_name = format_lookup(metadata_name);
-        let metadata_id = *METADATA_NAME_LOOKUP
-            .get(&metadata_name)
-            .ok_or(FastNoiseError::MetadataNameNotFound(metadata_name))?;
+        let metadata_id = *METADATA_NAME_LOOKUP.get(&metadata_name).ok_or_else(|| {
+            FastNoiseError::MetadataNameNotFound {
+                expected: METADATA_NAME_LOOKUP.keys().cloned().collect(),
+                found: metadata_name,
+            }
+        })?;
         let handle = unsafe { fnNewFromMetadata(metadata_id, 0) };
         Ok(Self {
             handle,
@@ -54,10 +57,12 @@ impl FastNoise {
     ) -> Result<(), FastNoiseError> {
         let metadata = &NODE_METADATA[self.metadata_id as usize];
         let member_name = format_lookup(member_name);
-        let member = metadata
-            .members
-            .get(&member_name)
-            .ok_or(FastNoiseError::MemberNameNotFound(member_name))?;
+        let member = metadata.members.get(&member_name).ok_or_else(|| {
+            FastNoiseError::MemberNameNotFound {
+                expected: metadata.members.values().map(|m| m.name.clone()).collect(),
+                found: member_name,
+            }
+        })?;
 
         value.apply(self, member)
     }
@@ -300,18 +305,22 @@ impl OutputMinMax {
 }
 
 trait MemberValue {
+    const TYPE: MemberType;
+
     fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError>;
 
     fn invalid_member_type_error(member: &Member) -> FastNoiseError {
         FastNoiseError::InvalidMemberType {
             member_name: member.name.clone(),
-            given_type: type_name::<Self>().to_string(),
-            expected_type: member.member_type,
+            expected: member.member_type,
+            found: Self::TYPE,
         }
     }
 }
 
 impl MemberValue for f32 {
+    const TYPE: MemberType = MemberType::Float;
+
     fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::Float => {
@@ -331,6 +340,8 @@ impl MemberValue for f32 {
 }
 
 impl MemberValue for i32 {
+    const TYPE: MemberType = MemberType::Int;
+
     fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::Int => {
@@ -345,13 +356,17 @@ impl MemberValue for i32 {
 }
 
 impl MemberValue for &str {
+    const TYPE: MemberType = MemberType::Enum;
+
     fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::Enum => {
-                let enum_idx = member
-                    .enum_names
-                    .get(&format_lookup(self))
-                    .ok_or(FastNoiseError::EnumValueNotFound(self.to_string()))?;
+                let enum_idx = member.enum_names.get(&format_lookup(self)).ok_or_else(|| {
+                    FastNoiseError::EnumValueNotFound {
+                        expected: member.enum_names.keys().cloned().collect(),
+                        found: self.to_string(),
+                    }
+                })?;
                 if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *enum_idx) } {
                     return Err(FastNoiseError::SetEnumFailed);
                 }
@@ -363,6 +378,8 @@ impl MemberValue for &str {
 }
 
 impl MemberValue for &FastNoise {
+    const TYPE: MemberType = MemberType::NodeLookup;
+
     fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::NodeLookup => {

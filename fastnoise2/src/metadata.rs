@@ -6,12 +6,12 @@ use crate::FastNoise;
 
 #[derive(Debug)]
 pub(crate) struct Metadata {
-    // pub id: i32,
-    // pub name: String,
+    pub id: i32,
+    pub name: String,
     pub members: HashMap<String, Member>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Member {
     pub name: String,
     pub member_type: MemberType,
@@ -47,7 +47,7 @@ pub(crate) static METADATA_NAME_LOOKUP: LazyLock<HashMap<String, i32>> = LazyLoc
     for id in 0..metadata_count {
         let name =
             format_lookup(&unsafe { CStr::from_ptr(fnGetMetadataName(id)) }.to_string_lossy());
-        lookup.insert(format_lookup(&name), id);
+        lookup.insert(name, id);
     }
     lookup
 });
@@ -56,7 +56,8 @@ pub(crate) static NODE_METADATA: LazyLock<Vec<Metadata>> = LazyLock::new(|| {
     let metadata_count = unsafe { fnGetMetadataCount() };
     let mut metadata_vec = Vec::with_capacity(metadata_count as usize);
     for id in 0..metadata_count {
-        // let name = format_lookup(&unsafe { CStr::from_ptr(fnGetMetadataName(id)) }.to_string_lossy());
+        let name =
+            format_lookup(&unsafe { CStr::from_ptr(fnGetMetadataName(id)) }.to_string_lossy());
         let mut members = HashMap::new();
 
         let variable_count = unsafe { fnGetMetadataVariableCount(id) };
@@ -142,9 +143,7 @@ pub(crate) static NODE_METADATA: LazyLock<Vec<Metadata>> = LazyLock::new(|| {
             );
         }
 
-        metadata_vec.push(Metadata {
-            /* id, name, */ members,
-        });
+        metadata_vec.push(Metadata { id, name, members });
     }
     metadata_vec
 });
