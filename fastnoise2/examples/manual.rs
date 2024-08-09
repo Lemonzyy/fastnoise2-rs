@@ -35,15 +35,17 @@ fn main() {
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
-    let min_max = noise.gen_uniform_grid_2d(
-        &mut noise_out,
-        -X_SIZE / 2,
-        -Y_SIZE / 2,
-        X_SIZE,
-        Y_SIZE,
-        0.02,
-        1337,
-    );
+    let min_max = unsafe {
+        noise.gen_uniform_grid_2d_unchecked(
+            &mut noise_out,
+            -X_SIZE / 2,
+            -Y_SIZE / 2,
+            X_SIZE,
+            Y_SIZE,
+            0.02,
+            1337,
+        )
+    };
     let elapsed = start.elapsed();
 
     println!(

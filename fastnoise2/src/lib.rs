@@ -67,7 +67,10 @@ impl FastNoise {
         value.apply(self, member)
     }
 
-    pub fn gen_uniform_grid_2d(
+    /// # Safety
+    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size` values.
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_uniform_grid_2d_unchecked(
         &self,
         noise_out: &mut [f32],
         x_start: i32,
@@ -78,23 +81,26 @@ impl FastNoise {
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
-        unsafe {
-            fnGenUniformGrid2D(
-                self.handle,
-                noise_out.as_mut_ptr(),
-                x_start,
-                y_start,
-                x_size,
-                y_size,
-                frequency,
-                seed,
-                min_max.as_mut_ptr(),
-            )
-        }
+
+        fnGenUniformGrid2D(
+            self.handle,
+            noise_out.as_mut_ptr(),
+            x_start,
+            y_start,
+            x_size,
+            y_size,
+            frequency,
+            seed,
+            min_max.as_mut_ptr(),
+        );
+
         OutputMinMax::new(min_max)
     }
 
-    pub fn gen_uniform_grid_3d(
+    /// # Safety
+    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size * z_size` values.
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_uniform_grid_3d_unchecked(
         &self,
         noise_out: &mut [f32],
         x_start: i32,
@@ -107,25 +113,28 @@ impl FastNoise {
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
-        unsafe {
-            fnGenUniformGrid3D(
-                self.handle,
-                noise_out.as_mut_ptr(),
-                x_start,
-                y_start,
-                z_start,
-                x_size,
-                y_size,
-                z_size,
-                frequency,
-                seed,
-                min_max.as_mut_ptr(),
-            )
-        }
+
+        fnGenUniformGrid3D(
+            self.handle,
+            noise_out.as_mut_ptr(),
+            x_start,
+            y_start,
+            z_start,
+            x_size,
+            y_size,
+            z_size,
+            frequency,
+            seed,
+            min_max.as_mut_ptr(),
+        );
+
         OutputMinMax::new(min_max)
     }
 
-    pub fn gen_uniform_grid_4d(
+    /// # Safety
+    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size * z_size * w_size` values.
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_uniform_grid_4d_unchecked(
         &self,
         noise_out: &mut [f32],
         x_start: i32,
@@ -140,27 +149,30 @@ impl FastNoise {
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
-        unsafe {
-            fnGenUniformGrid4D(
-                self.handle,
-                noise_out.as_mut_ptr(),
-                x_start,
-                y_start,
-                z_start,
-                w_start,
-                x_size,
-                y_size,
-                z_size,
-                w_size,
-                frequency,
-                seed,
-                min_max.as_mut_ptr(),
-            )
-        }
+
+        fnGenUniformGrid4D(
+            self.handle,
+            noise_out.as_mut_ptr(),
+            x_start,
+            y_start,
+            z_start,
+            w_start,
+            x_size,
+            y_size,
+            z_size,
+            w_size,
+            frequency,
+            seed,
+            min_max.as_mut_ptr(),
+        );
+
         OutputMinMax::new(min_max)
     }
 
-    pub fn gen_position_array_2d(
+    /// # Safety
+    /// - The caller must ensure that `noise_out`, `x_pos_array`, and `y_pos_array` all have the same length.
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_position_array_2d_unchecked(
         &self,
         noise_out: &mut [f32],
         x_pos_array: &[f32],
@@ -170,23 +182,26 @@ impl FastNoise {
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
-        unsafe {
-            fnGenPositionArray2D(
-                self.handle,
-                noise_out.as_mut_ptr(),
-                x_pos_array.len() as i32,
-                x_pos_array.as_ptr(),
-                y_pos_array.as_ptr(),
-                x_offset,
-                y_offset,
-                seed,
-                min_max.as_mut_ptr(),
-            )
-        }
+
+        fnGenPositionArray2D(
+            self.handle,
+            noise_out.as_mut_ptr(),
+            x_pos_array.len() as i32,
+            x_pos_array.as_ptr(),
+            y_pos_array.as_ptr(),
+            x_offset,
+            y_offset,
+            seed,
+            min_max.as_mut_ptr(),
+        );
+
         OutputMinMax::new(min_max)
     }
 
-    pub fn gen_position_array_3d(
+    /// # Safety
+    /// - The caller must ensure that `noise_out`, `x_pos_array`, `y_pos_array`, and `z_pos_array` all have the same length.
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_position_array_3d_unchecked(
         &self,
         noise_out: &mut [f32],
         x_pos_array: &[f32],
@@ -198,25 +213,28 @@ impl FastNoise {
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
-        unsafe {
-            fnGenPositionArray3D(
-                self.handle,
-                noise_out.as_mut_ptr(),
-                x_pos_array.len() as i32,
-                x_pos_array.as_ptr(),
-                y_pos_array.as_ptr(),
-                z_pos_array.as_ptr(),
-                x_offset,
-                y_offset,
-                z_offset,
-                seed,
-                min_max.as_mut_ptr(),
-            )
-        }
+
+        fnGenPositionArray3D(
+            self.handle,
+            noise_out.as_mut_ptr(),
+            x_pos_array.len() as i32,
+            x_pos_array.as_ptr(),
+            y_pos_array.as_ptr(),
+            z_pos_array.as_ptr(),
+            x_offset,
+            y_offset,
+            z_offset,
+            seed,
+            min_max.as_mut_ptr(),
+        );
+
         OutputMinMax::new(min_max)
     }
 
-    pub fn gen_position_array_4d(
+    /// # Safety
+    /// - The caller must ensure that `noise_out`, `x_pos_array`, `y_pos_array`, `z_pos_array`, and `w_pos_array` all have the same length.
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_position_array_4d_unchecked(
         &self,
         noise_out: &mut [f32],
         x_pos_array: &[f32],
@@ -230,27 +248,30 @@ impl FastNoise {
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
-        unsafe {
-            fnGenPositionArray4D(
-                self.handle,
-                noise_out.as_mut_ptr(),
-                x_pos_array.len() as i32,
-                x_pos_array.as_ptr(),
-                y_pos_array.as_ptr(),
-                z_pos_array.as_ptr(),
-                w_pos_array.as_ptr(),
-                x_offset,
-                y_offset,
-                z_offset,
-                w_offset,
-                seed,
-                min_max.as_mut_ptr(),
-            )
-        }
+
+        fnGenPositionArray4D(
+            self.handle,
+            noise_out.as_mut_ptr(),
+            x_pos_array.len() as i32,
+            x_pos_array.as_ptr(),
+            y_pos_array.as_ptr(),
+            z_pos_array.as_ptr(),
+            w_pos_array.as_ptr(),
+            x_offset,
+            y_offset,
+            z_offset,
+            w_offset,
+            seed,
+            min_max.as_mut_ptr(),
+        );
+
         OutputMinMax::new(min_max)
     }
 
-    pub fn gen_tileable_2d(
+    /// # Safety
+    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size` values.
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_tileable_2d_unchecked(
         &self,
         noise_out: &mut [f32],
         x_size: i32,
@@ -259,29 +280,35 @@ impl FastNoise {
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
-        unsafe {
-            fnGenTileable2D(
-                self.handle,
-                noise_out.as_mut_ptr(),
-                x_size,
-                y_size,
-                frequency,
-                seed,
-                min_max.as_mut_ptr(),
-            )
-        }
+
+        fnGenTileable2D(
+            self.handle,
+            noise_out.as_mut_ptr(),
+            x_size,
+            y_size,
+            frequency,
+            seed,
+            min_max.as_mut_ptr(),
+        );
+
         OutputMinMax::new(min_max)
     }
 
-    pub fn gen_single_2d(&self, x: f32, y: f32, seed: i32) -> f32 {
+    /// # Safety
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_single_2d_unchecked(&self, x: f32, y: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle2D(self.handle, x, y, seed) }
     }
 
-    pub fn gen_single_3d(&self, x: f32, y: f32, z: f32, seed: i32) -> f32 {
+    /// # Safety
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_single_3d_unchecked(&self, x: f32, y: f32, z: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle3D(self.handle, x, y, z, seed) }
     }
 
-    pub fn gen_single_4d(&self, x: f32, y: f32, z: f32, w: f32, seed: i32) -> f32 {
+    /// # Safety
+    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    pub unsafe fn gen_single_4d_unchecked(&self, x: f32, y: f32, z: f32, w: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle4D(self.handle, x, y, z, w, seed) }
     }
 }
