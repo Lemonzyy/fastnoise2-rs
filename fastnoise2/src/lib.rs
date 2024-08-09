@@ -4,11 +4,18 @@ mod metadata;
 
 pub use error::FastNoiseError;
 pub use metadata::MemberType;
-use metadata::{format_lookup, Member, METADATA_NAME_LOOKUP, NODE_METADATA};
+use metadata::{format_lookup, MemberValue, METADATA_NAME_LOOKUP, NODE_METADATA};
 
 use fastnoise2_sys::*;
 use std::ffi::CString;
 
+/// Represents a node in the [FastNoise2 C++ library](https://github.com/Auburn/FastNoise2).
+///
+/// This struct interfaces with the library, which uses metadata to dynamically manage node names and parameters.
+/// For details on available metadata, see the [library documentation](https://github.com/Auburn/FastNoise2/wiki).
+///
+/// # Safety
+/// Generating noise is unsafe. Refer to the specific method documentation for safety details.
 #[derive(Debug)]
 pub struct FastNoise {
     handle: *mut core::ffi::c_void,
@@ -16,6 +23,10 @@ pub struct FastNoise {
 }
 
 impl FastNoise {
+    /// Creates a [`FastNoise`] instance using a metadata name.
+    ///
+    /// # Errors
+    /// Returns an error if the metadata name is not found in the FastNoise2 metadata system.
     pub fn from_name(metadata_name: &str) -> Result<Self, FastNoiseError> {
         let metadata_name = format_lookup(metadata_name);
         let metadata_id = *METADATA_NAME_LOOKUP.get(&metadata_name).ok_or_else(|| {
@@ -31,6 +42,10 @@ impl FastNoise {
         })
     }
 
+    /// Creates a `FastNoise` instance from an encoded node tree.
+    ///
+    /// # Errors
+    /// Returns an error if the encoded node tree is invalid or if creation fails.
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
         let cstring =
             CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
@@ -49,11 +64,19 @@ impl FastNoise {
         unsafe { fnGetSIMDLevel(self.handle) }
     }
 
+    /// Sets a value for a member.
+    ///
+    /// The `member_name` is looked up in the metadata, and the `value` is applied based on its type.
+    /// The type of `value` must match the member's expected type as defined in the metadata.
+    ///
+    /// # Errors
+    /// Returns an error if the member name is not found which includes a list of valid member names.
+    /// Also returns an error if `value`'s type does not match the expected type for the member. The error provides the expected and actual types to assist in debugging.
     #[allow(private_bounds)]
-    pub fn set<T: MemberValue>(
+    pub fn set(
         &mut self,
         member_name: &str,
-        value: T,
+        value: impl MemberValue,
     ) -> Result<(), FastNoiseError> {
         let metadata = &NODE_METADATA[self.metadata_id as usize];
         let member_name = format_lookup(member_name);
@@ -319,6 +342,9 @@ impl Drop for FastNoise {
     }
 }
 
+/// Holds the minimum and maximum values from noise generation.
+///
+/// Used to represent the range of values produced by noise functions.
 #[derive(Debug)]
 pub struct OutputMinMax {
     pub min: f32,
@@ -328,99 +354,5 @@ pub struct OutputMinMax {
 impl OutputMinMax {
     fn new([min, max]: [f32; 2]) -> Self {
         Self { min, max }
-    }
-}
-
-trait MemberValue {
-    const TYPE: MemberType;
-
-    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError>;
-
-    fn invalid_member_type_error(member: &Member) -> FastNoiseError {
-        FastNoiseError::InvalidMemberType {
-            member_name: member.name.clone(),
-            expected: member.member_type,
-            found: Self::TYPE,
-        }
-    }
-}
-
-impl MemberValue for f32 {
-    const TYPE: MemberType = MemberType::Float;
-
-    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::Float => {
-                if !unsafe { fnSetVariableFloat(node.handle, member.index, self) } {
-                    return Err(FastNoiseError::SetFloatFailed);
-                }
-            }
-            MemberType::Hybrid => {
-                if !unsafe { fnSetHybridFloat(node.handle, member.index, self) } {
-                    return Err(FastNoiseError::SetHybridFloatFailed);
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(member)),
-        }
-        Ok(())
-    }
-}
-
-impl MemberValue for i32 {
-    const TYPE: MemberType = MemberType::Int;
-
-    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::Int => {
-                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, self) } {
-                    return Err(FastNoiseError::SetIntFailed);
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(member)),
-        }
-        Ok(())
-    }
-}
-
-impl MemberValue for &str {
-    const TYPE: MemberType = MemberType::Enum;
-
-    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::Enum => {
-                let enum_idx = member.enum_names.get(&format_lookup(self)).ok_or_else(|| {
-                    FastNoiseError::EnumValueNotFound {
-                        expected: member.enum_names.keys().cloned().collect(),
-                        found: self.to_string(),
-                    }
-                })?;
-                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *enum_idx) } {
-                    return Err(FastNoiseError::SetEnumFailed);
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(member)),
-        }
-        Ok(())
-    }
-}
-
-impl MemberValue for &FastNoise {
-    const TYPE: MemberType = MemberType::NodeLookup;
-
-    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::NodeLookup => {
-                if !unsafe { fnSetNodeLookup(node.handle, member.index, self.handle) } {
-                    return Err(FastNoiseError::SetNodeLookupFailed);
-                }
-            }
-            MemberType::Hybrid => {
-                if !unsafe { fnSetHybridNodeLookup(node.handle, member.index, self.handle) } {
-                    return Err(FastNoiseError::SetHybridNodeLookupFailed);
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(member)),
-        }
-        Ok(())
     }
 }

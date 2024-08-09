@@ -2,7 +2,7 @@ use std::{any::type_name, collections::HashMap, ffi::CStr, sync::LazyLock};
 
 use fastnoise2_sys::*;
 
-use crate::FastNoise;
+use crate::{FastNoise, FastNoiseError};
 
 #[derive(Debug)]
 pub(crate) struct Metadata {
@@ -19,12 +19,18 @@ pub(crate) struct Member {
     pub enum_names: HashMap<String, i32>,
 }
 
+/// Defines the type of value or reference a node can handle.
 #[derive(Clone, Copy, Debug)]
 pub enum MemberType {
+    /// A floating-point number ([`f32`]).
     Float,
+    /// An integer ([`i32`]).
     Int,
+    /// An enumerated value represented as a string ([`&str`]).
     Enum,
+    /// A reference to a [`FastNoise`] instance.
     NodeLookup,
+    /// A member that can be either a floating-point value ([`f32`]) or a [`FastNoise`] reference.
     Hybrid,
 }
 
@@ -159,5 +165,99 @@ fn format_dimension_member(name: &str, dim_idx: i32) -> String {
         format!("{name}{suffix}")
     } else {
         name.to_string()
+    }
+}
+
+pub(crate) trait MemberValue {
+    const TYPE: MemberType;
+
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError>;
+
+    fn invalid_member_type_error(member: &Member) -> FastNoiseError {
+        FastNoiseError::InvalidMemberType {
+            member_name: member.name.clone(),
+            expected: member.member_type,
+            found: Self::TYPE,
+        }
+    }
+}
+
+impl MemberValue for f32 {
+    const TYPE: MemberType = MemberType::Float;
+
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::Float => {
+                if !unsafe { fnSetVariableFloat(node.handle, member.index, self) } {
+                    return Err(FastNoiseError::SetFloatFailed);
+                }
+            }
+            MemberType::Hybrid => {
+                if !unsafe { fnSetHybridFloat(node.handle, member.index, self) } {
+                    return Err(FastNoiseError::SetHybridFloatFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
+    }
+}
+
+impl MemberValue for i32 {
+    const TYPE: MemberType = MemberType::Int;
+
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::Int => {
+                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, self) } {
+                    return Err(FastNoiseError::SetIntFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
+    }
+}
+
+impl MemberValue for &str {
+    const TYPE: MemberType = MemberType::Enum;
+
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::Enum => {
+                let enum_idx = member.enum_names.get(&format_lookup(self)).ok_or_else(|| {
+                    FastNoiseError::EnumValueNotFound {
+                        expected: member.enum_names.keys().cloned().collect(),
+                        found: self.to_string(),
+                    }
+                })?;
+                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *enum_idx) } {
+                    return Err(FastNoiseError::SetEnumFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
+    }
+}
+
+impl MemberValue for &FastNoise {
+    const TYPE: MemberType = MemberType::NodeLookup;
+
+    fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError> {
+        match member.member_type {
+            MemberType::NodeLookup => {
+                if !unsafe { fnSetNodeLookup(node.handle, member.index, self.handle) } {
+                    return Err(FastNoiseError::SetNodeLookupFailed);
+                }
+            }
+            MemberType::Hybrid => {
+                if !unsafe { fnSetHybridNodeLookup(node.handle, member.index, self.handle) } {
+                    return Err(FastNoiseError::SetHybridNodeLookupFailed);
+                }
+            }
+            _ => return Err(Self::invalid_member_type_error(member)),
+        }
+        Ok(())
     }
 }
