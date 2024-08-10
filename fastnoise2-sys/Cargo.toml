@@ -3,8 +3,8 @@ name = "fastnoise2-sys"
 version = "0.1.0"
 edition = "2021"
 description = "Rust bindings for FastNoise2"
-repository.workspace = true
-license.workspace = true
+repository = "https://github.com/Lemonzyy/fastnoise2-rs"
+license = "MIT"
 
 [build-dependencies]
 bindgen = "0.69"
