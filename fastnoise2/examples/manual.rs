@@ -6,7 +6,7 @@ use image::{GrayImage, Luma};
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
-fn new_noise() -> Result<FastNoise, FastNoiseError> {
+fn create_node() -> Result<FastNoise, FastNoiseError> {
     let mut cellular = FastNoise::from_name("CellularDistance")?;
     cellular.set("ReturnType", "Index0Add1")?;
     cellular.set("DistanceIndex0", 2)?;
@@ -29,8 +29,7 @@ fn new_noise() -> Result<FastNoise, FastNoiseError> {
 }
 
 fn main() {
-    let noise = new_noise().unwrap();
-    println!("SIMD level: {}", noise.get_simd_level());
+    let noise = create_node().unwrap();
 
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
@@ -63,6 +62,8 @@ fn main() {
         noise_out.len() as f32 / elapsed.as_secs_f32()
     );
 
+    // Do whatever you want with `noise_out`! In this case, generate an image with it.
+
     let mut img = GrayImage::new(X_SIZE as u32, Y_SIZE as u32);
 
     for x in 0..X_SIZE {
@@ -74,8 +75,14 @@ fn main() {
         }
     }
 
-    std::fs::create_dir_all("examples_output").expect("Failed to create directories");
-    img.save("examples_output/manual.png")
-        .expect("Failed to save image");
-    println!("Image saved as examples_output/manual.png");
+    save(img, "manual.png");
+}
+
+fn save(img: GrayImage, filename: &str) {
+    let output_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap())
+        .join("examples_output");
+    std::fs::create_dir_all(&output_dir).expect("Failed to create directories");
+    let output_path = output_dir.join(filename);
+    img.save(&output_path).expect("Failed to save image");
+    println!("Image successfully saved as {}", output_path.display());
 }
