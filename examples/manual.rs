@@ -30,6 +30,7 @@ fn create_node() -> Result<FastNoise, FastNoiseError> {
 
 fn main() {
     let noise = create_node().unwrap();
+    println!("SIMD level: {}", noise.get_simd_level());
 
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
