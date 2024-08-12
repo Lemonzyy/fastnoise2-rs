@@ -13,6 +13,9 @@ thiserror = "1.0"
 [dev-dependencies]
 image = "0.25.2"
 
+[features]
+build-from-source = ["fastnoise2-sys/build-from-source"]
+
 [workspace]
 resolver = "2"
 members = ["fastnoise2-sys"]
