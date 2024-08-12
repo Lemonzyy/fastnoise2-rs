@@ -6,7 +6,9 @@ use crate::{FastNoise, FastNoiseError};
 
 #[derive(Debug)]
 pub(crate) struct Metadata {
+    #[allow(dead_code)]
     pub id: i32,
+    #[allow(dead_code)]
     pub name: String,
     pub members: HashMap<String, Member>,
 }

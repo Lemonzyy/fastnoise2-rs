@@ -2,7 +2,7 @@
 name = "fastnoise2"
 version = "0.1.0"
 edition = "2021"
-description = "A safe Rust wrapper for FastNoise2, a modern, node-based noise generation library optimized with SIMD."
+description = "A safe Rust wrapper for FastNoise2, a node-based noise generation library optimized with SIMD."
 repository = "https://github.com/Lemonzyy/fastnoise2-rs"
 license = "MIT"
 

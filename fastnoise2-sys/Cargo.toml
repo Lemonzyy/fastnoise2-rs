@@ -5,6 +5,7 @@ edition = "2021"
 description = "Rust bindings for FastNoise2"
 repository = "https://github.com/Lemonzyy/fastnoise2-rs"
 license = "MIT"
+build = "build/main.rs"
 
 [build-dependencies]
 cmake = { version = "0.1", optional = true }
