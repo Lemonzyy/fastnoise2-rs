@@ -42,8 +42,7 @@ fn main() {
     // - Incorrect or incomplete parameter setup (e.g., missing source nodes or invalid values).
     // - Internal errors or limitations in the FastNoise2 library that may not be evident from Rust's type safety
     //   or runtime checks.
-    // Verify that all node configurations and parameters are correct, and be prepared to handle runtime issues
-    // as detailed in the FastNoise2 documentation.
+    // Verify that all node configurations and parameters are correct.
     let min_max = unsafe {
         noise.gen_uniform_grid_2d_unchecked(
             &mut noise_out,

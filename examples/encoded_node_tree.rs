@@ -3,7 +3,7 @@ use std::time::Instant;
 use fastnoise2::FastNoise;
 use image::{GrayImage, Luma};
 
-const DEFAULT_ENCODED_NODE_TREE: &str = "DQAFAAAAAAAAQAgAAAAAAD8AAAAAAA==";
+const DEFAULT_ENCODED_NODE_TREE: &str = "EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/";
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
@@ -34,7 +34,7 @@ fn main() {
             -Y_SIZE / 2,
             X_SIZE,
             Y_SIZE,
-            0.02,
+            0.01,
             1337,
         )
     };
