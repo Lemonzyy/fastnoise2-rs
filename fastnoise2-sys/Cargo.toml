@@ -8,8 +8,8 @@ license = "MIT"
 build = "build/main.rs"
 
 [build-dependencies]
+bindgen = "0.69"
 cmake = { version = "0.1", optional = true }
-bindgen = { version = "0.69", optional = true }
 
 [features]
-build-from-source = ["cmake", "bindgen"]
+build-from-source = ["cmake"]

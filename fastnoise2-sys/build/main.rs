@@ -3,7 +3,6 @@ use std::env;
 const SOURCE_DIR_KEY: &str = "FASTNOISE2_SOURCE_DIR";
 const LIB_DIR_KEY: &str = "FASTNOISE2_LIB_DIR";
 const LIB_NAME: &str = "FastNoise";
-#[cfg(feature = "build-from-source")]
 const HEADER_NAME: &str = "FastNoise_C.h";
 
 fn main() {
@@ -14,6 +13,25 @@ fn main() {
         println!("cargo:warning=fastnoise2: linking to the precompiled library '{LIB_NAME}' located in '{lib_dir}'");
         println!("cargo:rustc-link-search=native={lib_dir}");
         println!("cargo:rustc-link-lib=static={LIB_NAME}");
+
+        let manifest_dir = env::var("CARGO_MANIFEST_DIR").unwrap();
+        let header_path = std::path::Path::new(&manifest_dir)
+            .join("build")
+            .join("FastNoise2")
+            .join("include")
+            .join("FastNoise")
+            .join(HEADER_NAME);
+        let bindings = bindgen::Builder::default()
+            .header(header_path.to_str().unwrap())
+            // 'bool' exists in C++ but not directly in C, it is named _Bool or you can use 'bool' by including 'stdbool.h'
+            .clang_arg("-xc++")
+            .generate()
+            .expect("Unable to generate bindings");
+
+        let out_path = std::path::PathBuf::from(env::var("OUT_DIR").unwrap());
+        bindings
+            .write_to_file(out_path.join("bindings.rs"))
+            .expect("Couldn't write bindings!");
     } else {
         #[cfg(feature = "build-from-source")]
         {
@@ -76,10 +94,10 @@ fn main() {
         }
 
         #[cfg(not(feature = "build-from-source"))]
-        panic!("\
-        No valid build configuration found.\n\
-        To use a precompiled library and built-in bindings, set the environment variable '{LIB_DIR_KEY}' to the path of the precompiled library directory. \
-        Alternatively, enable the 'build-from-source' feature to build the library and generate bindings from source.\
-        ");
+        panic!(
+            "No valid build configuration found.\n\
+            To use a precompiled library set the environment variable '{LIB_DIR_KEY}' to the path of the precompiled library directory. \
+            Alternatively, enable the 'build-from-source' feature to build the library and generate bindings from source."
+        );
     }
 }
