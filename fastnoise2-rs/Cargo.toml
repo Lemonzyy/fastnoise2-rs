@@ -9,7 +9,7 @@ license.workspace = true
 readme.workspace = true
 
 [dependencies]
-fastnoise2-sys = { version = "0.1.0", path = "../fastnoise2-sys" }
+fastnoise2-sys = { version = "0.1.1", path = "../fastnoise2-sys" }
 thiserror = "1.0"
 
 [dev-dependencies]
