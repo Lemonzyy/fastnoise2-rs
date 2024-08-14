@@ -1,4 +1,4 @@
-#![doc = include_str!("../README.md")]
+#![doc = include_str!("../../README.md")]
 #![allow(clippy::too_many_arguments)]
 mod error;
 mod metadata;

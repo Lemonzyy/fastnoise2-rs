@@ -22,19 +22,15 @@ fn main() {
             "cargo:warning=feature 'build-from-source' is enabled; building FastNoise2 from source"
         );
         build_from_source();
-    } else {
-        if let Ok(lib_dir) = env::var(LIB_DIR_KEY) {
-            println!("cargo:warning=using precompiled library located in '{lib_dir}'");
-            println!("cargo:rustc-link-search=native={lib_dir}");
-            println!("cargo:rustc-link-lib=static={LIB_NAME}");
+    } else if let Ok(lib_dir) = env::var(LIB_DIR_KEY) {
+        println!("cargo:warning=using precompiled library located in '{lib_dir}'");
+        println!("cargo:rustc-link-search=native={lib_dir}");
+        println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
-            generate_bindings(default_source_path());
-        } else {
-            println!(
-                "cargo:warning={LIB_DIR_KEY} is not set; falling back to building from source"
-            );
-            build_from_source();
-        }
+        generate_bindings(default_source_path());
+    } else {
+        println!("cargo:warning={LIB_DIR_KEY} is not set; falling back to building from source");
+        build_from_source();
     }
 }
 
