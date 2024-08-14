@@ -3,5 +3,6 @@ resolver = "2"
 members = ["fastnoise2-rs", "fastnoise2-sys"]
 
 [workspace.package]
+readme = "README.md"
 repository = "https://github.com/Lemonzyy/fastnoise2-rs"
 license = "MIT"

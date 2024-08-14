@@ -1,12 +1,13 @@
 [package]
 name = "fastnoise2-sys"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Rust bindings for FastNoise2."
 keywords = ["noise", "simd", "procedural", "perlin", "bindings"]
 build = "build/main.rs"
 repository.workspace = true
 license.workspace = true
+readme.workspace = true
 
 [build-dependencies]
 bindgen = "0.69"
