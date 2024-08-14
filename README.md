@@ -4,7 +4,7 @@
 ![Crates.io Version](https://img.shields.io/crates/v/fastnoise2)
 ![docs.rs](https://docs.rs/fastnoise2/badge.svg)
 
-`fastnoise2` provides an easy-to-use and mostly safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
+fastnoise2 provides an easy-to-use and mostly safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
 
 ![NoiseTool Node Tree](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/noisetool.png)
 
@@ -41,3 +41,23 @@ let min_max = unsafe {
 ```
 
 You can also manually code a node tree using the metadata system of FastNoise2. See `examples` for more information.
+
+## Setup
+
+fastnoise2-sys, the underlying bindings for fastnoise2, uses a build script that follows a specific order of preference for compiling and/or linking the FastNoise2 library:
+
+1. Building from source, if the `build-from-source` feature is enabled.
+2. If the `FASTNOISE2_LIB_DIR` environment variable is set to `/path/to/lib/`, that path will be searched for static `FastNoise` library.
+3. If not set, it falls back to building from source.
+
+## Building from Source
+
+To build FastNoise2 from source using fastnoise2-sys, ensure you have:
+
+- [CMake](https://cmake.org/)
+- a C++17 compiler
+
+## Notes
+
+- If you prefer not to build from source, precompiled binaries are available for download from the [FastNoise2 Releases](https://github.com/Auburn/FastNoise2/releases).
+- The `FASTNOISE2_SOURCE_DIR` environment variable is generally not needed as fastnoise2-sys includes the FastNoise2 source code as a Git submodule. If you need to use a different source directory, set `FASTNOISE2_SOURCE_DIR` to point to the root of the FastNoise2 source code.
