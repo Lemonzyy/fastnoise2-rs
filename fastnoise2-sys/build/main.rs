@@ -6,19 +6,23 @@ const LIB_NAME: &str = "FastNoise";
 const HEADER_NAME: &str = "FastNoise_C.h";
 
 fn main() {
+    if env::var("DOCS_RS").is_ok() {
+        println!("cargo:warning=docs.rs compilation detected, only bindings will be generated");
+        generate_bindings(default_source_path());
+        return;
+    }
+
     println!("cargo:rerun-if-env-changed={SOURCE_DIR_KEY}");
     println!("cargo:rerun-if-env-changed={LIB_DIR_KEY}");
 
-    #[cfg(feature = "build-from-source")]
-    {
+    let feature_build_from_source = env::var("CARGO_FEATURE_BUILD_FROM_SOURCE").is_ok();
+
+    if feature_build_from_source {
         println!(
             "cargo:warning=feature 'build-from-source' is enabled; building FastNoise2 from source"
         );
         build_from_source();
-    }
-
-    #[cfg(not(feature = "build-from-source"))]
-    {
+    } else {
         if let Ok(lib_dir) = env::var(LIB_DIR_KEY) {
             println!("cargo:warning=using precompiled library located in '{lib_dir}'");
             println!("cargo:rustc-link-search=native={lib_dir}");
