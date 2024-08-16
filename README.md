@@ -1,8 +1,8 @@
 # fastnoise2
 
-![Crates.io License](https://img.shields.io/crates/l/fastnoise2)
-![Crates.io Version](https://img.shields.io/crates/v/fastnoise2)
-![docs.rs](https://docs.rs/fastnoise2/badge.svg)
+[![Crates.io License](https://img.shields.io/crates/l/fastnoise2)](https://github.com/Lemonzyy/fastnoise2-rs/blob/main/LICENSE)
+[![Crates.io Version](https://img.shields.io/crates/v/fastnoise2)](https://crates.io/crates/fastnoise2)
+[![docs.rs](https://docs.rs/fastnoise2/badge.svg)](https://docs.rs/fastnoise2/latest/fastnoise2/)
 
 fastnoise2 provides an easy-to-use and mostly safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
 
