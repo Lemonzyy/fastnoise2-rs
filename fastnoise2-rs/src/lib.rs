@@ -64,6 +64,7 @@
 //!
 #![allow(clippy::too_many_arguments)]
 mod error;
+pub mod generator;
 mod metadata;
 
 pub use error::FastNoiseError;

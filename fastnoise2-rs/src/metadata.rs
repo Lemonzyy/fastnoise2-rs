@@ -14,7 +14,7 @@ pub(crate) struct Metadata {
 }
 
 #[derive(Debug, Clone)]
-pub(crate) struct Member {
+pub struct Member {
     pub name: String,
     pub member_type: MemberType,
     pub index: i32,
@@ -170,7 +170,7 @@ fn format_dimension_member(name: &str, dim_idx: i32) -> String {
     }
 }
 
-pub(crate) trait MemberValue {
+pub trait MemberValue: Copy {
     const TYPE: MemberType;
 
     fn apply(self, node: &mut FastNoise, member: &Member) -> Result<(), FastNoiseError>;
