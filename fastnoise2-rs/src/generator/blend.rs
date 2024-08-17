@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Generator, Hybrid, Node};
 
@@ -72,104 +72,104 @@ pub struct PowInt<VALUE: Node> {
 }
 
 impl<LHS: Node, RHS: Hybrid> Node for Add<LHS, RHS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Add").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<LHS: Hybrid, RHS: Hybrid> Node for Subtract<LHS, RHS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Subtract").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<LHS: Node, RHS: Hybrid> Node for Multiply<LHS, RHS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Multiply").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<LHS: Hybrid, RHS: Hybrid> Node for Divide<LHS, RHS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Divide").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<LHS: Node, RHS: Hybrid> Node for Min<LHS, RHS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Min").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<LHS: Node, RHS: Hybrid> Node for Max<LHS, RHS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Max").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<LHS: Node, RHS: Hybrid, SMOOTHNESS: Hybrid> Node for MinSmooth<LHS, RHS, SMOOTHNESS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("MinSmooth").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
         node.set("Smoothness", self.smoothness).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<LHS: Node, RHS: Hybrid, SMOOTHNESS: Hybrid> Node for MaxSmooth<LHS, RHS, SMOOTHNESS> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("MaxSmooth").unwrap();
         node.set("LHS", self.lhs).unwrap();
         node.set("RHS", self.rhs).unwrap();
         node.set("Smoothness", self.smoothness).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<A: Node, B: Node, FADE: Hybrid> Node for Fade<A, B, FADE> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Fade").unwrap();
         node.set("A", self.a).unwrap();
         node.set("B", self.b).unwrap();
         node.set("Fade", self.fade).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<VALUE: Hybrid, POW: Hybrid> Node for PowFloat<VALUE, POW> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("PowFloat").unwrap();
         node.set("Value", self.value).unwrap();
         node.set("Pow", self.pow).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<VALUE: Node> Node for PowInt<VALUE> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("PowInt").unwrap();
         node.set("Value", self.value).unwrap();
         node.set("Pow", self.pow).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 

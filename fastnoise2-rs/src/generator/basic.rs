@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{DistanceFunction, Generator, Node};
 
@@ -42,37 +42,37 @@ pub struct DistanceToPoint {
 }
 
 impl Node for Constant {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Constant").unwrap();
         node.set("Value", self.value).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl Node for White {
-    fn build_node(&self) -> FastNoise {
-        FastNoise::from_name("White").unwrap()
+    fn build_node(&self) -> TypedFastNoise {
+        TypedFastNoise(FastNoise::from_name("White").unwrap())
     }
 }
 
 impl Node for Checkerboard {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Checkerboard").unwrap();
         node.set("Size", self.size).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl Node for SineWave {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("SineWave").unwrap();
         node.set("Scale", self.scale).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl Node for PositionOutput {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("PositionOutput").unwrap();
         node.set("MultiplierX", self.x_multiplier).unwrap();
         node.set("MultiplierY", self.y_multiplier).unwrap();
@@ -82,12 +82,12 @@ impl Node for PositionOutput {
         node.set("OffsetY", self.y_offset).unwrap();
         node.set("OffsetZ", self.z_offset).unwrap();
         node.set("OffsetW", self.w_offset).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl Node for DistanceToPoint {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DistanceToPoint").unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
@@ -95,7 +95,7 @@ impl Node for DistanceToPoint {
         node.set("PointY", self.y_point).unwrap();
         node.set("PointZ", self.z_point).unwrap();
         node.set("PointW", self.w_point).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 

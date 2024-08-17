@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Generator, Hybrid, Node};
 
@@ -38,7 +38,7 @@ pub struct FractalPingPong<
 impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
     for FractalFBm<Source, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("FractalFBm").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Gain", self.gain).unwrap();
@@ -46,14 +46,14 @@ impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
     for FractalRidged<Source, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("FractalRidged").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Gain", self.gain).unwrap();
@@ -61,14 +61,14 @@ impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid> Node
     for FractalPingPong<Source, Gain, WeightedStrength, PingPongStrength>
 {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("FractalFBm").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Gain", self.gain).unwrap();
@@ -78,11 +78,11 @@ impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hyb
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
-pub fn fractal_fbm<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
+pub fn fbm<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
     source: Source,
     gain: Gain,
     weighted_strength: WeightedStrength,
@@ -98,7 +98,7 @@ pub fn fractal_fbm<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
     })
 }
 
-pub fn fractal_ridged<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
+pub fn ridged<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
     source: Source,
     gain: Gain,
     weighted_strength: WeightedStrength,
@@ -114,12 +114,7 @@ pub fn fractal_ridged<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
     })
 }
 
-pub fn fractal_ping_pong<
-    Source: Node,
-    Gain: Hybrid,
-    WeightedStrength: Hybrid,
-    PingPongStrength: Hybrid,
->(
+pub fn ping_pong<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid>(
     source: Source,
     gain: Gain,
     weighted_strength: WeightedStrength,

@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Generator, Hybrid, Node};
 
@@ -10,16 +10,16 @@ pub struct DomainWarpGradient<Source: Node, WarpAmplitude: Hybrid> {
 }
 
 impl<Source: Node, WarpAmplitude: Hybrid> Node for DomainWarpGradient<Source, WarpAmplitude> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DomainWarpGradient").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("WarpAmplitude", self.warp_amplitude).unwrap();
         node.set("WarpFrequency", self.warp_frequency).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
-pub fn domain_warp_gradient<Source: Node, WarpAmplitude: Hybrid>(
+pub fn gradient<Source: Node, WarpAmplitude: Hybrid>(
     source: Source,
     warp_amplitude: WarpAmplitude,
     warp_frequency: f32,

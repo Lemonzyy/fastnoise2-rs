@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Generator, Hybrid, Node};
 
@@ -31,7 +31,7 @@ pub struct DomainWarpFractalIndependant<
 impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
     for DomainWarpFractalProgressive<DomainWarpSource, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DomainWarpFractalProgressive").unwrap();
         node.set("DomainWarpSource", self.domain_warp_source)
             .unwrap();
@@ -40,14 +40,14 @@ impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
     for DomainWarpFractalIndependant<DomainWarpSource, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DomainWarpFractalIndependant").unwrap();
         node.set("DomainWarpSource", self.domain_warp_source)
             .unwrap();
@@ -56,15 +56,11 @@ impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
-pub fn domain_warp_fractal_progressive<
-    DomainWarpSource: Node,
-    Gain: Hybrid,
-    WeightedStrength: Hybrid,
->(
+pub fn progressive<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
     domain_warp_source: DomainWarpSource,
     gain: Gain,
     weighted_strength: WeightedStrength,
@@ -80,11 +76,7 @@ pub fn domain_warp_fractal_progressive<
     })
 }
 
-pub fn domain_warp_fractal_independant<
-    DomainWarpSource: Node,
-    Gain: Hybrid,
-    WeightedStrength: Hybrid,
->(
+pub fn independant<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
     domain_warp_source: DomainWarpSource,
     gain: Gain,
     weighted_strength: WeightedStrength,

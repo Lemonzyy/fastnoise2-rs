@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Dimension, Generator, Hybrid, Node};
 
@@ -87,119 +87,119 @@ pub struct GeneratorCache<Source: Node> {
 }
 
 impl<Source: Node> Node for DomainScale<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DomainScale").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Scale", self.scale).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node, XOffset: Hybrid, YOffset: Hybrid, ZOffset: Hybrid, WOffset: Hybrid> Node
     for DomainOffset<Source, XOffset, YOffset, ZOffset, WOffset>
 {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DomainOffset").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("OffsetX", self.x_offset).unwrap();
         node.set("OffsetY", self.y_offset).unwrap();
         node.set("OffsetZ", self.z_offset).unwrap();
         node.set("OffsetW", self.w_offset).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for DomainRotate<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DomainRotate").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Yaw", self.yaw).unwrap();
         node.set("Pitch", self.pitch).unwrap();
         node.set("Roll", self.roll).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for SeedOffset<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("SeedOffset").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("SeedOffset", self.seed_offset).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for Remap<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Remap").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("FromMin", self.from_min).unwrap();
         node.set("FromMax", self.from_max).unwrap();
         node.set("ToMin", self.to_min).unwrap();
         node.set("ToMax", self.to_max).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for ConvertRgba8<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("ConvertRgba8").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Min", self.min).unwrap();
         node.set("Max", self.max).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for Terrace<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("Terrace").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Multiplier", self.multiplier).unwrap();
         node.set("Smoothness", self.smoothness).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for DomainAxisScale<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("DomainAxisScale").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("ScaleX", self.x_scale).unwrap();
         node.set("ScaleY", self.y_scale).unwrap();
         node.set("ScaleZ", self.z_scale).unwrap();
         node.set("ScaleW", self.w_scale).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node, NewDimensionPosition: Hybrid> Node
     for AddDimension<Source, NewDimensionPosition>
 {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("AddDimension").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("NewDimensionPosition", self.new_dimension_position)
             .unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for RemoveDimension<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("RemoveDimension").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("RemoveDimension", &*self.remove_dimension.to_string())
             .unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Source: Node> Node for GeneratorCache<Source> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("GeneratorCache").unwrap();
         node.set("Source", self.source).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 

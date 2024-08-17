@@ -2,21 +2,20 @@ use std::time::Instant;
 
 use fastnoise2::{
     generator::{
-        basic::position_output, domain_warp::domain_warp_gradient,
-        domain_warp_fractal::domain_warp_fractal_progressive, fractal::fractal_fbm,
+        basic::position_output, domain_warp, domain_warp_fractal, fractal::fbm,
         modifier::domain_scale, simplex::opensimplex2, Node,
     },
-    FastNoise,
+    TypedFastNoise,
 };
 use image::{GrayImage, Luma};
 
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
-fn create_node() -> FastNoise {
-    let n = domain_warp_fractal_progressive(
-        domain_warp_gradient(
-            domain_scale(fractal_fbm(opensimplex2(), 0.65, 0.5, 4, 2.5), 0.66)
+fn create_node() -> TypedFastNoise {
+    let n = domain_warp_fractal::progressive(
+        domain_warp::gradient(
+            domain_scale(fbm(opensimplex2(), 0.65, 0.5, 4, 2.5), 0.66)
                 + position_output([0.0, 3.0, 0.0, 0.0], [0.0; 4]),
             0.2,
             2.0,
@@ -37,19 +36,15 @@ fn main() {
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
-    // SAFETY:
-    // The node is built using types, so it can be considered safe since the parameters cannot be wrong or missing.
-    let min_max = unsafe {
-        noise.gen_uniform_grid_2d_unchecked(
-            &mut noise_out,
-            -X_SIZE / 2,
-            -Y_SIZE / 2,
-            X_SIZE,
-            Y_SIZE,
-            0.02,
-            1337,
-        )
-    };
+    let min_max = noise.gen_uniform_grid_2d(
+        &mut noise_out,
+        -X_SIZE / 2,
+        -Y_SIZE / 2,
+        X_SIZE,
+        Y_SIZE,
+        0.02,
+        1337,
+    );
     let elapsed = start.elapsed();
 
     println!(

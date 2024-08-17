@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Generator, Node};
 
@@ -6,8 +6,8 @@ use super::{Generator, Node};
 pub struct Value;
 
 impl Node for Value {
-    fn build_node(&self) -> FastNoise {
-        FastNoise::from_name("Value").unwrap()
+    fn build_node(&self) -> TypedFastNoise {
+        TypedFastNoise(FastNoise::from_name("Value").unwrap())
     }
 }
 

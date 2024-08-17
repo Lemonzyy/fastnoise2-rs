@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-use crate::{metadata::MemberValue, FastNoise, MemberType};
+use crate::{metadata::MemberValue, typed::TypedFastNoise, FastNoise, MemberType};
 
 pub mod basic;
 pub mod blend;
@@ -14,7 +14,7 @@ pub mod simplex;
 pub mod value;
 
 pub trait Node: Copy {
-    fn build_node(&self) -> FastNoise;
+    fn build_node(&self) -> TypedFastNoise;
 }
 
 impl<N: Node> MemberValue for N {
@@ -25,7 +25,7 @@ impl<N: Node> MemberValue for N {
         node: &mut FastNoise,
         member: &crate::metadata::Member,
     ) -> Result<(), crate::FastNoiseError> {
-        node.set(&member.name, &self.build_node())
+        node.set(&member.name, &self.build_node().0)
     }
 }
 
@@ -39,7 +39,7 @@ impl<N: Node> Hybrid for N {}
 pub struct Generator<T: Hybrid>(pub T);
 
 impl<T: Node> Node for Generator<T> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         self.0.build_node()
     }
 }

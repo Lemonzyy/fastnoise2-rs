@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{DistanceFunction, Generator, Hybrid, Node};
 
@@ -27,18 +27,18 @@ pub struct CellularLookup<Lookup: Node, JitterModifier: Hybrid> {
 }
 
 impl<JitterModifier: Hybrid> Node for CellularValue<JitterModifier> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("CellularValue").unwrap();
         node.set("JitterModifier", self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("ValueIndex", self.value_index).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<JitterModifier: Hybrid> Node for CellularDistance<JitterModifier> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("CellularValue").unwrap();
         node.set("JitterModifier", self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
@@ -47,23 +47,23 @@ impl<JitterModifier: Hybrid> Node for CellularDistance<JitterModifier> {
         node.set("DistanceIndex1", self.distance_index_1).unwrap();
         node.set("ReturnType", &*self.return_type.to_string())
             .unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
 impl<Lookup: Node, JitterModifier: Hybrid> Node for CellularLookup<Lookup, JitterModifier> {
-    fn build_node(&self) -> FastNoise {
+    fn build_node(&self) -> TypedFastNoise {
         let mut node = FastNoise::from_name("CellularLookup").unwrap();
         node.set("Lookup", self.lookup).unwrap();
         node.set("JitterModifier", self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("LookupFrequency", self.lookup_frequency).unwrap();
-        node
+        TypedFastNoise(node)
     }
 }
 
-pub fn cellular_value<JitterModifier: Hybrid>(
+pub fn value<JitterModifier: Hybrid>(
     jitter_modifier: JitterModifier,
     distance_function: DistanceFunction,
     value_index: i32,
@@ -75,7 +75,7 @@ pub fn cellular_value<JitterModifier: Hybrid>(
     })
 }
 
-pub fn cellular_distance<JitterModifier: Hybrid>(
+pub fn distance<JitterModifier: Hybrid>(
     jitter_modifier: JitterModifier,
     distance_function: DistanceFunction,
     distance_index_0: i32,
@@ -91,7 +91,7 @@ pub fn cellular_distance<JitterModifier: Hybrid>(
     })
 }
 
-pub fn cellular_lookup<Lookup: Node, JitterModifier: Hybrid>(
+pub fn lookup<Lookup: Node, JitterModifier: Hybrid>(
     lookup: Lookup,
     jitter_modifier: JitterModifier,
     distance_function: DistanceFunction,

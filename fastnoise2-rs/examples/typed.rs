@@ -7,14 +7,14 @@ use fastnoise2::{
         simplex::{simplex, Simplex},
         Generator, Node,
     },
-    FastNoise, FastNoiseError,
+    TypedFastNoise,
 };
 use image::{GrayImage, Luma};
 
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
-fn create_node() -> Result<FastNoise, FastNoiseError> {
+fn create_node() -> TypedFastNoise {
     // All these writings produce the same result.
     // Please note that using "0.5" (a float) instead of "Constant { value : 0.5 }" (a node) is faster
     // because the right-hand member of the "Add" node is a hybrid member (either a node or a float)
@@ -54,35 +54,25 @@ fn create_node() -> Result<FastNoise, FastNoiseError> {
     // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since the Generator wrapper is not needed here.
     let n = Generator::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
 
-    Ok(n.build_node())
+    n.build_node()
 }
 
 fn main() {
-    let noise = create_node().unwrap();
+    let noise = create_node();
     println!("SIMD level: {}", noise.get_simd_level());
 
     let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
-    // SAFETY:
-    // Even though `noise_out` has sufficient capacity and the `noise` node seems correctly configured
-    // (with valid node names and parameter types), undefined behavior may still occur during noise generation.
-    // Potential issues include:
-    // - Incorrect or incomplete parameter setup (e.g., missing source nodes or invalid values).
-    // - Internal errors or limitations in the FastNoise2 library that may not be evident from Rust's type safety
-    //   or runtime checks.
-    // Verify that all node configurations and parameters are correct.
-    let min_max = unsafe {
-        noise.gen_uniform_grid_2d_unchecked(
-            &mut noise_out,
-            -X_SIZE / 2,
-            -Y_SIZE / 2,
-            X_SIZE,
-            Y_SIZE,
-            0.02,
-            1337,
-        )
-    };
+    let min_max = noise.gen_uniform_grid_2d(
+        &mut noise_out,
+        -X_SIZE / 2,
+        -Y_SIZE / 2,
+        X_SIZE,
+        Y_SIZE,
+        0.02,
+        1337,
+    );
     let elapsed = start.elapsed();
 
     println!(

@@ -66,10 +66,12 @@
 mod error;
 pub mod generator;
 mod metadata;
+mod typed;
 
 pub use error::FastNoiseError;
 pub use metadata::MemberType;
 use metadata::{format_lookup, MemberValue, METADATA_NAME_LOOKUP, NODE_METADATA};
+pub use typed::TypedFastNoise;
 
 use fastnoise2_sys::*;
 use std::ffi::CString;

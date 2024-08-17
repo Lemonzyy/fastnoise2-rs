@@ -1,4 +1,4 @@
-use crate::FastNoise;
+use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Generator, Node};
 
@@ -12,20 +12,20 @@ pub struct OpenSimplex2;
 pub struct OpenSimplex2S;
 
 impl Node for Simplex {
-    fn build_node(&self) -> FastNoise {
-        FastNoise::from_name("Simplex").unwrap()
+    fn build_node(&self) -> TypedFastNoise {
+        TypedFastNoise(FastNoise::from_name("Simplex").unwrap())
     }
 }
 
 impl Node for OpenSimplex2 {
-    fn build_node(&self) -> FastNoise {
-        FastNoise::from_name("OpenSimplex2").unwrap()
+    fn build_node(&self) -> TypedFastNoise {
+        TypedFastNoise(FastNoise::from_name("OpenSimplex2").unwrap())
     }
 }
 
 impl Node for OpenSimplex2S {
-    fn build_node(&self) -> FastNoise {
-        FastNoise::from_name("OpenSimplex2S").unwrap()
+    fn build_node(&self) -> TypedFastNoise {
+        TypedFastNoise(FastNoise::from_name("OpenSimplex2S").unwrap())
     }
 }
 
