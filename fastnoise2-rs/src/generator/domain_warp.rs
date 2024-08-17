@@ -4,9 +4,9 @@ use super::{Generator, Hybrid, Node};
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainWarpGradient<Source: Node, WarpAmplitude: Hybrid> {
-    source: Source,
-    warp_amplitude: WarpAmplitude,
-    warp_frequency: f32,
+    pub source: Source,
+    pub warp_amplitude: WarpAmplitude,
+    pub warp_frequency: f32,
 }
 
 impl<Source: Node, WarpAmplitude: Hybrid> Node for DomainWarpGradient<Source, WarpAmplitude> {

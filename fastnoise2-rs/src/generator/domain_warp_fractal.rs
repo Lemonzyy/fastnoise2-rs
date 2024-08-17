@@ -8,11 +8,11 @@ pub struct DomainWarpFractalProgressive<
     Gain: Hybrid,
     WeightedStrength: Hybrid,
 > {
-    domain_warp_source: DomainWarpSource,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
+    pub domain_warp_source: DomainWarpSource,
+    pub gain: Gain,
+    pub weighted_strength: WeightedStrength,
+    pub octaves: i32,
+    pub lacunarity: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -21,11 +21,11 @@ pub struct DomainWarpFractalIndependant<
     Gain: Hybrid,
     WeightedStrength: Hybrid,
 > {
-    domain_warp_source: DomainWarpSource,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
+    pub domain_warp_source: DomainWarpSource,
+    pub gain: Gain,
+    pub weighted_strength: WeightedStrength,
+    pub octaves: i32,
+    pub lacunarity: f32,
 }
 
 impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node

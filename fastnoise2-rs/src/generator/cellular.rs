@@ -4,26 +4,26 @@ use super::{DistanceFunction, Generator, Hybrid, Node};
 
 #[derive(Clone, Copy, Debug)]
 pub struct CellularValue<JitterModifier: Hybrid> {
-    jitter_modifier: JitterModifier,
-    distance_function: DistanceFunction,
-    value_index: i32,
+    pub jitter_modifier: JitterModifier,
+    pub distance_function: DistanceFunction,
+    pub value_index: i32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct CellularDistance<JitterModifier: Hybrid> {
-    jitter_modifier: JitterModifier,
-    distance_function: DistanceFunction,
-    distance_index_0: i32,
-    distance_index_1: i32,
-    return_type: CellularDistanceReturnType,
+    pub jitter_modifier: JitterModifier,
+    pub distance_function: DistanceFunction,
+    pub distance_index_0: i32,
+    pub distance_index_1: i32,
+    pub return_type: CellularDistanceReturnType,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct CellularLookup<Lookup: Node, JitterModifier: Hybrid> {
-    lookup: Lookup,
-    jitter_modifier: JitterModifier,
-    distance_function: DistanceFunction,
-    lookup_frequency: f32,
+    pub lookup: Lookup,
+    pub jitter_modifier: JitterModifier,
+    pub distance_function: DistanceFunction,
+    pub lookup_frequency: f32,
 }
 
 impl<JitterModifier: Hybrid> Node for CellularValue<JitterModifier> {

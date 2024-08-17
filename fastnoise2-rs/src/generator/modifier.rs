@@ -4,8 +4,8 @@ use super::{Dimension, Generator, Hybrid, Node};
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainScale<Source: Node> {
-    source: Source,
-    scale: f32,
+    pub source: Source,
+    pub scale: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -16,74 +16,74 @@ pub struct DomainOffset<
     ZOffset: Hybrid,
     WOffset: Hybrid,
 > {
-    source: Source,
-    x_offset: XOffset,
-    y_offset: YOffset,
-    z_offset: ZOffset,
-    w_offset: WOffset,
+    pub source: Source,
+    pub x_offset: XOffset,
+    pub y_offset: YOffset,
+    pub z_offset: ZOffset,
+    pub w_offset: WOffset,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainRotate<Source: Node> {
-    source: Source,
-    yaw: f32,
-    pitch: f32,
-    roll: f32,
+    pub source: Source,
+    pub yaw: f32,
+    pub pitch: f32,
+    pub roll: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct SeedOffset<Source: Node> {
-    source: Source,
-    seed_offset: i32,
+    pub source: Source,
+    pub seed_offset: i32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Remap<Source: Node> {
-    source: Source,
-    from_min: f32,
-    from_max: f32,
-    to_min: f32,
-    to_max: f32,
+    pub source: Source,
+    pub from_min: f32,
+    pub from_max: f32,
+    pub to_min: f32,
+    pub to_max: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct ConvertRgba8<Source: Node> {
-    source: Source,
-    min: f32,
-    max: f32,
+    pub source: Source,
+    pub min: f32,
+    pub max: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Terrace<Source: Node> {
-    source: Source,
-    multiplier: f32,
-    smoothness: f32,
+    pub source: Source,
+    pub multiplier: f32,
+    pub smoothness: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainAxisScale<Source: Node> {
-    source: Source,
-    x_scale: f32,
-    y_scale: f32,
-    z_scale: f32,
-    w_scale: f32,
+    pub source: Source,
+    pub x_scale: f32,
+    pub y_scale: f32,
+    pub z_scale: f32,
+    pub w_scale: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct AddDimension<Source: Node, NewDimensionPosition> {
-    source: Source,
-    new_dimension_position: NewDimensionPosition,
+    pub source: Source,
+    pub new_dimension_position: NewDimensionPosition,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct RemoveDimension<Source: Node> {
-    source: Source,
-    remove_dimension: Dimension,
+    pub source: Source,
+    pub remove_dimension: Dimension,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct GeneratorCache<Source: Node> {
-    source: Source,
+    pub source: Source,
 }
 
 impl<Source: Node> Node for DomainScale<Source> {

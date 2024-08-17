@@ -4,20 +4,20 @@ use super::{Generator, Hybrid, Node};
 
 #[derive(Clone, Copy, Debug)]
 pub struct FractalFBm<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> {
-    source: Source,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
+    pub source: Source,
+    pub gain: Gain,
+    pub weighted_strength: WeightedStrength,
+    pub octaves: i32,
+    pub lacunarity: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct FractalRidged<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> {
-    source: Source,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
+    pub source: Source,
+    pub gain: Gain,
+    pub weighted_strength: WeightedStrength,
+    pub octaves: i32,
+    pub lacunarity: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
@@ -27,12 +27,12 @@ pub struct FractalPingPong<
     WeightedStrength: Hybrid,
     PingPongStrength: Hybrid,
 > {
-    source: Source,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    ping_pong_strength: PingPongStrength,
-    octaves: i32,
-    lacunarity: f32,
+    pub source: Source,
+    pub gain: Gain,
+    pub weighted_strength: WeightedStrength,
+    pub ping_pong_strength: PingPongStrength,
+    pub octaves: i32,
+    pub lacunarity: f32,
 }
 
 impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
