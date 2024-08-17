@@ -1,3 +1,4 @@
+// This example illustrates the use of different types of writing with generators to build safe trees.
 use std::time::Instant;
 
 use fastnoise2::{

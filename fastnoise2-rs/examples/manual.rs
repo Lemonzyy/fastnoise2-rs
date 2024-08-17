@@ -1,3 +1,4 @@
+// This example illustrates the use of the metadata-based API to build trees.
 use std::time::Instant;
 
 use fastnoise2::{FastNoise, FastNoiseError};

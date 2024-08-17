@@ -1,7 +1,7 @@
 use crate::{FastNoise, FastNoiseError, OutputMinMax};
 
-/// Unlike [`FastNoise`], this struct is safe to use because it's built from typed nodes
-/// that implement the [`Node`][`crate::generator::Node`] trait.
+/// Unlike [`FastNoise`], this structure is safe to use because it is built from typed nodes
+/// that implement the [`Node`][`crate::generator::Node`] trait, or built by an encoded node tree produced by [NoiseTool](https://github.com/Auburn/FastNoise2?tab=readme-ov-file#noise-tool).
 pub struct TypedFastNoise(pub(crate) FastNoise);
 
 impl TypedFastNoise {
