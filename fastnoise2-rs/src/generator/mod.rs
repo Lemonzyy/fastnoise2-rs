@@ -2,8 +2,10 @@ use crate::{metadata::MemberValue, FastNoise, MemberType};
 
 pub mod basic;
 pub mod blend;
+pub mod cellular;
 pub mod perlin;
 pub mod simplex;
+pub mod value;
 
 pub trait Node: Copy {
     fn build_node(&self) -> FastNoise;

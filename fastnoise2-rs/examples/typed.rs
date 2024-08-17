@@ -104,7 +104,7 @@ fn main() {
         }
     }
 
-    save(img, "safe_layer.png");
+    save(img, "typed.png");
 }
 
 fn save(img: GrayImage, filename: &str) {
