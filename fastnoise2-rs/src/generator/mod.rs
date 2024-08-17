@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 use crate::{metadata::MemberValue, FastNoise, MemberType};
 
 pub mod basic;
@@ -6,6 +8,7 @@ pub mod cellular;
 pub mod domain_warp;
 pub mod domain_warp_fractal;
 pub mod fractal;
+pub mod modifier;
 pub mod perlin;
 pub mod simplex;
 pub mod value;
@@ -50,7 +53,7 @@ pub enum DistanceFunction {
     MaxAxis,
 }
 
-impl std::fmt::Display for DistanceFunction {
+impl Display for DistanceFunction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DistanceFunction::Euclidean => f.write_str("Euclidean"),
@@ -58,6 +61,25 @@ impl std::fmt::Display for DistanceFunction {
             DistanceFunction::Manhattan => f.write_str("Manhattan"),
             DistanceFunction::Hybrid => f.write_str("Hybrid"),
             DistanceFunction::MaxAxis => f.write_str("MaxAxis"),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum Dimension {
+    X,
+    Y,
+    Z,
+    W,
+}
+
+impl Display for Dimension {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Dimension::X => f.write_str("X"),
+            Dimension::Y => f.write_str("Y"),
+            Dimension::Z => f.write_str("Z"),
+            Dimension::W => f.write_str("W"),
         }
     }
 }
