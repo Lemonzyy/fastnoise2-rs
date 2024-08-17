@@ -82,52 +82,54 @@ impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hyb
     }
 }
 
-pub fn fbm<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
-    source: Source,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
-) -> Generator<FractalFBm<Source, Gain, WeightedStrength>> {
-    Generator(FractalFBm {
-        source,
-        gain,
-        weighted_strength,
-        octaves,
-        lacunarity,
-    })
-}
+impl<Source: Node> Generator<Source> {
+    pub fn fbm<Gain: Hybrid, WeightedStrength: Hybrid>(
+        self,
+        gain: Gain,
+        weighted_strength: WeightedStrength,
+        octaves: i32,
+        lacunarity: f32,
+    ) -> Generator<FractalFBm<Source, Gain, WeightedStrength>> {
+        Generator(FractalFBm {
+            source: self.0,
+            gain,
+            weighted_strength,
+            octaves,
+            lacunarity,
+        })
+    }
 
-pub fn ridged<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
-    source: Source,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
-) -> Generator<FractalRidged<Source, Gain, WeightedStrength>> {
-    Generator(FractalRidged {
-        source,
-        gain,
-        weighted_strength,
-        octaves,
-        lacunarity,
-    })
-}
+    pub fn ridged<Gain: Hybrid, WeightedStrength: Hybrid>(
+        self,
+        gain: Gain,
+        weighted_strength: WeightedStrength,
+        octaves: i32,
+        lacunarity: f32,
+    ) -> Generator<FractalRidged<Source, Gain, WeightedStrength>> {
+        Generator(FractalRidged {
+            source: self.0,
+            gain,
+            weighted_strength,
+            octaves,
+            lacunarity,
+        })
+    }
 
-pub fn ping_pong<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid>(
-    source: Source,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    ping_pong_strength: PingPongStrength,
-    octaves: i32,
-    lacunarity: f32,
-) -> Generator<FractalPingPong<Source, Gain, WeightedStrength, PingPongStrength>> {
-    Generator(FractalPingPong {
-        source,
-        gain,
-        weighted_strength,
-        ping_pong_strength,
-        octaves,
-        lacunarity,
-    })
+    pub fn ping_pong<Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid>(
+        self,
+        gain: Gain,
+        weighted_strength: WeightedStrength,
+        ping_pong_strength: PingPongStrength,
+        octaves: i32,
+        lacunarity: f32,
+    ) -> Generator<FractalPingPong<Source, Gain, WeightedStrength, PingPongStrength>> {
+        Generator(FractalPingPong {
+            source: self.0,
+            gain,
+            weighted_strength,
+            ping_pong_strength,
+            octaves,
+            lacunarity,
+        })
+    }
 }

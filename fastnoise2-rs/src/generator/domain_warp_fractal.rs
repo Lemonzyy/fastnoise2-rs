@@ -60,34 +60,36 @@ impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
     }
 }
 
-pub fn progressive<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
-    domain_warp_source: DomainWarpSource,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
-) -> Generator<DomainWarpFractalProgressive<DomainWarpSource, Gain, WeightedStrength>> {
-    Generator(DomainWarpFractalProgressive {
-        domain_warp_source,
-        gain,
-        weighted_strength,
-        octaves,
-        lacunarity,
-    })
-}
+impl<DomainWarpSource: Node> Generator<DomainWarpSource> {
+    pub fn warp_progressive<Gain: Hybrid, WeightedStrength: Hybrid>(
+        self,
+        gain: Gain,
+        weighted_strength: WeightedStrength,
+        octaves: i32,
+        lacunarity: f32,
+    ) -> Generator<DomainWarpFractalProgressive<DomainWarpSource, Gain, WeightedStrength>> {
+        Generator(DomainWarpFractalProgressive {
+            domain_warp_source: self.0,
+            gain,
+            weighted_strength,
+            octaves,
+            lacunarity,
+        })
+    }
 
-pub fn independant<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid>(
-    domain_warp_source: DomainWarpSource,
-    gain: Gain,
-    weighted_strength: WeightedStrength,
-    octaves: i32,
-    lacunarity: f32,
-) -> Generator<DomainWarpFractalIndependant<DomainWarpSource, Gain, WeightedStrength>> {
-    Generator(DomainWarpFractalIndependant {
-        domain_warp_source,
-        gain,
-        weighted_strength,
-        octaves,
-        lacunarity,
-    })
+    pub fn warp_independant<Gain: Hybrid, WeightedStrength: Hybrid>(
+        self,
+        gain: Gain,
+        weighted_strength: WeightedStrength,
+        octaves: i32,
+        lacunarity: f32,
+    ) -> Generator<DomainWarpFractalIndependant<DomainWarpSource, Gain, WeightedStrength>> {
+        Generator(DomainWarpFractalIndependant {
+            domain_warp_source: self.0,
+            gain,
+            weighted_strength,
+            octaves,
+            lacunarity,
+        })
+    }
 }

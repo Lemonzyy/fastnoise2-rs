@@ -19,14 +19,16 @@ impl<Source: Node, WarpAmplitude: Hybrid> Node for DomainWarpGradient<Source, Wa
     }
 }
 
-pub fn gradient<Source: Node, WarpAmplitude: Hybrid>(
-    source: Source,
-    warp_amplitude: WarpAmplitude,
-    warp_frequency: f32,
-) -> Generator<DomainWarpGradient<Source, WarpAmplitude>> {
-    Generator(DomainWarpGradient {
-        source,
-        warp_amplitude,
-        warp_frequency,
-    })
+impl<Source: Node> Generator<Source> {
+    pub fn warp_gradient<WarpAmplitude: Hybrid>(
+        self,
+        warp_amplitude: WarpAmplitude,
+        warp_frequency: f32,
+    ) -> Generator<DomainWarpGradient<Source, WarpAmplitude>> {
+        Generator(DomainWarpGradient {
+            source: self.0,
+            warp_amplitude,
+            warp_frequency,
+        })
+    }
 }

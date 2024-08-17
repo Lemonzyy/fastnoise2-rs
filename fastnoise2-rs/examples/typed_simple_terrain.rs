@@ -1,10 +1,7 @@
 use std::time::Instant;
 
 use fastnoise2::{
-    generator::{
-        basic::position_output, domain_warp, domain_warp_fractal, fractal::fbm,
-        modifier::domain_scale, simplex::opensimplex2, Node,
-    },
+    generator::{basic::position_output, simplex::opensimplex2, Node},
     TypedFastNoise,
 };
 use image::{GrayImage, Luma};
@@ -13,20 +10,11 @@ const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
 fn create_node() -> TypedFastNoise {
-    let n = domain_warp_fractal::progressive(
-        domain_warp::gradient(
-            domain_scale(fbm(opensimplex2(), 0.65, 0.5, 4, 2.5), 0.66)
-                + position_output([0.0, 3.0, 0.0, 0.0], [0.0; 4]),
-            0.2,
-            2.0,
-        ),
-        0.7,
-        0.5,
-        2,
-        2.5,
-    );
-
-    n.build_node()
+    (opensimplex2().fbm(0.65, 0.5, 4, 2.5).scale(0.66)
+        + position_output([0.0, 3.0, 0.0, 0.0], [0.0; 4]))
+    .warp_gradient(0.2, 2.0)
+    .warp_progressive(0.7, 0.5, 2, 2.5)
+    .build_node()
 }
 
 fn main() {

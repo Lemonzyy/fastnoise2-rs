@@ -203,126 +203,110 @@ impl<Source: Node> Node for GeneratorCache<Source> {
     }
 }
 
-pub fn domain_scale<Source: Node>(source: Source, scale: f32) -> Generator<DomainScale<Source>> {
-    Generator(DomainScale { source, scale })
-}
+impl<Source: Node> Generator<Source> {
+    pub fn scale(self, scale: f32) -> Generator<DomainScale<Source>> {
+        Generator(DomainScale {
+            source: self.0,
+            scale,
+        })
+    }
 
-pub fn domain_offset<
-    Source: Node,
-    XOffset: Hybrid,
-    YOffset: Hybrid,
-    ZOffset: Hybrid,
-    WOffset: Hybrid,
->(
-    source: Source,
-    x_offset: XOffset,
-    y_offset: YOffset,
-    z_offset: ZOffset,
-    w_offset: WOffset,
-) -> Generator<DomainOffset<Source, XOffset, YOffset, ZOffset, WOffset>> {
-    Generator(DomainOffset {
-        source,
-        x_offset,
-        y_offset,
-        z_offset,
-        w_offset,
-    })
-}
+    pub fn offset<XOffset: Hybrid, YOffset: Hybrid, ZOffset: Hybrid, WOffset: Hybrid>(
+        self,
+        x_offset: XOffset,
+        y_offset: YOffset,
+        z_offset: ZOffset,
+        w_offset: WOffset,
+    ) -> Generator<DomainOffset<Source, XOffset, YOffset, ZOffset, WOffset>> {
+        Generator(DomainOffset {
+            source: self.0,
+            x_offset,
+            y_offset,
+            z_offset,
+            w_offset,
+        })
+    }
 
-pub fn domain_rotate<Source: Node>(
-    source: Source,
-    yaw: f32,
-    pitch: f32,
-    roll: f32,
-) -> Generator<DomainRotate<Source>> {
-    Generator(DomainRotate {
-        source,
-        yaw,
-        pitch,
-        roll,
-    })
-}
+    pub fn rotate(self, yaw: f32, pitch: f32, roll: f32) -> Generator<DomainRotate<Source>> {
+        Generator(DomainRotate {
+            source: self.0,
+            yaw,
+            pitch,
+            roll,
+        })
+    }
 
-pub fn seed_offset<Source: Node>(
-    source: Source,
-    seed_offset: i32,
-) -> Generator<SeedOffset<Source>> {
-    Generator(SeedOffset {
-        source,
-        seed_offset,
-    })
-}
+    pub fn seed_offset(self, seed_offset: i32) -> Generator<SeedOffset<Source>> {
+        Generator(SeedOffset {
+            source: self.0,
+            seed_offset,
+        })
+    }
 
-pub fn remap<Source: Node>(
-    source: Source,
-    from_min: f32,
-    from_max: f32,
-    to_min: f32,
-    to_max: f32,
-) -> Generator<Remap<Source>> {
-    Generator(Remap {
-        source,
-        from_min,
-        from_max,
-        to_min,
-        to_max,
-    })
-}
+    pub fn remap(
+        self,
+        from_min: f32,
+        from_max: f32,
+        to_min: f32,
+        to_max: f32,
+    ) -> Generator<Remap<Source>> {
+        Generator(Remap {
+            source: self.0,
+            from_min,
+            from_max,
+            to_min,
+            to_max,
+        })
+    }
 
-pub fn convert_rgba8<Source: Node>(
-    source: Source,
-    min: f32,
-    max: f32,
-) -> Generator<ConvertRgba8<Source>> {
-    Generator(ConvertRgba8 { source, min, max })
-}
+    pub fn convert_rgba8(self, min: f32, max: f32) -> Generator<ConvertRgba8<Source>> {
+        Generator(ConvertRgba8 {
+            source: self.0,
+            min,
+            max,
+        })
+    }
 
-pub fn terrace<Source: Node>(
-    source: Source,
-    multiplier: f32,
-    smoothness: f32,
-) -> Generator<Terrace<Source>> {
-    Generator(Terrace {
-        source,
-        multiplier,
-        smoothness,
-    })
-}
+    pub fn terrace(self, multiplier: f32, smoothness: f32) -> Generator<Terrace<Source>> {
+        Generator(Terrace {
+            source: self.0,
+            multiplier,
+            smoothness,
+        })
+    }
 
-pub fn domain_axis_scale<Source: Node>(
-    source: Source,
-    scale: [f32; 4],
-) -> Generator<DomainAxisScale<Source>> {
-    let [x_scale, y_scale, z_scale, w_scale] = scale;
-    Generator(DomainAxisScale {
-        source,
-        x_scale,
-        y_scale,
-        z_scale,
-        w_scale,
-    })
-}
+    pub fn axis_scale(self, scale: [f32; 4]) -> Generator<DomainAxisScale<Source>> {
+        let [x_scale, y_scale, z_scale, w_scale] = scale;
+        Generator(DomainAxisScale {
+            source: self.0,
+            x_scale,
+            y_scale,
+            z_scale,
+            w_scale,
+        })
+    }
 
-pub fn add_dimension<Source: Node, NewDimensionPosition: Hybrid>(
-    source: Source,
-    new_dimension_position: NewDimensionPosition,
-) -> Generator<AddDimension<Source, NewDimensionPosition>> {
-    Generator(AddDimension {
-        source,
-        new_dimension_position,
-    })
-}
+    pub fn add_dimension<NewDimensionPosition: Hybrid>(
+        self,
+        new_dimension_position: NewDimensionPosition,
+    ) -> Generator<AddDimension<Source, NewDimensionPosition>> {
+        Generator(AddDimension {
+            source: self.0,
+            new_dimension_position,
+        })
+    }
 
-pub fn remove_dimension<Source: Node>(
-    source: Source,
-    remove_dimension: Dimension,
-) -> Generator<RemoveDimension<Source>> {
-    Generator(RemoveDimension {
-        source,
-        remove_dimension,
-    })
-}
+    pub fn remove_dimension(
+        self,
+        remove_dimension: Dimension,
+    ) -> Generator<RemoveDimension<Source>> {
+        Generator(RemoveDimension {
+            source: self.0,
+            remove_dimension,
+        })
+    }
 
-pub fn generator_cache<Source: Node>(source: Source) -> Generator<GeneratorCache<Source>> {
-    Generator(GeneratorCache { source })
+    pub fn cache(self) -> Generator<GeneratorCache<Source>> {
+        Generator(GeneratorCache { source: self.0 })
+    }
 }

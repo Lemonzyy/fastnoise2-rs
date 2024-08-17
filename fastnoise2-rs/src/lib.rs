@@ -409,6 +409,12 @@ impl Drop for FastNoise {
     }
 }
 
+impl From<TypedFastNoise> for FastNoise {
+    fn from(value: TypedFastNoise) -> Self {
+        value.0
+    }
+}
+
 /// Holds the minimum and maximum values from noise generation.
 ///
 /// Used to represent the range of values produced by noise functions.
