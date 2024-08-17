@@ -1,26 +1,26 @@
 use crate::FastNoise;
 
-use super::{DistanceFunction, Node};
+use super::{DistanceFunction, Generator, Node};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Constant {
     pub value: f32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct White;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Checkerboard {
     pub size: f32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct SineWave {
     pub scale: f32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct PositionOutput {
     pub x_multiplier: f32,
     pub y_multiplier: f32,
@@ -32,7 +32,7 @@ pub struct PositionOutput {
     pub w_offset: f32,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct DistanceToPoint {
     pub distance_function: DistanceFunction,
     pub x_point: f32,
@@ -97,4 +97,48 @@ impl Node for DistanceToPoint {
         node.set("PointW", self.w_point).unwrap();
         node
     }
+}
+
+pub fn constant(value: f32) -> Generator<Constant> {
+    Generator(Constant { value })
+}
+
+pub fn white() -> Generator<White> {
+    Generator(White)
+}
+
+pub fn checkerboard(size: f32) -> Generator<Checkerboard> {
+    Generator(Checkerboard { size })
+}
+pub fn sinewave(scale: f32) -> Generator<SineWave> {
+    Generator(SineWave { scale })
+}
+
+pub fn position_output(multiplier: [f32; 4], offset: [f32; 4]) -> Generator<PositionOutput> {
+    let [x_multiplier, y_multiplier, z_multiplier, w_multiplier] = multiplier;
+    let [x_offset, y_offset, z_offset, w_offset] = offset;
+    Generator(PositionOutput {
+        x_multiplier,
+        y_multiplier,
+        z_multiplier,
+        w_multiplier,
+        x_offset,
+        y_offset,
+        z_offset,
+        w_offset,
+    })
+}
+
+pub fn distance_to_point(
+    distance_function: DistanceFunction,
+    point: [f32; 4],
+) -> Generator<DistanceToPoint> {
+    let [x_point, y_point, z_point, w_point] = point;
+    Generator(DistanceToPoint {
+        distance_function,
+        x_point,
+        y_point,
+        z_point,
+        w_point,
+    })
 }

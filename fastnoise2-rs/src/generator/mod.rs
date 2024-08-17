@@ -2,10 +2,41 @@ use crate::{metadata::MemberValue, FastNoise, MemberType};
 
 pub mod basic;
 pub mod blend;
+pub mod perlin;
+pub mod simplex;
 
-pub struct NodeWrapper<T: Node>(pub T);
+pub trait Node: Copy {
+    fn build_node(&self) -> FastNoise;
+}
 
-#[derive(Clone, Copy)]
+impl<N: Node> MemberValue for N {
+    const TYPE: MemberType = MemberType::NodeLookup;
+
+    fn apply(
+        self,
+        node: &mut FastNoise,
+        member: &crate::metadata::Member,
+    ) -> Result<(), crate::FastNoiseError> {
+        node.set(&member.name, &self.build_node())
+    }
+}
+
+pub trait Hybrid: MemberValue {}
+
+impl Hybrid for f32 {}
+
+impl<N: Node> Hybrid for N {}
+
+#[derive(Clone, Copy, Debug)]
+pub struct Generator<T: Hybrid>(pub T);
+
+impl<T: Node> Node for Generator<T> {
+    fn build_node(&self) -> FastNoise {
+        self.0.build_node()
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
 pub enum DistanceFunction {
     Euclidean,
     EuclideanSquared,
@@ -23,27 +54,5 @@ impl std::fmt::Display for DistanceFunction {
             DistanceFunction::Hybrid => f.write_str("Hybrid"),
             DistanceFunction::MaxAxis => f.write_str("MaxAxis"),
         }
-    }
-}
-
-pub trait Node: Copy {
-    fn build_node(&self) -> FastNoise;
-}
-
-pub trait Hybrid: MemberValue {}
-
-impl Hybrid for f32 {}
-
-impl<N: Node> Hybrid for N {}
-
-impl<N: Node> MemberValue for N {
-    const TYPE: MemberType = MemberType::NodeLookup;
-
-    fn apply(
-        self,
-        node: &mut FastNoise,
-        member: &crate::metadata::Member,
-    ) -> Result<(), crate::FastNoiseError> {
-        node.set(&member.name, &self.build_node())
     }
 }

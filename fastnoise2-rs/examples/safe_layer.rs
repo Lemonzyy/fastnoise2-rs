@@ -1,7 +1,12 @@
 use std::time::Instant;
 
 use fastnoise2::{
-    generator::{basic::*, blend::*, Node},
+    generator::{
+        basic::*,
+        blend::*,
+        simplex::{simplex, Simplex},
+        Generator, Node,
+    },
     FastNoise, FastNoiseError,
 };
 use image::{GrayImage, Luma};
@@ -10,24 +15,46 @@ const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
 fn create_node() -> Result<FastNoise, FastNoiseError> {
-    let n = Add {
+    // All these writings produce the same result.
+    // Please note that using "0.5" (a float) instead of "Constant { value : 0.5 }" (a node) is faster
+    // because the right-hand member of the "Add" node is a hybrid member (either a node or a float)
+    // that FastNoise2 handles differently. It is also easier to write "0.5".
+    let _n = Add {
         lhs: Fade {
             a: SineWave { scale: 0.1 },
             b: SineWave { scale: -0.2 },
-            fade: 0.5,
+            fade: Simplex,
         },
-        rhs: Constant { value: 0.5 },
-    }
-    .build_node();
+        rhs: Constant { value: 0.5 }, // this uses a Constant node as entry to a hybrid member
+    };
 
-    // let n = (NodeWrapper(Fade {
-    //     a: SineWave { scale: 0.1 },
-    //     b: SineWave { scale: -0.2 },
-    //     fade: 0.5,
-    // }) + Constant { value: 0.5 })
-    // .get_node();
+    let _n = Add {
+        lhs: Fade {
+            a: SineWave { scale: 0.1 },
+            b: SineWave { scale: -0.2 },
+            fade: Simplex,
+        },
+        rhs: 0.5, // and this uses a float directly
+    };
 
-    Ok(n)
+    // You can, and I would recommend this, use functions to instance different types of nodes wrapped in a Generator, necessary for operators such as + - * /
+    let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + constant(0.5); // this uses a Constant node as entry to a hybrid member
+    let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5; // and this uses a float directly
+
+    // You can also mix the two writings. Note the use of the Generator wrapper type to enable use of the operator
+    let _n = Generator(Fade {
+        a: SineWave { scale: 0.1 },
+        b: sinewave(-0.2),
+        fade: Simplex,
+    }) + 0.5;
+
+    // Qualifying the "fade" method can also lead to better syntax, although this is subjective.
+    let _n = Generator::fade(sinewave(0.1), sinewave(-0.2), simplex()) + 0.5;
+
+    // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since the Generator wrapper is not needed here.
+    let n = Generator::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
+
+    Ok(n.build_node())
 }
 
 fn main() {
