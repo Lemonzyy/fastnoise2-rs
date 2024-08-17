@@ -1,10 +1,10 @@
 use crate::{typed::TypedFastNoise, FastNoise};
 
-use super::{Generator, Hybrid, Node};
+use super::{domain_warp::DomainWarpNode, Generator, Hybrid, Node};
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainWarpFractalProgressive<
-    DomainWarpSource: Node,
+    DomainWarpSource: DomainWarpNode,
     Gain: Hybrid,
     WeightedStrength: Hybrid,
 > {
@@ -17,7 +17,7 @@ pub struct DomainWarpFractalProgressive<
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainWarpFractalIndependant<
-    DomainWarpSource: Node,
+    DomainWarpSource: DomainWarpNode,
     Gain: Hybrid,
     WeightedStrength: Hybrid,
 > {
@@ -28,7 +28,7 @@ pub struct DomainWarpFractalIndependant<
     pub lacunarity: f32,
 }
 
-impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
+impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> Node
     for DomainWarpFractalProgressive<DomainWarpSource, Gain, WeightedStrength>
 {
     fn build_node(&self) -> TypedFastNoise {
@@ -44,7 +44,7 @@ impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
     }
 }
 
-impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
+impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> Node
     for DomainWarpFractalIndependant<DomainWarpSource, Gain, WeightedStrength>
 {
     fn build_node(&self) -> TypedFastNoise {
@@ -60,7 +60,7 @@ impl<DomainWarpSource: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
     }
 }
 
-impl<DomainWarpSource: Node> Generator<DomainWarpSource> {
+impl<DomainWarpSource: DomainWarpNode> Generator<DomainWarpSource> {
     pub fn warp_progressive<Gain: Hybrid, WeightedStrength: Hybrid>(
         self,
         gain: Gain,

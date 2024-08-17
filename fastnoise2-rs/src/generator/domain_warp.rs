@@ -2,6 +2,8 @@ use crate::{typed::TypedFastNoise, FastNoise};
 
 use super::{Generator, Hybrid, Node};
 
+pub trait DomainWarpNode: Node {}
+
 #[derive(Clone, Copy, Debug)]
 pub struct DomainWarpGradient<Source: Node, WarpAmplitude: Hybrid> {
     pub source: Source,
@@ -17,6 +19,11 @@ impl<Source: Node, WarpAmplitude: Hybrid> Node for DomainWarpGradient<Source, Wa
         node.set("WarpFrequency", self.warp_frequency).unwrap();
         TypedFastNoise(node)
     }
+}
+
+impl<Source: Node, WarpAmplitude: Hybrid> DomainWarpNode
+    for DomainWarpGradient<Source, WarpAmplitude>
+{
 }
 
 impl<Source: Node> Generator<Source> {
