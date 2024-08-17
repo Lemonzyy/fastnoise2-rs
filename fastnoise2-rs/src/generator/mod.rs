@@ -1,3 +1,13 @@
+//! FastNoise2 generators as types. Ensures safety at compile time.
+//!
+//! # Examples
+//!
+//! ```rust
+//! use fastnoise2::generator::{basic::sinewave, perlin::perlin, Node};
+//!
+//! let node = perlin().fbm(0.5, 0.0, 3, 2.0).min(sinewave(0.3) + 0.2).build_node();
+//! let out = node.gen_single_2d(0.0, 0.0, 123);
+//! ```
 use std::fmt::Display;
 
 use crate::{metadata::MemberValue, typed::TypedFastNoise, FastNoise, MemberType};
