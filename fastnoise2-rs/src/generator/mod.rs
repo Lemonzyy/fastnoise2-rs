@@ -8,9 +8,13 @@
 //! let node = perlin().fbm(0.5, 0.0, 3, 2.0).min(sinewave(0.3) + 0.2).build_node();
 //! let out = node.gen_single_2d(0.0, 0.0, 123);
 //! ```
+//!
+//! ## See Also
+//! - [safe example](https://github.com/Lemonzyy/fastnoise2-rs/blob/main/fastnoise2-rs/examples/safe.rs)
+//! - [safe_simple_terrain example](https://github.com/Lemonzyy/fastnoise2-rs/blob/main/fastnoise2-rs/examples/safe_simple_terrain.rs)
 use std::fmt::Display;
 
-use crate::{metadata::MemberValue, typed::TypedFastNoise, FastNoise, MemberType};
+use crate::{metadata::MemberValue, safe::SafeNode, MemberType, Node};
 
 pub mod basic;
 pub mod blend;
@@ -24,7 +28,7 @@ pub mod simplex;
 pub mod value;
 
 pub mod prelude {
-    //! Functions and [`Node`] re-exports
+    //! Functions and [`TypedNode`] re-exports
     pub use super::{
         basic::{checkerboard, constant, distance_to_point, position_output, sinewave, white},
         cellular::{
@@ -33,20 +37,20 @@ pub mod prelude {
         perlin::perlin,
         simplex::{opensimplex2, opensimplex2s, simplex},
         value::value,
-        Node,
+        TypedNode,
     };
 }
 
-pub trait Node: Copy {
-    fn build_node(&self) -> TypedFastNoise;
+pub trait TypedNode: Copy {
+    fn build_node(&self) -> SafeNode;
 }
 
-impl<N: Node> MemberValue for N {
+impl<N: TypedNode> MemberValue for N {
     const TYPE: MemberType = MemberType::NodeLookup;
 
     fn apply(
         self,
-        node: &mut FastNoise,
+        node: &mut Node,
         member: &crate::metadata::Member,
     ) -> Result<(), crate::FastNoiseError> {
         node.set(&member.name, &self.build_node().0)
@@ -57,13 +61,13 @@ pub trait Hybrid: MemberValue {}
 
 impl Hybrid for f32 {}
 
-impl<N: Node> Hybrid for N {}
+impl<N: TypedNode> Hybrid for N {}
 
 #[derive(Clone, Copy, Debug)]
 pub struct Generator<T: Hybrid>(pub T);
 
-impl<T: Node> Node for Generator<T> {
-    fn build_node(&self) -> TypedFastNoise {
+impl<T: TypedNode> TypedNode for Generator<T> {
+    fn build_node(&self) -> SafeNode {
         self.0.build_node()
     }
 }

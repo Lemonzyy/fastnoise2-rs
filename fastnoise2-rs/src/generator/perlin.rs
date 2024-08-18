@@ -1,13 +1,13 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Node};
+use super::{Generator, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Perlin;
 
-impl Node for Perlin {
-    fn build_node(&self) -> TypedFastNoise {
-        TypedFastNoise(FastNoise::from_name("Perlin").unwrap())
+impl TypedNode for Perlin {
+    fn build_node(&self) -> SafeNode {
+        SafeNode(Node::from_name("Perlin").unwrap())
     }
 }
 

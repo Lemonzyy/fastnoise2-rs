@@ -1,32 +1,34 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Hybrid, Node};
+use super::{Generator, Hybrid, TypedNode};
 
-pub trait DomainWarpNode: Node {}
+pub trait DomainWarpNode: TypedNode {}
 
 #[derive(Clone, Copy, Debug)]
-pub struct DomainWarpGradient<Source: Node, WarpAmplitude: Hybrid> {
+pub struct DomainWarpGradient<Source: TypedNode, WarpAmplitude: Hybrid> {
     pub source: Source,
     pub warp_amplitude: WarpAmplitude,
     pub warp_frequency: f32,
 }
 
-impl<Source: Node, WarpAmplitude: Hybrid> Node for DomainWarpGradient<Source, WarpAmplitude> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DomainWarpGradient").unwrap();
+impl<Source: TypedNode, WarpAmplitude: Hybrid> TypedNode
+    for DomainWarpGradient<Source, WarpAmplitude>
+{
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DomainWarpGradient").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("WarpAmplitude", self.warp_amplitude).unwrap();
         node.set("WarpFrequency", self.warp_frequency).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node, WarpAmplitude: Hybrid> DomainWarpNode
+impl<Source: TypedNode, WarpAmplitude: Hybrid> DomainWarpNode
     for DomainWarpGradient<Source, WarpAmplitude>
 {
 }
 
-impl<Source: Node> Generator<Source> {
+impl<Source: TypedNode> Generator<Source> {
     pub fn warp_gradient<WarpAmplitude: Hybrid>(
         self,
         warp_amplitude: WarpAmplitude,

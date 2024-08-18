@@ -15,11 +15,11 @@
 //! Here is an example of a encoded node tree, exported by FastNoise2's NoiseTool.
 //!
 //! ```rust
-//! use fastnoise2::TypedFastNoise;
+//! use fastnoise2::SafeNode;
 //!
 //! let (x_size, y_size) = (1000, 1000);
 //! let encoded_node_tree = "EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/";
-//! let node = TypedFastNoise::from_encoded_node_tree(encoded_node_tree).unwrap();
+//! let node = SafeNode::from_encoded_node_tree(encoded_node_tree).unwrap();
 //!
 //! // Allocate a buffer of enough size to hold all output data.
 //! let mut noise_out = vec![0.0; (x_size * y_size) as usize];
@@ -37,7 +37,7 @@
 //! // use `noise_out`!
 //! ```
 //!
-//! You can also manually code a node tree using FastNoise2's metadata system, either with [`FastNoise`], or by combining generators, see [`TypedFastNoise`].
+//! You can also manually code a node tree using FastNoise2's metadata system, either with [`Node`], or by combining generators, see [`SafeNode`].
 //!
 //! Take a look at `examples` to find out more.
 //!
@@ -65,12 +65,12 @@
 mod error;
 pub mod generator;
 mod metadata;
-mod typed;
+mod safe;
 
 pub use error::FastNoiseError;
 pub use metadata::MemberType;
 use metadata::{format_lookup, MemberValue, METADATA_NAME_LOOKUP, NODE_METADATA};
-pub use typed::TypedFastNoise;
+pub use safe::SafeNode;
 
 use fastnoise2_sys::*;
 use std::ffi::CString;
@@ -83,20 +83,20 @@ use std::ffi::CString;
 /// # Safety
 ///
 /// Generating noise with this structure is not safe for various reasons.
-/// One of them is the fact that nodes such as `FractalFBm` need a `Source` member to generate noise.
+/// One of them is the fact that nodes such as [`FractalFBm`][crate::generator::fractal::FractalFBm] need a `Source` member to generate noise.
 /// With the metadata-based API, it's not possible to enforce this, which will result in a crash if not specified.
 ///
 /// Refer to the specific method documentation for safety details.
 ///
-/// You can use [`TypedFastNoise`] to get rid of `unsafe` blocks in exchange for easy node updating.
+/// You can use [`SafeNode`] to get rid of `unsafe` blocks in exchange for easy node updating.
 #[derive(Debug)]
-pub struct FastNoise {
+pub struct Node {
     handle: *mut core::ffi::c_void,
     metadata_id: i32,
 }
 
-impl FastNoise {
-    /// Creates a [`FastNoise`] instance using a metadata name.
+impl Node {
+    /// Creates a [`Node`] instance using a metadata name.
     ///
     /// # Errors
     /// Returns an error if the metadata name is not found in the FastNoise2 metadata system.
@@ -115,7 +115,7 @@ impl FastNoise {
         })
     }
 
-    /// Creates a `FastNoise` instance from an encoded node tree.
+    /// Creates a `Node` instance from an encoded node tree.
     ///
     /// # Errors
     /// Returns an error if the encoded node tree is invalid or if creation fails.
@@ -165,7 +165,7 @@ impl FastNoise {
 
     /// # Safety
     /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size` values.
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_uniform_grid_2d_unchecked(
         &self,
         noise_out: &mut [f32],
@@ -195,7 +195,7 @@ impl FastNoise {
 
     /// # Safety
     /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size * z_size` values.
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_uniform_grid_3d_unchecked(
         &self,
         noise_out: &mut [f32],
@@ -229,7 +229,7 @@ impl FastNoise {
 
     /// # Safety
     /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size * z_size * w_size` values.
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_uniform_grid_4d_unchecked(
         &self,
         noise_out: &mut [f32],
@@ -267,7 +267,7 @@ impl FastNoise {
 
     /// # Safety
     /// - The caller must ensure that `noise_out`, `x_pos_array`, and `y_pos_array` all have the same length.
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_position_array_2d_unchecked(
         &self,
         noise_out: &mut [f32],
@@ -296,7 +296,7 @@ impl FastNoise {
 
     /// # Safety
     /// - The caller must ensure that `noise_out`, `x_pos_array`, `y_pos_array`, and `z_pos_array` all have the same length.
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_position_array_3d_unchecked(
         &self,
         noise_out: &mut [f32],
@@ -329,7 +329,7 @@ impl FastNoise {
 
     /// # Safety
     /// - The caller must ensure that `noise_out`, `x_pos_array`, `y_pos_array`, `z_pos_array`, and `w_pos_array` all have the same length.
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_position_array_4d_unchecked(
         &self,
         noise_out: &mut [f32],
@@ -366,7 +366,7 @@ impl FastNoise {
 
     /// # Safety
     /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size` values.
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_tileable_2d_unchecked(
         &self,
         noise_out: &mut [f32],
@@ -391,32 +391,32 @@ impl FastNoise {
     }
 
     /// # Safety
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_single_2d_unchecked(&self, x: f32, y: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle2D(self.handle, x, y, seed) }
     }
 
     /// # Safety
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_single_3d_unchecked(&self, x: f32, y: f32, z: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle3D(self.handle, x, y, z, seed) }
     }
 
     /// # Safety
-    /// - The internal state of the noise generator must be correctly configured before calling this method.
+    /// - The internal state of the node must be correctly configured before calling this method.
     pub unsafe fn gen_single_4d_unchecked(&self, x: f32, y: f32, z: f32, w: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle4D(self.handle, x, y, z, w, seed) }
     }
 }
 
-impl Drop for FastNoise {
+impl Drop for Node {
     fn drop(&mut self) {
         unsafe { fnDeleteNodeRef(self.handle) };
     }
 }
 
-impl From<TypedFastNoise> for FastNoise {
-    fn from(value: TypedFastNoise) -> Self {
+impl From<SafeNode> for Node {
+    fn from(value: SafeNode) -> Self {
         value.0
     }
 }

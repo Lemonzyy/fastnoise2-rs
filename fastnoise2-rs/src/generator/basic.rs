@@ -1,6 +1,6 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{DistanceFunction, Generator, Node};
+use super::{DistanceFunction, Generator, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Constant {
@@ -41,39 +41,39 @@ pub struct DistanceToPoint {
     pub w_point: f32,
 }
 
-impl Node for Constant {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("Constant").unwrap();
+impl TypedNode for Constant {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("Constant").unwrap();
         node.set("Value", self.value).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl Node for White {
-    fn build_node(&self) -> TypedFastNoise {
-        TypedFastNoise(FastNoise::from_name("White").unwrap())
+impl TypedNode for White {
+    fn build_node(&self) -> SafeNode {
+        SafeNode(Node::from_name("White").unwrap())
     }
 }
 
-impl Node for Checkerboard {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("Checkerboard").unwrap();
+impl TypedNode for Checkerboard {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("Checkerboard").unwrap();
         node.set("Size", self.size).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl Node for SineWave {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("SineWave").unwrap();
+impl TypedNode for SineWave {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("SineWave").unwrap();
         node.set("Scale", self.scale).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl Node for PositionOutput {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("PositionOutput").unwrap();
+impl TypedNode for PositionOutput {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("PositionOutput").unwrap();
         node.set("MultiplierX", self.x_multiplier).unwrap();
         node.set("MultiplierY", self.y_multiplier).unwrap();
         node.set("MultiplierZ", self.z_multiplier).unwrap();
@@ -82,20 +82,20 @@ impl Node for PositionOutput {
         node.set("OffsetY", self.y_offset).unwrap();
         node.set("OffsetZ", self.z_offset).unwrap();
         node.set("OffsetW", self.w_offset).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl Node for DistanceToPoint {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DistanceToPoint").unwrap();
+impl TypedNode for DistanceToPoint {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DistanceToPoint").unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("PointX", self.x_point).unwrap();
         node.set("PointY", self.y_point).unwrap();
         node.set("PointZ", self.z_point).unwrap();
         node.set("PointW", self.w_point).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 

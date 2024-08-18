@@ -1,6 +1,6 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{DistanceFunction, Generator, Hybrid, Node};
+use super::{DistanceFunction, Generator, Hybrid, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
 pub struct CellularValue<JitterModifier: Hybrid> {
@@ -19,27 +19,27 @@ pub struct CellularDistance<JitterModifier: Hybrid> {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct CellularLookup<Lookup: Node, JitterModifier: Hybrid> {
+pub struct CellularLookup<Lookup: TypedNode, JitterModifier: Hybrid> {
     pub lookup: Lookup,
     pub jitter_modifier: JitterModifier,
     pub distance_function: DistanceFunction,
     pub lookup_frequency: f32,
 }
 
-impl<JitterModifier: Hybrid> Node for CellularValue<JitterModifier> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("CellularValue").unwrap();
+impl<JitterModifier: Hybrid> TypedNode for CellularValue<JitterModifier> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("CellularValue").unwrap();
         node.set("JitterModifier", self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("ValueIndex", self.value_index).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<JitterModifier: Hybrid> Node for CellularDistance<JitterModifier> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("CellularValue").unwrap();
+impl<JitterModifier: Hybrid> TypedNode for CellularDistance<JitterModifier> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("CellularValue").unwrap();
         node.set("JitterModifier", self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
@@ -47,19 +47,21 @@ impl<JitterModifier: Hybrid> Node for CellularDistance<JitterModifier> {
         node.set("DistanceIndex1", self.distance_index_1).unwrap();
         node.set("ReturnType", &*self.return_type.to_string())
             .unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Lookup: Node, JitterModifier: Hybrid> Node for CellularLookup<Lookup, JitterModifier> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("CellularLookup").unwrap();
+impl<Lookup: TypedNode, JitterModifier: Hybrid> TypedNode
+    for CellularLookup<Lookup, JitterModifier>
+{
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("CellularLookup").unwrap();
         node.set("Lookup", self.lookup).unwrap();
         node.set("JitterModifier", self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("LookupFrequency", self.lookup_frequency).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
@@ -91,7 +93,7 @@ pub fn distance<JitterModifier: Hybrid>(
     })
 }
 
-pub fn lookup<Lookup: Node, JitterModifier: Hybrid>(
+pub fn lookup<Lookup: TypedNode, JitterModifier: Hybrid>(
     lookup: Lookup,
     jitter_modifier: JitterModifier,
     distance_function: DistanceFunction,

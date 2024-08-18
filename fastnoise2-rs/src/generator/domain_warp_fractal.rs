@@ -1,6 +1,6 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{domain_warp::DomainWarpNode, Generator, Hybrid, Node};
+use super::{domain_warp::DomainWarpNode, Generator, Hybrid, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainWarpFractalProgressive<
@@ -28,11 +28,11 @@ pub struct DomainWarpFractalIndependant<
     pub lacunarity: f32,
 }
 
-impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> Node
+impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
     for DomainWarpFractalProgressive<DomainWarpSource, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DomainWarpFractalProgressive").unwrap();
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DomainWarpFractalProgressive").unwrap();
         node.set("DomainWarpSource", self.domain_warp_source)
             .unwrap();
         node.set("Gain", self.gain).unwrap();
@@ -40,15 +40,15 @@ impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> N
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> Node
+impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
     for DomainWarpFractalIndependant<DomainWarpSource, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DomainWarpFractalIndependant").unwrap();
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DomainWarpFractalIndependant").unwrap();
         node.set("DomainWarpSource", self.domain_warp_source)
             .unwrap();
         node.set("Gain", self.gain).unwrap();
@@ -56,7 +56,7 @@ impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> N
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 

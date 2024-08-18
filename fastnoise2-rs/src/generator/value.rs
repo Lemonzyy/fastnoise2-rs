@@ -1,13 +1,13 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Node};
+use super::{Generator, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Value;
 
-impl Node for Value {
-    fn build_node(&self) -> TypedFastNoise {
-        TypedFastNoise(FastNoise::from_name("Value").unwrap())
+impl TypedNode for Value {
+    fn build_node(&self) -> SafeNode {
+        SafeNode(Node::from_name("Value").unwrap())
     }
 }
 

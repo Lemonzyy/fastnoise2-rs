@@ -15,11 +15,11 @@ This crate acts as a wrapper around [fastnoise2-sys](https://crates.io/crates/fa
 Here is an example of a encoded node tree, exported by FastNoise2's NoiseTool.
 
 ```rust
-use fastnoise2::TypedFastNoise;
+use fastnoise2::SafeNode;
 
 let (x_size, y_size) = (1000, 1000);
 let encoded_node_tree = "EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/";
-let node = TypedFastNoise::from_encoded_node_tree(encoded_node_tree).unwrap();
+let node = SafeNode::from_encoded_node_tree(encoded_node_tree).unwrap();
 
 // Allocate a buffer of enough size to hold all output data.
 let mut noise_out = vec![0.0; (x_size * y_size) as usize];
@@ -37,7 +37,7 @@ let min_max = node.gen_uniform_grid_2d(
 // use `noise_out`!
 ```
 
-You can also manually code a node tree using FastNoise2's metadata system, either with [`FastNoise`](https://docs.rs/fastnoise2/latest/fastnoise2/struct.FastNoise.html), or by combining generators, see [`TypedFastNoise`](https://docs.rs/fastnoise2/latest/fastnoise2/struct.TypedFastNoise.html).
+You can also manually code a node tree using FastNoise2's metadata system, either with [`Node`](https://docs.rs/fastnoise2/latest/fastnoise2/struct.Node.html), or by combining generators, see [`SafeNode`](https://docs.rs/fastnoise2/latest/fastnoise2/struct.SafeNode.html).
 
 Take a look at `examples` to find out more.
 

@@ -1,16 +1,18 @@
-use crate::{FastNoise, FastNoiseError, OutputMinMax};
+use crate::{FastNoiseError, Node, OutputMinMax};
 
-/// Unlike [`FastNoise`], this structure is safe to use because it is built from typed nodes
-/// that implement the [`Node`][`crate::generator::Node`] trait, or built by an encoded node tree produced by [NoiseTool](https://github.com/Auburn/FastNoise2?tab=readme-ov-file#noise-tool).
-pub struct TypedFastNoise(pub(crate) FastNoise);
+/// Unlike [`Node`], this structure is safe to use because it is built from typed nodes
+/// that implement the [`TypedNode`][`crate::generator::TypedNode`] trait, or built by an encoded node tree produced by [NoiseTool](https://github.com/Auburn/FastNoise2?tab=readme-ov-file#noise-tool).
+///
+/// You can see how to use it in the [`generator`][`crate::generator`] module.
+pub struct SafeNode(pub(crate) Node);
 
-impl TypedFastNoise {
-    /// Creates a [`TypedFastNoise`] instance from an encoded node tree.
+impl SafeNode {
+    /// Creates a [`SafeNode`] instance from an encoded node tree.
     ///
     /// # Errors
     /// Returns an error if the encoded node tree is invalid or if creation fails.
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
-        FastNoise::from_encoded_node_tree(encoded_node_tree).map(Self)
+        Node::from_encoded_node_tree(encoded_node_tree).map(Self)
     }
 
     pub fn get_simd_level(&self) -> u32 {

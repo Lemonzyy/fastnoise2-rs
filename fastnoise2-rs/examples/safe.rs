@@ -9,14 +9,14 @@ use fastnoise2::{
         simplex::Simplex,
         Generator,
     },
-    TypedFastNoise,
+    SafeNode,
 };
 use image::{GrayImage, Luma};
 
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
-fn create_node() -> TypedFastNoise {
+fn create_node() -> SafeNode {
     // All these writings produce the same result.
     // Please note that using "0.5" (a float) instead of "Constant { value : 0.5 }" (a node) is faster
     // because the right-hand member of the "Add" node is a hybrid member (either a node or a float)
@@ -54,20 +54,23 @@ fn create_node() -> TypedFastNoise {
     let _n = Generator::fade(sinewave(0.1), sinewave(-0.2), simplex()) + 0.5;
 
     // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since the Generator wrapper is not needed here.
-    let n = Generator::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
+    let _n = Generator::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
+
+    // In the end, this is the most idiomatic writing, and it's easier to import functions by using "use fastnoise2::generator::prelude::*;"
+    let n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5;
 
     n.build_node()
 }
 
 fn main() {
-    let noise = create_node();
-    println!("SIMD level: {}", noise.get_simd_level());
+    let node = create_node();
+    println!("SIMD level: {}", node.get_simd_level());
 
-    let mut noise_out = vec![0.0; (X_SIZE * Y_SIZE) as usize];
+    let mut noise = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
-    let min_max = noise.gen_uniform_grid_2d(
-        &mut noise_out,
+    let min_max = node.gen_uniform_grid_2d(
+        &mut noise,
         -X_SIZE / 2,
         -Y_SIZE / 2,
         X_SIZE,
@@ -79,24 +82,24 @@ fn main() {
 
     println!(
         "Took {elapsed:?} to generate {} values ({}/s): {min_max:?}",
-        noise_out.len(),
-        noise_out.len() as f32 / elapsed.as_secs_f32()
+        noise.len(),
+        noise.len() as f32 / elapsed.as_secs_f32()
     );
 
-    // Do whatever you want with `noise_out`! In this case, generate an image with it.
+    // Do whatever you want with `noise`! In this case, generate an image with it.
 
     let mut img = GrayImage::new(X_SIZE as u32, Y_SIZE as u32);
 
     for x in 0..X_SIZE {
         for y in 0..Y_SIZE {
             let index = ((Y_SIZE - 1 - y) * X_SIZE + x) as usize;
-            let value = noise_out[index];
+            let value = noise[index];
             let pixel_value = (255.0 * ((value + 1.0) / 2.0)) as u8;
             img.put_pixel(x as u32, y as u32, Luma([pixel_value]));
         }
     }
 
-    save(img, "typed.png");
+    save(img, "safe.png");
 }
 
 fn save(img: GrayImage, filename: &str) {

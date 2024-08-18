@@ -2,7 +2,7 @@ use thiserror::Error;
 
 use crate::metadata::MemberType;
 
-/// Errors that can occur when interacting with [`FastNoise`][`crate::FastNoise`].
+/// Errors that can occur when interacting with [`Node`][`crate::Node`].
 ///
 /// This enum covers various failure scenarios including metadata issues, value setting problems, and node creation errors.
 #[derive(Error, Debug)]
@@ -25,7 +25,7 @@ pub enum FastNoiseError {
     #[error("failed to create CString from encoded node tree")]
     CStringCreationFailed(#[from] std::ffi::NulError),
 
-    /// Indicates a failure to create a noise node from the encoded node tree.
+    /// Indicates a failure to create a node from the encoded node tree.
     #[error("failed to create noise node from the encoded node tree")]
     NodeCreationFailed,
 

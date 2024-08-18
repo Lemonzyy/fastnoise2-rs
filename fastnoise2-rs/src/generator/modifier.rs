@@ -1,16 +1,16 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{Dimension, Generator, Hybrid, Node};
+use super::{Dimension, Generator, Hybrid, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
-pub struct DomainScale<Source: Node> {
+pub struct DomainScale<Source: TypedNode> {
     pub source: Source,
     pub scale: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct DomainOffset<
-    Source: Node,
+    Source: TypedNode,
     XOffset: Hybrid,
     YOffset: Hybrid,
     ZOffset: Hybrid,
@@ -24,7 +24,7 @@ pub struct DomainOffset<
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct DomainRotate<Source: Node> {
+pub struct DomainRotate<Source: TypedNode> {
     pub source: Source,
     pub yaw: f32,
     pub pitch: f32,
@@ -32,13 +32,13 @@ pub struct DomainRotate<Source: Node> {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct SeedOffset<Source: Node> {
+pub struct SeedOffset<Source: TypedNode> {
     pub source: Source,
     pub seed_offset: i32,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct Remap<Source: Node> {
+pub struct Remap<Source: TypedNode> {
     pub source: Source,
     pub from_min: f32,
     pub from_max: f32,
@@ -47,21 +47,21 @@ pub struct Remap<Source: Node> {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct ConvertRgba8<Source: Node> {
+pub struct ConvertRgba8<Source: TypedNode> {
     pub source: Source,
     pub min: f32,
     pub max: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct Terrace<Source: Node> {
+pub struct Terrace<Source: TypedNode> {
     pub source: Source,
     pub multiplier: f32,
     pub smoothness: f32,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct DomainAxisScale<Source: Node> {
+pub struct DomainAxisScale<Source: TypedNode> {
     pub source: Source,
     pub x_scale: f32,
     pub y_scale: f32,
@@ -70,140 +70,140 @@ pub struct DomainAxisScale<Source: Node> {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct AddDimension<Source: Node, NewDimensionPosition> {
+pub struct AddDimension<Source: TypedNode, NewDimensionPosition> {
     pub source: Source,
     pub new_dimension_position: NewDimensionPosition,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct RemoveDimension<Source: Node> {
+pub struct RemoveDimension<Source: TypedNode> {
     pub source: Source,
     pub remove_dimension: Dimension,
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct GeneratorCache<Source: Node> {
+pub struct GeneratorCache<Source: TypedNode> {
     pub source: Source,
 }
 
-impl<Source: Node> Node for DomainScale<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DomainScale").unwrap();
+impl<Source: TypedNode> TypedNode for DomainScale<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DomainScale").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Scale", self.scale).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node, XOffset: Hybrid, YOffset: Hybrid, ZOffset: Hybrid, WOffset: Hybrid> Node
-    for DomainOffset<Source, XOffset, YOffset, ZOffset, WOffset>
+impl<Source: TypedNode, XOffset: Hybrid, YOffset: Hybrid, ZOffset: Hybrid, WOffset: Hybrid>
+    TypedNode for DomainOffset<Source, XOffset, YOffset, ZOffset, WOffset>
 {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DomainOffset").unwrap();
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DomainOffset").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("OffsetX", self.x_offset).unwrap();
         node.set("OffsetY", self.y_offset).unwrap();
         node.set("OffsetZ", self.z_offset).unwrap();
         node.set("OffsetW", self.w_offset).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for DomainRotate<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DomainRotate").unwrap();
+impl<Source: TypedNode> TypedNode for DomainRotate<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DomainRotate").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Yaw", self.yaw).unwrap();
         node.set("Pitch", self.pitch).unwrap();
         node.set("Roll", self.roll).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for SeedOffset<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("SeedOffset").unwrap();
+impl<Source: TypedNode> TypedNode for SeedOffset<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("SeedOffset").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("SeedOffset", self.seed_offset).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for Remap<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("Remap").unwrap();
+impl<Source: TypedNode> TypedNode for Remap<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("Remap").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("FromMin", self.from_min).unwrap();
         node.set("FromMax", self.from_max).unwrap();
         node.set("ToMin", self.to_min).unwrap();
         node.set("ToMax", self.to_max).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for ConvertRgba8<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("ConvertRgba8").unwrap();
+impl<Source: TypedNode> TypedNode for ConvertRgba8<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("ConvertRgba8").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Min", self.min).unwrap();
         node.set("Max", self.max).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for Terrace<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("Terrace").unwrap();
+impl<Source: TypedNode> TypedNode for Terrace<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("Terrace").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Multiplier", self.multiplier).unwrap();
         node.set("Smoothness", self.smoothness).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for DomainAxisScale<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("DomainAxisScale").unwrap();
+impl<Source: TypedNode> TypedNode for DomainAxisScale<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("DomainAxisScale").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("ScaleX", self.x_scale).unwrap();
         node.set("ScaleY", self.y_scale).unwrap();
         node.set("ScaleZ", self.z_scale).unwrap();
         node.set("ScaleW", self.w_scale).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node, NewDimensionPosition: Hybrid> Node
+impl<Source: TypedNode, NewDimensionPosition: Hybrid> TypedNode
     for AddDimension<Source, NewDimensionPosition>
 {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("AddDimension").unwrap();
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("AddDimension").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("NewDimensionPosition", self.new_dimension_position)
             .unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for RemoveDimension<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("RemoveDimension").unwrap();
+impl<Source: TypedNode> TypedNode for RemoveDimension<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("RemoveDimension").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("RemoveDimension", &*self.remove_dimension.to_string())
             .unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Node for GeneratorCache<Source> {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("GeneratorCache").unwrap();
+impl<Source: TypedNode> TypedNode for GeneratorCache<Source> {
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("GeneratorCache").unwrap();
         node.set("Source", self.source).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Generator<Source> {
+impl<Source: TypedNode> Generator<Source> {
     pub fn scale(self, scale: f32) -> Generator<DomainScale<Source>> {
         Generator(DomainScale {
             source: self.0,

@@ -1,6 +1,6 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Node};
+use super::{Generator, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
 pub struct Simplex;
@@ -11,21 +11,21 @@ pub struct OpenSimplex2;
 #[derive(Clone, Copy, Debug)]
 pub struct OpenSimplex2S;
 
-impl Node for Simplex {
-    fn build_node(&self) -> TypedFastNoise {
-        TypedFastNoise(FastNoise::from_name("Simplex").unwrap())
+impl TypedNode for Simplex {
+    fn build_node(&self) -> SafeNode {
+        SafeNode(Node::from_name("Simplex").unwrap())
     }
 }
 
-impl Node for OpenSimplex2 {
-    fn build_node(&self) -> TypedFastNoise {
-        TypedFastNoise(FastNoise::from_name("OpenSimplex2").unwrap())
+impl TypedNode for OpenSimplex2 {
+    fn build_node(&self) -> SafeNode {
+        SafeNode(Node::from_name("OpenSimplex2").unwrap())
     }
 }
 
-impl Node for OpenSimplex2S {
-    fn build_node(&self) -> TypedFastNoise {
-        TypedFastNoise(FastNoise::from_name("OpenSimplex2S").unwrap())
+impl TypedNode for OpenSimplex2S {
+    fn build_node(&self) -> SafeNode {
+        SafeNode(Node::from_name("OpenSimplex2S").unwrap())
     }
 }
 

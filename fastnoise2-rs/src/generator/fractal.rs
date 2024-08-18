@@ -1,9 +1,9 @@
-use crate::{typed::TypedFastNoise, FastNoise};
+use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Hybrid, Node};
+use super::{Generator, Hybrid, TypedNode};
 
 #[derive(Clone, Copy, Debug)]
-pub struct FractalFBm<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> {
+pub struct FractalFBm<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> {
     pub source: Source,
     pub gain: Gain,
     pub weighted_strength: WeightedStrength,
@@ -12,7 +12,7 @@ pub struct FractalFBm<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> {
 }
 
 #[derive(Clone, Copy, Debug)]
-pub struct FractalRidged<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> {
+pub struct FractalRidged<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> {
     pub source: Source,
     pub gain: Gain,
     pub weighted_strength: WeightedStrength,
@@ -22,7 +22,7 @@ pub struct FractalRidged<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> {
 
 #[derive(Clone, Copy, Debug)]
 pub struct FractalPingPong<
-    Source: Node,
+    Source: TypedNode,
     Gain: Hybrid,
     WeightedStrength: Hybrid,
     PingPongStrength: Hybrid,
@@ -35,41 +35,41 @@ pub struct FractalPingPong<
     pub lacunarity: f32,
 }
 
-impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
+impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
     for FractalFBm<Source, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("FractalFBm").unwrap();
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("FractalFBm").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Gain", self.gain).unwrap();
         node.set("WeightedStrength", self.weighted_strength)
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid> Node
+impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
     for FractalRidged<Source, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("FractalRidged").unwrap();
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("FractalRidged").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Gain", self.gain).unwrap();
         node.set("WeightedStrength", self.weighted_strength)
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid> Node
+impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid> TypedNode
     for FractalPingPong<Source, Gain, WeightedStrength, PingPongStrength>
 {
-    fn build_node(&self) -> TypedFastNoise {
-        let mut node = FastNoise::from_name("FractalFBm").unwrap();
+    fn build_node(&self) -> SafeNode {
+        let mut node = Node::from_name("FractalFBm").unwrap();
         node.set("Source", self.source).unwrap();
         node.set("Gain", self.gain).unwrap();
         node.set("WeightedStrength", self.weighted_strength)
@@ -78,11 +78,11 @@ impl<Source: Node, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hyb
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        TypedFastNoise(node)
+        SafeNode(node)
     }
 }
 
-impl<Source: Node> Generator<Source> {
+impl<Source: TypedNode> Generator<Source> {
     pub fn fbm<Gain: Hybrid, WeightedStrength: Hybrid>(
         self,
         gain: Gain,
