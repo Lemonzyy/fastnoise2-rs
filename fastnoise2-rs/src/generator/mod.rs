@@ -41,7 +41,7 @@ pub mod prelude {
     };
 }
 
-pub trait TypedNode: Copy {
+pub trait TypedNode {
     fn build_node(&self) -> SafeNode;
 }
 
@@ -49,7 +49,7 @@ impl<N: TypedNode> MemberValue for N {
     const TYPE: MemberType = MemberType::NodeLookup;
 
     fn apply(
-        self,
+        &self,
         node: &mut Node,
         member: &crate::metadata::Member,
     ) -> Result<(), crate::FastNoiseError> {
@@ -63,7 +63,11 @@ impl Hybrid for f32 {}
 
 impl<N: TypedNode> Hybrid for N {}
 
-#[derive(Clone, Copy, Debug)]
+// impl Hybrid for &f32 {}
+
+// impl<N: TypedNode + Sized> Hybrid for N {}
+
+#[derive(Debug)]
 pub struct Generator<T: Hybrid>(pub T);
 
 impl<T: TypedNode> TypedNode for Generator<T> {
@@ -72,7 +76,13 @@ impl<T: TypedNode> TypedNode for Generator<T> {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+impl<N: TypedNode> TypedNode for &N {
+    fn build_node(&self) -> SafeNode {
+        (*self).build_node()
+    }
+}
+
+#[derive(Debug)]
 pub enum DistanceFunction {
     Euclidean,
     EuclideanSquared,
@@ -93,7 +103,7 @@ impl Display for DistanceFunction {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub enum Dimension {
     X,
     Y,

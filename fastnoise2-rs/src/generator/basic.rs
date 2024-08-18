@@ -2,25 +2,25 @@ use crate::{safe::SafeNode, Node};
 
 use super::{DistanceFunction, Generator, TypedNode};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Constant {
     pub value: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct White;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Checkerboard {
     pub size: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct SineWave {
     pub scale: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct PositionOutput {
     pub x_multiplier: f32,
     pub y_multiplier: f32,
@@ -32,7 +32,7 @@ pub struct PositionOutput {
     pub w_offset: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct DistanceToPoint {
     pub distance_function: DistanceFunction,
     pub x_point: f32,

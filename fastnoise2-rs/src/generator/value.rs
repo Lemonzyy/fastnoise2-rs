@@ -2,7 +2,7 @@ use crate::{safe::SafeNode, Node};
 
 use super::{Generator, TypedNode};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Value;
 
 impl TypedNode for Value {

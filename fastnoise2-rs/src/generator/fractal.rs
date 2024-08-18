@@ -2,7 +2,7 @@ use crate::{safe::SafeNode, Node};
 
 use super::{Generator, Hybrid, TypedNode};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct FractalFBm<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> {
     pub source: Source,
     pub gain: Gain,
@@ -11,7 +11,7 @@ pub struct FractalFBm<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid>
     pub lacunarity: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct FractalRidged<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> {
     pub source: Source,
     pub gain: Gain,
@@ -20,7 +20,7 @@ pub struct FractalRidged<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybr
     pub lacunarity: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct FractalPingPong<
     Source: TypedNode,
     Gain: Hybrid,
@@ -40,9 +40,9 @@ impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
 {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("FractalFBm").unwrap();
-        node.set("Source", self.source).unwrap();
-        node.set("Gain", self.gain).unwrap();
-        node.set("WeightedStrength", self.weighted_strength)
+        node.set("Source", &self.source).unwrap();
+        node.set("Gain", &self.gain).unwrap();
+        node.set("WeightedStrength", &self.weighted_strength)
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
@@ -55,9 +55,9 @@ impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
 {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("FractalRidged").unwrap();
-        node.set("Source", self.source).unwrap();
-        node.set("Gain", self.gain).unwrap();
-        node.set("WeightedStrength", self.weighted_strength)
+        node.set("Source", &self.source).unwrap();
+        node.set("Gain", &self.gain).unwrap();
+        node.set("WeightedStrength", &self.weighted_strength)
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
@@ -70,11 +70,11 @@ impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength
 {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("FractalFBm").unwrap();
-        node.set("Source", self.source).unwrap();
-        node.set("Gain", self.gain).unwrap();
-        node.set("WeightedStrength", self.weighted_strength)
+        node.set("Source", &self.source).unwrap();
+        node.set("Gain", &self.gain).unwrap();
+        node.set("WeightedStrength", &self.weighted_strength)
             .unwrap();
-        node.set("PingPongStrength", self.ping_pong_strength)
+        node.set("PingPongStrength", &self.ping_pong_strength)
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();

@@ -2,14 +2,14 @@ use crate::{safe::SafeNode, Node};
 
 use super::{DistanceFunction, Generator, Hybrid, TypedNode};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct CellularValue<JitterModifier: Hybrid> {
     pub jitter_modifier: JitterModifier,
     pub distance_function: DistanceFunction,
     pub value_index: i32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct CellularDistance<JitterModifier: Hybrid> {
     pub jitter_modifier: JitterModifier,
     pub distance_function: DistanceFunction,
@@ -18,7 +18,7 @@ pub struct CellularDistance<JitterModifier: Hybrid> {
     pub return_type: CellularDistanceReturnType,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct CellularLookup<Lookup: TypedNode, JitterModifier: Hybrid> {
     pub lookup: Lookup,
     pub jitter_modifier: JitterModifier,
@@ -29,7 +29,7 @@ pub struct CellularLookup<Lookup: TypedNode, JitterModifier: Hybrid> {
 impl<JitterModifier: Hybrid> TypedNode for CellularValue<JitterModifier> {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("CellularValue").unwrap();
-        node.set("JitterModifier", self.jitter_modifier).unwrap();
+        node.set("JitterModifier", &self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("ValueIndex", self.value_index).unwrap();
@@ -40,7 +40,7 @@ impl<JitterModifier: Hybrid> TypedNode for CellularValue<JitterModifier> {
 impl<JitterModifier: Hybrid> TypedNode for CellularDistance<JitterModifier> {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("CellularValue").unwrap();
-        node.set("JitterModifier", self.jitter_modifier).unwrap();
+        node.set("JitterModifier", &self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("DistanceIndex0", self.distance_index_0).unwrap();
@@ -56,8 +56,8 @@ impl<Lookup: TypedNode, JitterModifier: Hybrid> TypedNode
 {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("CellularLookup").unwrap();
-        node.set("Lookup", self.lookup).unwrap();
-        node.set("JitterModifier", self.jitter_modifier).unwrap();
+        node.set("Lookup", &self.lookup).unwrap();
+        node.set("JitterModifier", &self.jitter_modifier).unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
         node.set("LookupFrequency", self.lookup_frequency).unwrap();
@@ -107,7 +107,7 @@ pub fn lookup<Lookup: TypedNode, JitterModifier: Hybrid>(
     })
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub enum CellularDistanceReturnType {
     Index0,
     Index0Add1,

@@ -2,7 +2,7 @@ use crate::{safe::SafeNode, Node};
 
 use super::{domain_warp::DomainWarpNode, Generator, Hybrid, TypedNode};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct DomainWarpFractalProgressive<
     DomainWarpSource: DomainWarpNode,
     Gain: Hybrid,
@@ -15,7 +15,7 @@ pub struct DomainWarpFractalProgressive<
     pub lacunarity: f32,
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct DomainWarpFractalIndependant<
     DomainWarpSource: DomainWarpNode,
     Gain: Hybrid,
@@ -33,9 +33,9 @@ impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> T
 {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("DomainWarpFractalProgressive").unwrap();
-        node.set("DomainWarpSource", self.domain_warp_source)
+        node.set("DomainWarpSource", &self.domain_warp_source)
             .unwrap();
-        node.set("Gain", self.gain).unwrap();
+        node.set("Gain", &self.gain).unwrap();
         node.set("WeightedStrength", self.weighted_strength)
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
@@ -49,10 +49,10 @@ impl<DomainWarpSource: DomainWarpNode, Gain: Hybrid, WeightedStrength: Hybrid> T
 {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("DomainWarpFractalIndependant").unwrap();
-        node.set("DomainWarpSource", self.domain_warp_source)
+        node.set("DomainWarpSource", &self.domain_warp_source)
             .unwrap();
-        node.set("Gain", self.gain).unwrap();
-        node.set("WeightedStrength", self.weighted_strength)
+        node.set("Gain", &self.gain).unwrap();
+        node.set("WeightedStrength", &self.weighted_strength)
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();

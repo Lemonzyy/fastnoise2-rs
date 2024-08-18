@@ -4,7 +4,7 @@ use super::{Generator, Hybrid, TypedNode};
 
 pub trait DomainWarpNode: TypedNode {}
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct DomainWarpGradient<Source: TypedNode, WarpAmplitude: Hybrid> {
     pub source: Source,
     pub warp_amplitude: WarpAmplitude,
@@ -16,8 +16,8 @@ impl<Source: TypedNode, WarpAmplitude: Hybrid> TypedNode
 {
     fn build_node(&self) -> SafeNode {
         let mut node = Node::from_name("DomainWarpGradient").unwrap();
-        node.set("Source", self.source).unwrap();
-        node.set("WarpAmplitude", self.warp_amplitude).unwrap();
+        node.set("Source", &self.source).unwrap();
+        node.set("WarpAmplitude", &self.warp_amplitude).unwrap();
         node.set("WarpFrequency", self.warp_frequency).unwrap();
         SafeNode(node)
     }

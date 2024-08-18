@@ -2,13 +2,13 @@ use crate::{safe::SafeNode, Node};
 
 use super::{Generator, TypedNode};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct Simplex;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct OpenSimplex2;
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Debug)]
 pub struct OpenSimplex2S;
 
 impl TypedNode for Simplex {
