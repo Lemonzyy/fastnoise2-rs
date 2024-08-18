@@ -39,7 +39,7 @@ let min_max = node.gen_uniform_grid_2d(
 
 You can also manually code a node tree using FastNoise2's metadata system, either with [`Node`](https://docs.rs/fastnoise2/latest/fastnoise2/struct.Node.html), or by combining generators, see [`SafeNode`](https://docs.rs/fastnoise2/latest/fastnoise2/struct.SafeNode.html).
 
-Take a look at `examples` to find out more.
+Take a look at [examples](https://github.com/Lemonzyy/fastnoise2-rs/tree/main/fastnoise2-rs/examples) to find out more.
 
 ## Setup
 

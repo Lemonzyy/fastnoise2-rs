@@ -39,7 +39,7 @@
 //!
 //! You can also manually code a node tree using FastNoise2's metadata system, either with [`Node`], or by combining generators, see [`SafeNode`].
 //!
-//! Take a look at `examples` to find out more.
+//! Take a look at [examples](https://github.com/Lemonzyy/fastnoise2-rs/tree/main/fastnoise2-rs/examples) to find out more.
 //!
 //! ## Setup
 //!
