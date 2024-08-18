@@ -1,10 +1,7 @@
 // This example illustrates the use of the typed API with generators to build safe trees. It builds the "Simple Terrain" integrated into NoiseTool.
 use std::time::Instant;
 
-use fastnoise2::{
-    generator::{basic::position_output, simplex::opensimplex2, Node},
-    TypedFastNoise,
-};
+use fastnoise2::{generator::prelude::*, TypedFastNoise};
 use image::{GrayImage, Luma};
 
 const X_SIZE: i32 = 1024;

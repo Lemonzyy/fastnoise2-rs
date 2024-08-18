@@ -3,7 +3,7 @@
 //! # Examples
 //!
 //! ```rust
-//! use fastnoise2::generator::{basic::sinewave, perlin::perlin, Node};
+//! use fastnoise2::generator::prelude::*;
 //!
 //! let node = perlin().fbm(0.5, 0.0, 3, 2.0).min(sinewave(0.3) + 0.2).build_node();
 //! let out = node.gen_single_2d(0.0, 0.0, 123);
@@ -22,6 +22,20 @@ pub mod modifier;
 pub mod perlin;
 pub mod simplex;
 pub mod value;
+
+pub mod prelude {
+    //! Functions and [`Node`] re-exports
+    pub use super::{
+        basic::{checkerboard, constant, distance_to_point, position_output, sinewave, white},
+        cellular::{
+            distance as cellular_distance, lookup as cellular_lookup, value as cellular_value,
+        },
+        perlin::perlin,
+        simplex::{opensimplex2, opensimplex2s, simplex},
+        value::value,
+        Node,
+    };
+}
 
 pub trait Node: Copy {
     fn build_node(&self) -> TypedFastNoise;

@@ -3,10 +3,11 @@ use std::time::Instant;
 
 use fastnoise2::{
     generator::{
-        basic::*,
-        blend::*,
-        simplex::{simplex, Simplex},
-        Generator, Node,
+        basic::{Constant, SineWave},
+        blend::{Add, Fade},
+        prelude::*,
+        simplex::Simplex,
+        Generator,
     },
     TypedFastNoise,
 };
