@@ -205,18 +205,6 @@ impl MemberValue for f32 {
     }
 }
 
-impl MemberValue for &f32 {
-    const TYPE: MemberType = f32::TYPE;
-
-    fn apply(
-        &self,
-        node: &mut Node,
-        member: &crate::metadata::Member,
-    ) -> Result<(), crate::FastNoiseError> {
-        (*self).apply(node, member)
-    }
-}
-
 impl MemberValue for i32 {
     const TYPE: MemberType = MemberType::Int;
 
