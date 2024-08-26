@@ -1,9 +1,9 @@
 use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Hybrid, TypedNode};
+use super::{Generator, GeneratorWrapper, Hybrid};
 
-#[derive(Debug)]
-pub struct FractalFBm<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct FractalFBm<Source: Generator, Gain: Hybrid, WeightedStrength: Hybrid> {
     pub source: Source,
     pub gain: Gain,
     pub weighted_strength: WeightedStrength,
@@ -11,8 +11,8 @@ pub struct FractalFBm<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid>
     pub lacunarity: f32,
 }
 
-#[derive(Debug)]
-pub struct FractalRidged<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct FractalRidged<Source: Generator, Gain: Hybrid, WeightedStrength: Hybrid> {
     pub source: Source,
     pub gain: Gain,
     pub weighted_strength: WeightedStrength,
@@ -20,9 +20,9 @@ pub struct FractalRidged<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybr
     pub lacunarity: f32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct FractalPingPong<
-    Source: TypedNode,
+    Source: Generator,
     Gain: Hybrid,
     WeightedStrength: Hybrid,
     PingPongStrength: Hybrid,
@@ -35,68 +35,69 @@ pub struct FractalPingPong<
     pub lacunarity: f32,
 }
 
-impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
+impl<Source: Generator, Gain: Hybrid, WeightedStrength: Hybrid> Generator
     for FractalFBm<Source, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> SafeNode {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("FractalFBm").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("Gain", &self.gain).unwrap();
-        node.set("WeightedStrength", &self.weighted_strength)
+        node.set("Gain", self.gain.clone()).unwrap();
+        node.set("WeightedStrength", self.weighted_strength.clone())
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid> TypedNode
+impl<Source: Generator, Gain: Hybrid, WeightedStrength: Hybrid> Generator
     for FractalRidged<Source, Gain, WeightedStrength>
 {
-    fn build_node(&self) -> SafeNode {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("FractalRidged").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("Gain", &self.gain).unwrap();
-        node.set("WeightedStrength", &self.weighted_strength)
+        node.set("Gain", self.gain.clone()).unwrap();
+        node.set("WeightedStrength", self.weighted_strength.clone())
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl<Source: TypedNode, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid> TypedNode
+impl<Source: Generator, Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid> Generator
     for FractalPingPong<Source, Gain, WeightedStrength, PingPongStrength>
 {
-    fn build_node(&self) -> SafeNode {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("FractalFBm").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("Gain", &self.gain).unwrap();
-        node.set("WeightedStrength", &self.weighted_strength)
+        node.set("Gain", self.gain.clone()).unwrap();
+        node.set("WeightedStrength", self.weighted_strength.clone())
             .unwrap();
-        node.set("PingPongStrength", &self.ping_pong_strength)
+        node.set("PingPongStrength", self.ping_pong_strength.clone())
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl<Source: TypedNode> Generator<Source> {
+impl<Source: Generator> GeneratorWrapper<Source> {
     pub fn fbm<Gain: Hybrid, WeightedStrength: Hybrid>(
         self,
         gain: Gain,
         weighted_strength: WeightedStrength,
         octaves: i32,
         lacunarity: f32,
-    ) -> Generator<FractalFBm<Source, Gain, WeightedStrength>> {
-        Generator(FractalFBm {
+    ) -> GeneratorWrapper<FractalFBm<Source, Gain, WeightedStrength>> {
+        FractalFBm {
             source: self.0,
             gain,
             weighted_strength,
             octaves,
             lacunarity,
-        })
+        }
+        .into()
     }
 
     pub fn ridged<Gain: Hybrid, WeightedStrength: Hybrid>(
@@ -105,14 +106,15 @@ impl<Source: TypedNode> Generator<Source> {
         weighted_strength: WeightedStrength,
         octaves: i32,
         lacunarity: f32,
-    ) -> Generator<FractalRidged<Source, Gain, WeightedStrength>> {
-        Generator(FractalRidged {
+    ) -> GeneratorWrapper<FractalRidged<Source, Gain, WeightedStrength>> {
+        FractalRidged {
             source: self.0,
             gain,
             weighted_strength,
             octaves,
             lacunarity,
-        })
+        }
+        .into()
     }
 
     pub fn ping_pong<Gain: Hybrid, WeightedStrength: Hybrid, PingPongStrength: Hybrid>(
@@ -122,14 +124,15 @@ impl<Source: TypedNode> Generator<Source> {
         ping_pong_strength: PingPongStrength,
         octaves: i32,
         lacunarity: f32,
-    ) -> Generator<FractalPingPong<Source, Gain, WeightedStrength, PingPongStrength>> {
-        Generator(FractalPingPong {
+    ) -> GeneratorWrapper<FractalPingPong<Source, Gain, WeightedStrength, PingPongStrength>> {
+        FractalPingPong {
             source: self.0,
             gain,
             weighted_strength,
             ping_pong_strength,
             octaves,
             lacunarity,
-        })
+        }
+        .into()
     }
 }

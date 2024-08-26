@@ -1,262 +1,268 @@
 use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Hybrid, TypedNode};
+use super::{Generator, GeneratorWrapper, Hybrid};
 
-#[derive(Debug)]
-pub struct Add<LHS: TypedNode, RHS: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct Add<LHS: Generator, RHS: Hybrid> {
     pub lhs: LHS,
     pub rhs: RHS,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Subtract<LHS: Hybrid, RHS: Hybrid> {
     pub lhs: LHS,
     pub rhs: RHS,
 }
 
-#[derive(Debug)]
-pub struct Multiply<LHS: TypedNode, RHS: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct Multiply<LHS: Generator, RHS: Hybrid> {
     pub lhs: LHS,
     pub rhs: RHS,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Divide<LHS: Hybrid, RHS: Hybrid> {
     pub lhs: LHS,
     pub rhs: RHS,
 }
 
-#[derive(Debug)]
-pub struct Min<LHS: TypedNode, RHS: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct Min<LHS: Generator, RHS: Hybrid> {
     pub lhs: LHS,
     pub rhs: RHS,
 }
 
-#[derive(Debug)]
-pub struct Max<LHS: TypedNode, RHS: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct Max<LHS: Generator, RHS: Hybrid> {
     pub lhs: LHS,
     pub rhs: RHS,
 }
 
-#[derive(Debug)]
-pub struct MinSmooth<LHS: TypedNode, RHS: Hybrid, SMOOTHNESS: Hybrid> {
-    pub lhs: LHS,
-    pub rhs: RHS,
-    pub smoothness: SMOOTHNESS,
-}
-
-#[derive(Debug)]
-pub struct MaxSmooth<LHS: TypedNode, RHS: Hybrid, SMOOTHNESS: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct MinSmooth<LHS: Generator, RHS: Hybrid, SMOOTHNESS: Hybrid> {
     pub lhs: LHS,
     pub rhs: RHS,
     pub smoothness: SMOOTHNESS,
 }
 
-#[derive(Debug)]
-pub struct Fade<A: TypedNode, B: TypedNode, FADE: Hybrid> {
+#[derive(Clone, Debug)]
+pub struct MaxSmooth<LHS: Generator, RHS: Hybrid, SMOOTHNESS: Hybrid> {
+    pub lhs: LHS,
+    pub rhs: RHS,
+    pub smoothness: SMOOTHNESS,
+}
+
+#[derive(Clone, Debug)]
+pub struct Fade<A: Generator, B: Generator, FADE: Hybrid> {
     pub a: A,
     pub b: B,
     pub fade: FADE,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PowFloat<VALUE: Hybrid, POW: Hybrid> {
     pub value: VALUE,
     pub pow: POW,
 }
 
-#[derive(Debug)]
-pub struct PowInt<VALUE: TypedNode> {
+#[derive(Clone, Debug)]
+pub struct PowInt<VALUE: Generator> {
     pub value: VALUE,
     pub pow: i32,
 }
 
-impl<LHS: TypedNode, RHS: Hybrid> TypedNode for Add<LHS, RHS> {
-    fn build_node(&self) -> SafeNode {
+impl<LHS: Generator, RHS: Hybrid> Generator for Add<LHS, RHS> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Add").unwrap();
         node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", &self.rhs).unwrap();
-        SafeNode(node)
+        node.set("RHS", self.rhs.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<LHS: Hybrid, RHS: Hybrid> TypedNode for Subtract<LHS, RHS> {
-    fn build_node(&self) -> SafeNode {
+impl<LHS: Hybrid, RHS: Hybrid> Generator for Subtract<LHS, RHS> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Subtract").unwrap();
-        node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", self.rhs).unwrap();
-        SafeNode(node)
+        node.set("LHS", self.lhs.clone()).unwrap();
+        node.set("RHS", self.rhs.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<LHS: TypedNode, RHS: Hybrid> TypedNode for Multiply<LHS, RHS> {
-    fn build_node(&self) -> SafeNode {
+impl<LHS: Generator, RHS: Hybrid> Generator for Multiply<LHS, RHS> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Multiply").unwrap();
         node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", &self.rhs).unwrap();
-        SafeNode(node)
+        node.set("RHS", self.rhs.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<LHS: Hybrid, RHS: Hybrid> TypedNode for Divide<LHS, RHS> {
-    fn build_node(&self) -> SafeNode {
+impl<LHS: Hybrid, RHS: Hybrid> Generator for Divide<LHS, RHS> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Divide").unwrap();
-        node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", &self.rhs).unwrap();
-        SafeNode(node)
+        node.set("LHS", self.lhs.clone()).unwrap();
+        node.set("RHS", self.rhs.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<LHS: TypedNode, RHS: Hybrid> TypedNode for Min<LHS, RHS> {
-    fn build_node(&self) -> SafeNode {
+impl<LHS: Generator, RHS: Hybrid> Generator for Min<LHS, RHS> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Min").unwrap();
         node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", &self.rhs).unwrap();
-        SafeNode(node)
+        node.set("RHS", self.rhs.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<LHS: TypedNode, RHS: Hybrid> TypedNode for Max<LHS, RHS> {
-    fn build_node(&self) -> SafeNode {
+impl<LHS: Generator, RHS: Hybrid> Generator for Max<LHS, RHS> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Max").unwrap();
         node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", &self.rhs).unwrap();
-        SafeNode(node)
+        node.set("RHS", self.rhs.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<LHS: TypedNode, RHS: Hybrid, SMOOTHNESS: Hybrid> TypedNode
+impl<LHS: Generator, RHS: Hybrid, SMOOTHNESS: Hybrid> Generator
     for MinSmooth<LHS, RHS, SMOOTHNESS>
 {
-    fn build_node(&self) -> SafeNode {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("MinSmooth").unwrap();
         node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", &self.rhs).unwrap();
-        node.set("Smoothness", self.smoothness).unwrap();
-        SafeNode(node)
+        node.set("RHS", self.rhs.clone()).unwrap();
+        node.set("Smoothness", self.smoothness.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<LHS: TypedNode, RHS: Hybrid, SMOOTHNESS: Hybrid> TypedNode
+impl<LHS: Generator, RHS: Hybrid, SMOOTHNESS: Hybrid> Generator
     for MaxSmooth<LHS, RHS, SMOOTHNESS>
 {
-    fn build_node(&self) -> SafeNode {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("MaxSmooth").unwrap();
         node.set("LHS", &self.lhs).unwrap();
-        node.set("RHS", &self.rhs).unwrap();
-        node.set("Smoothness", self.smoothness).unwrap();
-        SafeNode(node)
+        node.set("RHS", self.rhs.clone()).unwrap();
+        node.set("Smoothness", self.smoothness.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<A: TypedNode, B: TypedNode, FADE: Hybrid> TypedNode for Fade<A, B, FADE> {
-    fn build_node(&self) -> SafeNode {
+impl<A: Generator, B: Generator, FADE: Hybrid> Generator for Fade<A, B, FADE> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Fade").unwrap();
         node.set("A", &self.a).unwrap();
         node.set("B", &self.b).unwrap();
-        node.set("Fade", &self.fade).unwrap();
-        SafeNode(node)
+        node.set("Fade", self.fade.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<VALUE: Hybrid, POW: Hybrid> TypedNode for PowFloat<VALUE, POW> {
-    fn build_node(&self) -> SafeNode {
+impl<VALUE: Hybrid, POW: Hybrid> Generator for PowFloat<VALUE, POW> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("PowFloat").unwrap();
-        node.set("Value", &self.value).unwrap();
-        node.set("Pow", &self.pow).unwrap();
-        SafeNode(node)
+        node.set("Value", self.value.clone()).unwrap();
+        node.set("Pow", self.pow.clone()).unwrap();
+        SafeNode(node.into()).into()
     }
 }
 
-impl<VALUE: TypedNode> TypedNode for PowInt<VALUE> {
-    fn build_node(&self) -> SafeNode {
+impl<VALUE: Generator> Generator for PowInt<VALUE> {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("PowInt").unwrap();
         node.set("Value", &self.value).unwrap();
         node.set("Pow", self.pow).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl<Lhs: TypedNode, Rhs: Hybrid> std::ops::Add<Rhs> for Generator<Lhs> {
-    type Output = Generator<Add<Lhs, Rhs>>;
+impl<Lhs: Generator, Rhs: Hybrid> std::ops::Add<Rhs> for GeneratorWrapper<Lhs> {
+    type Output = GeneratorWrapper<Add<Lhs, Rhs>>;
 
     fn add(self, rhs: Rhs) -> Self::Output {
-        Generator(Add { lhs: self.0, rhs })
+        Add { lhs: self.0, rhs }.into()
     }
 }
 
-impl<Lhs: Hybrid, Rhs: Hybrid> std::ops::Sub<Rhs> for Generator<Lhs> {
-    type Output = Generator<Subtract<Lhs, Rhs>>;
+impl<Lhs: Hybrid, Rhs: Hybrid> std::ops::Sub<Rhs> for GeneratorWrapper<Lhs> {
+    type Output = GeneratorWrapper<Subtract<Lhs, Rhs>>;
 
     fn sub(self, rhs: Rhs) -> Self::Output {
-        Generator(Subtract { lhs: self.0, rhs })
+        Subtract { lhs: self.0, rhs }.into()
     }
 }
 
-impl<Lhs: TypedNode, Rhs: Hybrid> std::ops::Mul<Rhs> for Generator<Lhs> {
-    type Output = Generator<Multiply<Lhs, Rhs>>;
+impl<Lhs: Generator, Rhs: Hybrid> std::ops::Mul<Rhs> for GeneratorWrapper<Lhs> {
+    type Output = GeneratorWrapper<Multiply<Lhs, Rhs>>;
 
     fn mul(self, rhs: Rhs) -> Self::Output {
-        Generator(Multiply { lhs: self.0, rhs })
+        Multiply { lhs: self.0, rhs }.into()
     }
 }
 
-impl<Lhs: Hybrid, Rhs: Hybrid> std::ops::Div<Rhs> for Generator<Lhs> {
-    type Output = Generator<Divide<Lhs, Rhs>>;
+impl<Lhs: Hybrid, Rhs: Hybrid> std::ops::Div<Rhs> for GeneratorWrapper<Lhs> {
+    type Output = GeneratorWrapper<Divide<Lhs, Rhs>>;
 
     fn div(self, rhs: Rhs) -> Self::Output {
-        Generator(Divide { lhs: self.0, rhs })
+        Divide { lhs: self.0, rhs }.into()
     }
 }
 
-impl<Lhs: TypedNode> Generator<Lhs> {
-    pub fn min<Rhs: Hybrid>(self, rhs: Rhs) -> Generator<Min<Lhs, Rhs>> {
-        Generator(Min { lhs: self.0, rhs })
+impl<Lhs: Generator> GeneratorWrapper<Lhs> {
+    pub fn min<Rhs: Hybrid>(self, rhs: Rhs) -> GeneratorWrapper<Min<Lhs, Rhs>> {
+        Min { lhs: self.0, rhs }.into()
     }
 
-    pub fn max<Rhs: Hybrid>(self, rhs: Rhs) -> Generator<Max<Lhs, Rhs>> {
-        Generator(Max { lhs: self.0, rhs })
+    pub fn max<Rhs: Hybrid>(self, rhs: Rhs) -> GeneratorWrapper<Max<Lhs, Rhs>> {
+        Max { lhs: self.0, rhs }.into()
     }
 
     pub fn min_smooth<Rhs: Hybrid, Smoothness: Hybrid>(
         self,
         rhs: Rhs,
         smoothness: Smoothness,
-    ) -> Generator<MinSmooth<Lhs, Rhs, Smoothness>> {
-        Generator(MinSmooth {
+    ) -> GeneratorWrapper<MinSmooth<Lhs, Rhs, Smoothness>> {
+        MinSmooth {
             lhs: self.0,
             rhs,
             smoothness,
-        })
+        }
+        .into()
     }
 
     pub fn max_smooth<Rhs: Hybrid, Smoothness: Hybrid>(
         self,
         rhs: Rhs,
         smoothness: Smoothness,
-    ) -> Generator<MaxSmooth<Lhs, Rhs, Smoothness>> {
-        Generator(MaxSmooth {
+    ) -> GeneratorWrapper<MaxSmooth<Lhs, Rhs, Smoothness>> {
+        MaxSmooth {
             lhs: self.0,
             rhs,
             smoothness,
-        })
+        }
+        .into()
     }
 }
 
-impl<A: TypedNode> Generator<A> {
-    pub fn fade<B: TypedNode, FADE: Hybrid>(self, b: B, fade: FADE) -> Generator<Fade<A, B, FADE>> {
-        Generator(Fade { a: self.0, b, fade })
+impl<A: Generator> GeneratorWrapper<A> {
+    pub fn fade<B: Generator, FADE: Hybrid>(
+        self,
+        b: B,
+        fade: FADE,
+    ) -> GeneratorWrapper<Fade<A, B, FADE>> {
+        Fade { a: self.0, b, fade }.into()
     }
 }
 
-impl<Value: Hybrid> Generator<Value> {
-    pub fn powf<Pow: Hybrid>(self, pow: Pow) -> Generator<PowFloat<Value, Pow>> {
-        Generator(PowFloat { value: self.0, pow })
+impl<Value: Hybrid> GeneratorWrapper<Value> {
+    pub fn powf<Pow: Hybrid>(self, pow: Pow) -> GeneratorWrapper<PowFloat<Value, Pow>> {
+        PowFloat { value: self.0, pow }.into()
     }
 }
 
-impl<Value: TypedNode> Generator<Value> {
-    pub fn powi(self, pow: i32) -> Generator<PowInt<Value>> {
-        Generator(PowInt { value: self.0, pow })
+impl<Value: Generator> GeneratorWrapper<Value> {
+    pub fn powi(self, pow: i32) -> GeneratorWrapper<PowInt<Value>> {
+        PowInt { value: self.0, pow }.into()
     }
 }

@@ -1,42 +1,42 @@
 use crate::{safe::SafeNode, Node};
 
-use super::{Generator, TypedNode};
+use super::{Generator, GeneratorWrapper};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Simplex;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OpenSimplex2;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct OpenSimplex2S;
 
-impl TypedNode for Simplex {
-    fn build_node(&self) -> SafeNode {
-        SafeNode(Node::from_name("Simplex").unwrap())
+impl Generator for Simplex {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        SafeNode(Node::from_name("Simplex").unwrap().into()).into()
     }
 }
 
-impl TypedNode for OpenSimplex2 {
-    fn build_node(&self) -> SafeNode {
-        SafeNode(Node::from_name("OpenSimplex2").unwrap())
+impl Generator for OpenSimplex2 {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        SafeNode(Node::from_name("OpenSimplex2").unwrap().into()).into()
     }
 }
 
-impl TypedNode for OpenSimplex2S {
-    fn build_node(&self) -> SafeNode {
-        SafeNode(Node::from_name("OpenSimplex2S").unwrap())
+impl Generator for OpenSimplex2S {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        SafeNode(Node::from_name("OpenSimplex2S").unwrap().into()).into()
     }
 }
 
-pub fn simplex() -> Generator<Simplex> {
-    Generator(Simplex)
+pub fn simplex() -> GeneratorWrapper<Simplex> {
+    Simplex.into()
 }
 
-pub fn opensimplex2() -> Generator<OpenSimplex2> {
-    Generator(OpenSimplex2)
+pub fn opensimplex2() -> GeneratorWrapper<OpenSimplex2> {
+    OpenSimplex2.into()
 }
 
-pub fn opensimplex2s() -> Generator<OpenSimplex2S> {
-    Generator(OpenSimplex2S)
+pub fn opensimplex2s() -> GeneratorWrapper<OpenSimplex2S> {
+    OpenSimplex2S.into()
 }

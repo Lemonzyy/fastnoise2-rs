@@ -1,26 +1,26 @@
 use crate::{safe::SafeNode, Node};
 
-use super::{DistanceFunction, Generator, TypedNode};
+use super::{DistanceFunction, Generator, GeneratorWrapper};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Constant {
     pub value: f32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct White;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Checkerboard {
     pub size: f32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct SineWave {
     pub scale: f32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct PositionOutput {
     pub x_multiplier: f32,
     pub y_multiplier: f32,
@@ -32,7 +32,7 @@ pub struct PositionOutput {
     pub w_offset: f32,
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct DistanceToPoint {
     pub distance_function: DistanceFunction,
     pub x_point: f32,
@@ -41,38 +41,38 @@ pub struct DistanceToPoint {
     pub w_point: f32,
 }
 
-impl TypedNode for Constant {
-    fn build_node(&self) -> SafeNode {
+impl Generator for Constant {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Constant").unwrap();
         node.set("Value", self.value).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl TypedNode for White {
-    fn build_node(&self) -> SafeNode {
-        SafeNode(Node::from_name("White").unwrap())
+impl Generator for White {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        SafeNode(Node::from_name("White").unwrap().into()).into()
     }
 }
 
-impl TypedNode for Checkerboard {
-    fn build_node(&self) -> SafeNode {
+impl Generator for Checkerboard {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Checkerboard").unwrap();
         node.set("Size", self.size).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl TypedNode for SineWave {
-    fn build_node(&self) -> SafeNode {
+impl Generator for SineWave {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("SineWave").unwrap();
         node.set("Scale", self.scale).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl TypedNode for PositionOutput {
-    fn build_node(&self) -> SafeNode {
+impl Generator for PositionOutput {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("PositionOutput").unwrap();
         node.set("MultiplierX", self.x_multiplier).unwrap();
         node.set("MultiplierY", self.y_multiplier).unwrap();
@@ -82,12 +82,12 @@ impl TypedNode for PositionOutput {
         node.set("OffsetY", self.y_offset).unwrap();
         node.set("OffsetZ", self.z_offset).unwrap();
         node.set("OffsetW", self.w_offset).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl TypedNode for DistanceToPoint {
-    fn build_node(&self) -> SafeNode {
+impl Generator for DistanceToPoint {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DistanceToPoint").unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
             .unwrap();
@@ -95,29 +95,29 @@ impl TypedNode for DistanceToPoint {
         node.set("PointY", self.y_point).unwrap();
         node.set("PointZ", self.z_point).unwrap();
         node.set("PointW", self.w_point).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-pub fn constant(value: f32) -> Generator<Constant> {
-    Generator(Constant { value })
+pub fn constant(value: f32) -> GeneratorWrapper<Constant> {
+    Constant { value }.into()
 }
 
-pub fn white() -> Generator<White> {
-    Generator(White)
+pub fn white() -> GeneratorWrapper<White> {
+    White.into()
 }
 
-pub fn checkerboard(size: f32) -> Generator<Checkerboard> {
-    Generator(Checkerboard { size })
+pub fn checkerboard(size: f32) -> GeneratorWrapper<Checkerboard> {
+    Checkerboard { size }.into()
 }
-pub fn sinewave(scale: f32) -> Generator<SineWave> {
-    Generator(SineWave { scale })
+pub fn sinewave(scale: f32) -> GeneratorWrapper<SineWave> {
+    SineWave { scale }.into()
 }
 
-pub fn position_output(multiplier: [f32; 4], offset: [f32; 4]) -> Generator<PositionOutput> {
+pub fn position_output(multiplier: [f32; 4], offset: [f32; 4]) -> GeneratorWrapper<PositionOutput> {
     let [x_multiplier, y_multiplier, z_multiplier, w_multiplier] = multiplier;
     let [x_offset, y_offset, z_offset, w_offset] = offset;
-    Generator(PositionOutput {
+    PositionOutput {
         x_multiplier,
         y_multiplier,
         z_multiplier,
@@ -126,19 +126,21 @@ pub fn position_output(multiplier: [f32; 4], offset: [f32; 4]) -> Generator<Posi
         y_offset,
         z_offset,
         w_offset,
-    })
+    }
+    .into()
 }
 
 pub fn distance_to_point(
     distance_function: DistanceFunction,
     point: [f32; 4],
-) -> Generator<DistanceToPoint> {
+) -> GeneratorWrapper<DistanceToPoint> {
     let [x_point, y_point, z_point, w_point] = point;
-    Generator(DistanceToPoint {
+    DistanceToPoint {
         distance_function,
         x_point,
         y_point,
         z_point,
         w_point,
-    })
+    }
+    .into()
 }

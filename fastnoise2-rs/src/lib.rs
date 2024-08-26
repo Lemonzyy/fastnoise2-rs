@@ -63,8 +63,7 @@
 //!
 #![allow(clippy::too_many_arguments)]
 mod error;
-// pub mod generator;
-pub mod gen;
+pub mod generator;
 mod metadata;
 mod safe;
 

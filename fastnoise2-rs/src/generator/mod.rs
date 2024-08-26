@@ -5,14 +5,14 @@
 //! ```rust
 //! use fastnoise2::generator::prelude::*;
 //!
-//! let node = perlin().fbm(0.5, 0.0, 3, 2.0).min(sinewave(0.3) + 0.2).build_node();
+//! let node = perlin().fbm(0.5, 0.0, 3, 2.0).min(sinewave(0.3) + 0.2).build();
 //! let out = node.gen_single_2d(0.0, 0.0, 123);
 //! ```
 //!
 //! ## See Also
 //! - [safe example](https://github.com/Lemonzyy/fastnoise2-rs/blob/main/fastnoise2-rs/examples/safe.rs)
 //! - [safe_simple_terrain example](https://github.com/Lemonzyy/fastnoise2-rs/blob/main/fastnoise2-rs/examples/safe_simple_terrain.rs)
-use std::fmt::Display;
+use std::fmt::{Debug, Display};
 
 use crate::{metadata::MemberValue, safe::SafeNode, MemberType, Node};
 
@@ -37,15 +37,35 @@ pub mod prelude {
         perlin::perlin,
         simplex::{opensimplex2, opensimplex2s, simplex},
         value::value,
-        TypedNode,
+        Generator, GeneratorWrapper,
     };
 }
 
-pub trait TypedNode {
-    fn build_node(&self) -> SafeNode;
+pub trait Generator: Clone + Debug {
+    fn build(&self) -> GeneratorWrapper<SafeNode>;
 }
 
-impl<N: TypedNode> MemberValue for N {
+impl<T: Generator> Generator for &T {
+    #[cfg_attr(feature = "trace", tracing::instrument)]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        (*self).build()
+    }
+}
+
+impl Generator for SafeNode {
+    #[cfg_attr(feature = "trace", tracing::instrument)]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        self.clone().into()
+    }
+}
+
+pub trait Hybrid: MemberValue + Clone + Debug {}
+
+impl Hybrid for f32 {}
+
+impl<T: Generator> Hybrid for T {}
+
+impl<T: Generator> MemberValue for T {
     const TYPE: MemberType = MemberType::NodeLookup;
 
     fn apply(
@@ -53,36 +73,49 @@ impl<N: TypedNode> MemberValue for N {
         node: &mut Node,
         member: &crate::metadata::Member,
     ) -> Result<(), crate::FastNoiseError> {
-        node.set(&member.name, &self.build_node().0)
+        node.set(&member.name, self.build().0 .0.as_ref())
     }
 }
 
-pub trait Hybrid: MemberValue {}
+#[derive(Clone, Debug)]
+pub struct GeneratorWrapper<T>(pub T);
 
-impl Hybrid for f32 {}
-
-impl<N: TypedNode> Hybrid for N {}
-
-// impl Hybrid for &f32 {}
-
-// impl<N: TypedNode + Sized> Hybrid for N {}
-
-#[derive(Debug)]
-pub struct Generator<T: Hybrid>(pub T);
-
-impl<T: TypedNode> TypedNode for Generator<T> {
-    fn build_node(&self) -> SafeNode {
-        self.0.build_node()
+impl<T: Hybrid> From<T> for GeneratorWrapper<T> {
+    fn from(value: T) -> Self {
+        Self(value)
     }
 }
 
-impl<N: TypedNode> TypedNode for &N {
-    fn build_node(&self) -> SafeNode {
-        (*self).build_node()
+impl<T> std::ops::Deref for GeneratorWrapper<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
-#[derive(Debug)]
+impl<T: Generator> Generator for GeneratorWrapper<T> {
+    #[cfg_attr(feature = "trace", tracing::instrument)]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        self.0.build()
+    }
+}
+
+impl Hybrid for GeneratorWrapper<f32> {}
+
+impl MemberValue for GeneratorWrapper<f32> {
+    const TYPE: MemberType = MemberType::Float;
+
+    fn apply(
+        &self,
+        node: &mut Node,
+        member: &crate::metadata::Member,
+    ) -> Result<(), crate::FastNoiseError> {
+        self.0.apply(node, member)
+    }
+}
+
+#[derive(Clone, Debug)]
 pub enum DistanceFunction {
     Euclidean,
     EuclideanSquared,
@@ -103,7 +136,7 @@ impl Display for DistanceFunction {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub enum Dimension {
     X,
     Y,

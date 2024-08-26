@@ -1,16 +1,16 @@
 use crate::{safe::SafeNode, Node};
 
-use super::{Generator, TypedNode};
+use super::{Generator, GeneratorWrapper};
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 pub struct Value;
 
-impl TypedNode for Value {
-    fn build_node(&self) -> SafeNode {
-        SafeNode(Node::from_name("Value").unwrap())
+impl Generator for Value {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        SafeNode(Node::from_name("Value").unwrap().into()).into()
     }
 }
 
-pub fn value() -> Generator<Value> {
-    Generator(Value)
+pub fn value() -> GeneratorWrapper<Value> {
+    Value.into()
 }
