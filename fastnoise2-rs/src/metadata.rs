@@ -170,10 +170,10 @@ fn format_dimension_member(name: &str, dim_idx: i32) -> String {
     }
 }
 
-pub trait MemberValue: Copy {
+pub trait MemberValue {
     const TYPE: MemberType;
 
-    fn apply(self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError>;
+    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError>;
 
     fn invalid_member_type_error(member: &Member) -> FastNoiseError {
         FastNoiseError::InvalidMemberType {
@@ -187,15 +187,15 @@ pub trait MemberValue: Copy {
 impl MemberValue for f32 {
     const TYPE: MemberType = MemberType::Float;
 
-    fn apply(self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::Float => {
-                if !unsafe { fnSetVariableFloat(node.handle, member.index, self) } {
+                if !unsafe { fnSetVariableFloat(node.handle, member.index, *self) } {
                     return Err(FastNoiseError::SetFloatFailed);
                 }
             }
             MemberType::Hybrid => {
-                if !unsafe { fnSetHybridFloat(node.handle, member.index, self) } {
+                if !unsafe { fnSetHybridFloat(node.handle, member.index, *self) } {
                     return Err(FastNoiseError::SetHybridFloatFailed);
                 }
             }
@@ -208,10 +208,10 @@ impl MemberValue for f32 {
 impl MemberValue for i32 {
     const TYPE: MemberType = MemberType::Int;
 
-    fn apply(self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::Int => {
-                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, self) } {
+                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *self) } {
                     return Err(FastNoiseError::SetIntFailed);
                 }
             }
@@ -224,7 +224,7 @@ impl MemberValue for i32 {
 impl MemberValue for &str {
     const TYPE: MemberType = MemberType::Enum;
 
-    fn apply(self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::Enum => {
                 let enum_idx = member.enum_names.get(&format_lookup(self)).ok_or_else(|| {
@@ -246,7 +246,7 @@ impl MemberValue for &str {
 impl MemberValue for &Node {
     const TYPE: MemberType = MemberType::NodeLookup;
 
-    fn apply(self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::NodeLookup => {
                 if !unsafe { fnSetNodeLookup(node.handle, member.index, self.handle) } {

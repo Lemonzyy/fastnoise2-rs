@@ -1,16 +1,16 @@
 use crate::{safe::SafeNode, Node};
 
-use super::{Generator, TypedNode};
+use super::{Generator, GeneratorWrapper};
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Debug)]
 pub struct Perlin;
 
-impl TypedNode for Perlin {
-    fn build_node(&self) -> SafeNode {
-        SafeNode(Node::from_name("Perlin").unwrap())
+impl Generator for Perlin {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        SafeNode(Node::from_name("Perlin").unwrap().into()).into()
     }
 }
 
-pub fn perlin() -> Generator<Perlin> {
-    Generator(Perlin)
+pub fn perlin() -> GeneratorWrapper<Perlin> {
+    Perlin.into()
 }

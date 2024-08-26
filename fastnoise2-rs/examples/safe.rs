@@ -7,7 +7,6 @@ use fastnoise2::{
         blend::{Add, Fade},
         prelude::*,
         simplex::Simplex,
-        Generator,
     },
     SafeNode,
 };
@@ -16,7 +15,7 @@ use image::{GrayImage, Luma};
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
-fn create_node() -> SafeNode {
+fn create_node() -> GeneratorWrapper<SafeNode> {
     // All these writings produce the same result.
     // Please note that using "0.5" (a float) instead of "Constant { value : 0.5 }" (a node) is faster
     // because the right-hand member of the "Add" node is a hybrid member (either a node or a float)
@@ -43,23 +42,23 @@ fn create_node() -> SafeNode {
     let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + constant(0.5); // this uses a Constant node as entry to a hybrid member
     let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5; // and this uses a float directly
 
-    // You can also mix the two writings. Note the use of the Generator wrapper type to enable use of the operator
-    let _n = Generator(Fade {
+    // You can also mix the two writings. Note the use of the GeneratorWrapper type to enable use of the operator
+    let _n = GeneratorWrapper(Fade {
         a: SineWave { scale: 0.1 },
         b: sinewave(-0.2),
         fade: Simplex,
     }) + 0.5;
 
     // Qualifying the "fade" method can also lead to better syntax, although this is subjective.
-    let _n = Generator::fade(sinewave(0.1), sinewave(-0.2), simplex()) + 0.5;
+    let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), simplex()) + 0.5;
 
-    // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since the Generator wrapper is not needed here.
-    let _n = Generator::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
+    // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since GeneratorWrapper is not needed here.
+    let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
 
     // In the end, this is the most idiomatic writing, and it's easier to import functions by using "use fastnoise2::generator::prelude::*;"
     let n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5;
 
-    n.build_node()
+    n.build()
 }
 
 fn main() {

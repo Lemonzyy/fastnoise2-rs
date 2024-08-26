@@ -25,7 +25,7 @@ fn main() {
     // SAFETY:
     // Using `SafeNode::from_encoded_node_tree` is safe unlike manually constructing the node tree with
     // `Node::from_name` and `Node::set`, as it ensures the nodes and parameters are correctly set by the C++ library's
-    // tools. However, once the node is created, you cannot modify parameters unless you convert it to `Node` using the From trait.
+    // tools. However, once the node is created, you cannot modify its parameters.
     // Modifying parameters directly using `Node::set` can introduce the same risks as manually building the node tree.
     // Issues might arise due to incorrect parameter types, missing members, or other configuration errors.
     // Ensure that all modifications are valid and consult the FastNoise2 documentation for guidance on parameter types and expected values.

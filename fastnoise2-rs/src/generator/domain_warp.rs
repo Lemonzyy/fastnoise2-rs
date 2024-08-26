@@ -1,43 +1,59 @@
 use crate::{safe::SafeNode, Node};
 
-use super::{Generator, Hybrid, TypedNode};
+use super::{Generator, GeneratorWrapper, Hybrid};
 
-pub trait DomainWarpNode: TypedNode {}
+pub trait DomainWarpNode: Generator {}
 
-#[derive(Clone, Copy, Debug)]
-pub struct DomainWarpGradient<Source: TypedNode, WarpAmplitude: Hybrid> {
-    pub source: Source,
-    pub warp_amplitude: WarpAmplitude,
+#[derive(Clone, Debug)]
+pub struct DomainWarpGradient<S, A>
+where
+    S: Generator,
+    A: Hybrid,
+{
+    pub source: S,
+    pub warp_amplitude: A,
     pub warp_frequency: f32,
 }
 
-impl<Source: TypedNode, WarpAmplitude: Hybrid> TypedNode
-    for DomainWarpGradient<Source, WarpAmplitude>
+impl<S, A> Generator for DomainWarpGradient<S, A>
+where
+    S: Generator,
+    A: Hybrid,
 {
-    fn build_node(&self) -> SafeNode {
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainWarpGradient").unwrap();
-        node.set("Source", self.source).unwrap();
-        node.set("WarpAmplitude", self.warp_amplitude).unwrap();
+        node.set("Source", &self.source).unwrap();
+        node.set("WarpAmplitude", self.warp_amplitude.clone())
+            .unwrap();
         node.set("WarpFrequency", self.warp_frequency).unwrap();
-        SafeNode(node)
+        SafeNode(node.into()).into()
     }
 }
 
-impl<Source: TypedNode, WarpAmplitude: Hybrid> DomainWarpNode
-    for DomainWarpGradient<Source, WarpAmplitude>
+impl<S, A> DomainWarpNode for DomainWarpGradient<S, A>
+where
+    S: Generator,
+    A: Hybrid,
 {
 }
 
-impl<Source: TypedNode> Generator<Source> {
-    pub fn warp_gradient<WarpAmplitude: Hybrid>(
+impl<S> GeneratorWrapper<S>
+where
+    S: Generator,
+{
+    pub fn warp_gradient<A>(
         self,
-        warp_amplitude: WarpAmplitude,
+        warp_amplitude: A,
         warp_frequency: f32,
-    ) -> Generator<DomainWarpGradient<Source, WarpAmplitude>> {
-        Generator(DomainWarpGradient {
+    ) -> GeneratorWrapper<DomainWarpGradient<S, A>>
+    where
+        A: Hybrid,
+    {
+        DomainWarpGradient {
             source: self.0,
             warp_amplitude,
             warp_frequency,
-        })
+        }
+        .into()
     }
 }
