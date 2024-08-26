@@ -201,6 +201,14 @@ impl<Lhs: Generator, Rhs: Hybrid> std::ops::Mul<Rhs> for GeneratorWrapper<Lhs> {
     }
 }
 
+impl<Lhs: Generator> std::ops::Neg for GeneratorWrapper<Lhs> {
+    type Output = GeneratorWrapper<Multiply<Lhs, f32>>;
+
+    fn neg(self) -> Self::Output {
+        self * -1.0
+    }
+}
+
 impl<Lhs: Hybrid, Rhs: Hybrid> std::ops::Div<Rhs> for GeneratorWrapper<Lhs> {
     type Output = GeneratorWrapper<Divide<Lhs, Rhs>>;
 
@@ -264,5 +272,15 @@ impl<Value: Hybrid> GeneratorWrapper<Value> {
 impl<Value: Generator> GeneratorWrapper<Value> {
     pub fn powi(self, pow: i32) -> GeneratorWrapper<PowInt<Value>> {
         PowInt { value: self.0, pow }.into()
+    }
+}
+
+impl<T: Hybrid> GeneratorWrapper<T> {
+    pub fn recip(self) -> GeneratorWrapper<Divide<f32, T>> {
+        Divide {
+            lhs: 1.0,
+            rhs: self.0,
+        }
+        .into()
     }
 }

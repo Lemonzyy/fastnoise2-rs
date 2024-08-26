@@ -3,7 +3,7 @@ use std::rc::Rc;
 use crate::{FastNoiseError, Node, OutputMinMax};
 
 /// Unlike [`Node`], this structure is safe to use because it is built from typed nodes
-/// that implement the [`TypedNode`][`crate::generator::TypedNode`] trait, or built by an encoded node tree produced by [NoiseTool](https://github.com/Auburn/FastNoise2?tab=readme-ov-file#noise-tool).
+/// that implement the [`Generator`][`crate::generator::Generator`] trait, or built by an encoded node tree produced by [NoiseTool](https://github.com/Auburn/FastNoise2?tab=readme-ov-file#noise-tool).
 ///
 /// You can see how to use it in the [`generator`][`crate::generator`] module.
 #[derive(Debug, Clone)]

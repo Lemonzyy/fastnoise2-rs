@@ -42,7 +42,7 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + constant(0.5); // this uses a Constant node as entry to a hybrid member
     let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5; // and this uses a float directly
 
-    // You can also mix the two writings. Note the use of the Generator wrapper type to enable use of the operator
+    // You can also mix the two writings. Note the use of the GeneratorWrapper type to enable use of the operator
     let _n = GeneratorWrapper(Fade {
         a: SineWave { scale: 0.1 },
         b: sinewave(-0.2),
@@ -52,7 +52,7 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     // Qualifying the "fade" method can also lead to better syntax, although this is subjective.
     let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), simplex()) + 0.5;
 
-    // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since the Generator wrapper is not needed here.
+    // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since GeneratorWrapper is not needed here.
     let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
 
     // In the end, this is the most idiomatic writing, and it's easier to import functions by using "use fastnoise2::generator::prelude::*;"

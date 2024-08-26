@@ -28,7 +28,7 @@ pub mod simplex;
 pub mod value;
 
 pub mod prelude {
-    //! Functions and [`TypedNode`] re-exports
+    //! Functions and [`Generator`] re-exports
     pub use super::{
         basic::{checkerboard, constant, distance_to_point, position_output, sinewave, white},
         cellular::{
