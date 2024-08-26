@@ -3,43 +3,56 @@ use crate::{safe::SafeNode, Node};
 use super::{Dimension, Generator, GeneratorWrapper, Hybrid};
 
 #[derive(Clone, Debug)]
-pub struct DomainScale<Source: Generator> {
-    pub source: Source,
+pub struct DomainScale<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub scale: f32,
 }
 
 #[derive(Clone, Debug)]
-pub struct DomainOffset<
-    Source: Generator,
-    XOffset: Hybrid,
-    YOffset: Hybrid,
-    ZOffset: Hybrid,
-    WOffset: Hybrid,
-> {
-    pub source: Source,
-    pub x_offset: XOffset,
-    pub y_offset: YOffset,
-    pub z_offset: ZOffset,
-    pub w_offset: WOffset,
+pub struct DomainOffset<S, X, Y, Z, W>
+where
+    S: Generator,
+    X: Hybrid,
+    Y: Hybrid,
+    Z: Hybrid,
+    W: Hybrid,
+{
+    pub source: S,
+    pub x_offset: X,
+    pub y_offset: Y,
+    pub z_offset: Z,
+    pub w_offset: W,
 }
 
 #[derive(Clone, Debug)]
-pub struct DomainRotate<Source: Generator> {
-    pub source: Source,
+pub struct DomainRotate<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub yaw: f32,
     pub pitch: f32,
     pub roll: f32,
 }
 
 #[derive(Clone, Debug)]
-pub struct SeedOffset<Source: Generator> {
-    pub source: Source,
+pub struct SeedOffset<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub seed_offset: i32,
 }
 
 #[derive(Clone, Debug)]
-pub struct Remap<Source: Generator> {
-    pub source: Source,
+pub struct Remap<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub from_min: f32,
     pub from_max: f32,
     pub to_min: f32,
@@ -47,22 +60,31 @@ pub struct Remap<Source: Generator> {
 }
 
 #[derive(Clone, Debug)]
-pub struct ConvertRgba8<Source: Generator> {
-    pub source: Source,
+pub struct ConvertRgba8<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub min: f32,
     pub max: f32,
 }
 
 #[derive(Clone, Debug)]
-pub struct Terrace<Source: Generator> {
-    pub source: Source,
+pub struct Terrace<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub multiplier: f32,
     pub smoothness: f32,
 }
 
 #[derive(Clone, Debug)]
-pub struct DomainAxisScale<Source: Generator> {
-    pub source: Source,
+pub struct DomainAxisScale<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub x_scale: f32,
     pub y_scale: f32,
     pub z_scale: f32,
@@ -70,23 +92,36 @@ pub struct DomainAxisScale<Source: Generator> {
 }
 
 #[derive(Clone, Debug)]
-pub struct AddDimension<Source: Generator, NewDimensionPosition> {
-    pub source: Source,
-    pub new_dimension_position: NewDimensionPosition,
+pub struct AddDimension<S, N>
+where
+    S: Generator,
+    N: Hybrid,
+{
+    pub source: S,
+    pub new_dimension_position: N,
 }
 
 #[derive(Clone, Debug)]
-pub struct RemoveDimension<Source: Generator> {
-    pub source: Source,
+pub struct RemoveDimension<S>
+where
+    S: Generator,
+{
+    pub source: S,
     pub remove_dimension: Dimension,
 }
 
 #[derive(Clone, Debug)]
-pub struct GeneratorCache<Source: Generator> {
-    pub source: Source,
+pub struct GeneratorCache<S>
+where
+    S: Generator,
+{
+    pub source: S,
 }
 
-impl<Source: Generator> Generator for DomainScale<Source> {
+impl<S> Generator for DomainScale<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainScale").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -95,8 +130,13 @@ impl<Source: Generator> Generator for DomainScale<Source> {
     }
 }
 
-impl<Source: Generator, XOffset: Hybrid, YOffset: Hybrid, ZOffset: Hybrid, WOffset: Hybrid>
-    Generator for DomainOffset<Source, XOffset, YOffset, ZOffset, WOffset>
+impl<S, X, Y, Z, W> Generator for DomainOffset<S, X, Y, Z, W>
+where
+    S: Generator,
+    X: Hybrid,
+    Y: Hybrid,
+    Z: Hybrid,
+    W: Hybrid,
 {
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainOffset").unwrap();
@@ -109,7 +149,10 @@ impl<Source: Generator, XOffset: Hybrid, YOffset: Hybrid, ZOffset: Hybrid, WOffs
     }
 }
 
-impl<Source: Generator> Generator for DomainRotate<Source> {
+impl<S> Generator for DomainRotate<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainRotate").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -120,7 +163,10 @@ impl<Source: Generator> Generator for DomainRotate<Source> {
     }
 }
 
-impl<Source: Generator> Generator for SeedOffset<Source> {
+impl<S> Generator for SeedOffset<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("SeedOffset").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -129,7 +175,10 @@ impl<Source: Generator> Generator for SeedOffset<Source> {
     }
 }
 
-impl<Source: Generator> Generator for Remap<Source> {
+impl<S> Generator for Remap<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Remap").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -141,7 +190,10 @@ impl<Source: Generator> Generator for Remap<Source> {
     }
 }
 
-impl<Source: Generator> Generator for ConvertRgba8<Source> {
+impl<S> Generator for ConvertRgba8<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("ConvertRgba8").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -151,7 +203,10 @@ impl<Source: Generator> Generator for ConvertRgba8<Source> {
     }
 }
 
-impl<Source: Generator> Generator for Terrace<Source> {
+impl<S> Generator for Terrace<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Terrace").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -161,7 +216,10 @@ impl<Source: Generator> Generator for Terrace<Source> {
     }
 }
 
-impl<Source: Generator> Generator for DomainAxisScale<Source> {
+impl<S> Generator for DomainAxisScale<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainAxisScale").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -173,8 +231,10 @@ impl<Source: Generator> Generator for DomainAxisScale<Source> {
     }
 }
 
-impl<Source: Generator, NewDimensionPosition: Hybrid> Generator
-    for AddDimension<Source, NewDimensionPosition>
+impl<S, N> Generator for AddDimension<S, N>
+where
+    S: Generator,
+    N: Hybrid,
 {
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("AddDimension").unwrap();
@@ -185,7 +245,10 @@ impl<Source: Generator, NewDimensionPosition: Hybrid> Generator
     }
 }
 
-impl<Source: Generator> Generator for RemoveDimension<Source> {
+impl<S> Generator for RemoveDimension<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("RemoveDimension").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -195,7 +258,10 @@ impl<Source: Generator> Generator for RemoveDimension<Source> {
     }
 }
 
-impl<Source: Generator> Generator for GeneratorCache<Source> {
+impl<S> Generator for GeneratorCache<S>
+where
+    S: Generator,
+{
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("GeneratorCache").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -203,8 +269,11 @@ impl<Source: Generator> Generator for GeneratorCache<Source> {
     }
 }
 
-impl<Source: Generator> GeneratorWrapper<Source> {
-    pub fn scale(self, scale: f32) -> GeneratorWrapper<DomainScale<Source>> {
+impl<S> GeneratorWrapper<S>
+where
+    S: Generator,
+{
+    pub fn scale(self, scale: f32) -> GeneratorWrapper<DomainScale<S>> {
         DomainScale {
             source: self.0,
             scale,
@@ -212,13 +281,19 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn offset<XOffset: Hybrid, YOffset: Hybrid, ZOffset: Hybrid, WOffset: Hybrid>(
+    pub fn offset<X, Y, Z, W>(
         self,
-        x_offset: XOffset,
-        y_offset: YOffset,
-        z_offset: ZOffset,
-        w_offset: WOffset,
-    ) -> GeneratorWrapper<DomainOffset<Source, XOffset, YOffset, ZOffset, WOffset>> {
+        x_offset: X,
+        y_offset: Y,
+        z_offset: Z,
+        w_offset: W,
+    ) -> GeneratorWrapper<DomainOffset<S, X, Y, Z, W>>
+    where
+        X: Hybrid,
+        Y: Hybrid,
+        Z: Hybrid,
+        W: Hybrid,
+    {
         DomainOffset {
             source: self.0,
             x_offset,
@@ -229,7 +304,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn rotate(self, yaw: f32, pitch: f32, roll: f32) -> GeneratorWrapper<DomainRotate<Source>> {
+    pub fn rotate(self, yaw: f32, pitch: f32, roll: f32) -> GeneratorWrapper<DomainRotate<S>> {
         DomainRotate {
             source: self.0,
             yaw,
@@ -239,7 +314,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn seed_offset(self, seed_offset: i32) -> GeneratorWrapper<SeedOffset<Source>> {
+    pub fn seed_offset(self, seed_offset: i32) -> GeneratorWrapper<SeedOffset<S>> {
         SeedOffset {
             source: self.0,
             seed_offset,
@@ -253,7 +328,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         from_max: f32,
         to_min: f32,
         to_max: f32,
-    ) -> GeneratorWrapper<Remap<Source>> {
+    ) -> GeneratorWrapper<Remap<S>> {
         Remap {
             source: self.0,
             from_min,
@@ -264,7 +339,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn convert_rgba8(self, min: f32, max: f32) -> GeneratorWrapper<ConvertRgba8<Source>> {
+    pub fn convert_rgba8(self, min: f32, max: f32) -> GeneratorWrapper<ConvertRgba8<S>> {
         ConvertRgba8 {
             source: self.0,
             min,
@@ -273,7 +348,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn terrace(self, multiplier: f32, smoothness: f32) -> GeneratorWrapper<Terrace<Source>> {
+    pub fn terrace(self, multiplier: f32, smoothness: f32) -> GeneratorWrapper<Terrace<S>> {
         Terrace {
             source: self.0,
             multiplier,
@@ -282,7 +357,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn axis_scale(self, scale: [f32; 4]) -> GeneratorWrapper<DomainAxisScale<Source>> {
+    pub fn axis_scale(self, scale: [f32; 4]) -> GeneratorWrapper<DomainAxisScale<S>> {
         let [x_scale, y_scale, z_scale, w_scale] = scale;
         DomainAxisScale {
             source: self.0,
@@ -294,10 +369,10 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn add_dimension<NewDimensionPosition: Hybrid>(
-        self,
-        new_dimension_position: NewDimensionPosition,
-    ) -> GeneratorWrapper<AddDimension<Source, NewDimensionPosition>> {
+    pub fn add_dimension<N>(self, new_dimension_position: N) -> GeneratorWrapper<AddDimension<S, N>>
+    where
+        N: Hybrid,
+    {
         AddDimension {
             source: self.0,
             new_dimension_position,
@@ -308,7 +383,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
     pub fn remove_dimension(
         self,
         remove_dimension: Dimension,
-    ) -> GeneratorWrapper<RemoveDimension<Source>> {
+    ) -> GeneratorWrapper<RemoveDimension<S>> {
         RemoveDimension {
             source: self.0,
             remove_dimension,
@@ -316,7 +391,7 @@ impl<Source: Generator> GeneratorWrapper<Source> {
         .into()
     }
 
-    pub fn cache(self) -> GeneratorWrapper<GeneratorCache<Source>> {
+    pub fn cache(self) -> GeneratorWrapper<GeneratorCache<S>> {
         GeneratorCache { source: self.0 }.into()
     }
 }

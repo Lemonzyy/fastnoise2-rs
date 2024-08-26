@@ -5,14 +5,20 @@ use super::{Generator, GeneratorWrapper, Hybrid};
 pub trait DomainWarpNode: Generator {}
 
 #[derive(Clone, Debug)]
-pub struct DomainWarpGradient<Source: Generator, WarpAmplitude: Hybrid> {
-    pub source: Source,
-    pub warp_amplitude: WarpAmplitude,
+pub struct DomainWarpGradient<S, A>
+where
+    S: Generator,
+    A: Hybrid,
+{
+    pub source: S,
+    pub warp_amplitude: A,
     pub warp_frequency: f32,
 }
 
-impl<Source: Generator, WarpAmplitude: Hybrid> Generator
-    for DomainWarpGradient<Source, WarpAmplitude>
+impl<S, A> Generator for DomainWarpGradient<S, A>
+where
+    S: Generator,
+    A: Hybrid,
 {
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainWarpGradient").unwrap();
@@ -24,17 +30,25 @@ impl<Source: Generator, WarpAmplitude: Hybrid> Generator
     }
 }
 
-impl<Source: Generator, WarpAmplitude: Hybrid> DomainWarpNode
-    for DomainWarpGradient<Source, WarpAmplitude>
+impl<S, A> DomainWarpNode for DomainWarpGradient<S, A>
+where
+    S: Generator,
+    A: Hybrid,
 {
 }
 
-impl<Source: Generator> GeneratorWrapper<Source> {
-    pub fn warp_gradient<WarpAmplitude: Hybrid>(
+impl<S> GeneratorWrapper<S>
+where
+    S: Generator,
+{
+    pub fn warp_gradient<A>(
         self,
-        warp_amplitude: WarpAmplitude,
+        warp_amplitude: A,
         warp_frequency: f32,
-    ) -> GeneratorWrapper<DomainWarpGradient<Source, WarpAmplitude>> {
+    ) -> GeneratorWrapper<DomainWarpGradient<S, A>>
+    where
+        A: Hybrid,
+    {
         DomainWarpGradient {
             source: self.0,
             warp_amplitude,

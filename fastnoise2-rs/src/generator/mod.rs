@@ -31,9 +31,7 @@ pub mod prelude {
     //! Functions and [`Generator`] re-exports
     pub use super::{
         basic::{checkerboard, constant, distance_to_point, position_output, sinewave, white},
-        cellular::{
-            distance as cellular_distance, lookup as cellular_lookup, value as cellular_value,
-        },
+        cellular::{cellular_distance, cellular_lookup, cellular_value},
         perlin::perlin,
         simplex::{opensimplex2, opensimplex2s, simplex},
         value::value,
