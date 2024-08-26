@@ -2,14 +2,14 @@ use std::{fmt::Debug, ops::Deref};
 
 use crate::{metadata::MemberValue, MemberType, Node, SafeNode};
 
-pub trait Generator {
+pub trait Generator: Clone {
     fn build(&self) -> GeneratorWrapper<SafeNode>;
 }
 
 impl Generator for SafeNode {
     #[cfg_attr(feature = "trace", tracing::instrument)]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
-        GeneratorWrapper(self.clone())
+        self.clone().into()
     }
 }
 
@@ -17,7 +17,21 @@ pub trait Hybrid: MemberValue + Clone {}
 
 impl Hybrid for f32 {}
 
-impl<T: Generator + Clone + Debug> Hybrid for T {}
+impl Hybrid for GeneratorWrapper<f32> {}
+
+impl MemberValue for GeneratorWrapper<f32> {
+    const TYPE: MemberType = MemberType::Float;
+
+    fn apply(
+        &self,
+        node: &mut Node,
+        member: &crate::metadata::Member,
+    ) -> Result<(), crate::FastNoiseError> {
+        self.0.apply(node, member)
+    }
+}
+
+impl<T: Generator + Debug> Hybrid for T {}
 
 impl<T: Generator + Debug> Generator for &T {
     #[cfg_attr(feature = "trace", tracing::instrument)]
@@ -39,20 +53,11 @@ impl<T: Generator + Debug> MemberValue for T {
 }
 
 #[derive(Clone, Debug)]
-pub struct GeneratorWrapper<T>(pub(crate) T);
+pub struct GeneratorWrapper<T>(pub T);
 
-pub trait GeneratorWrapperExt {
-    fn wrap(self) -> GeneratorWrapper<Self>
-    where
-        Self: Sized;
-}
-
-impl<T: Hybrid> GeneratorWrapperExt for T {
-    fn wrap(self) -> GeneratorWrapper<Self>
-    where
-        Self: Sized,
-    {
-        GeneratorWrapper(self)
+impl<T: Hybrid> From<T> for GeneratorWrapper<T> {
+    fn from(value: T) -> Self {
+        Self(value)
     }
 }
 
@@ -81,12 +86,12 @@ impl Generator for Checkerboard {
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Checkerboard").unwrap();
         node.set("Size", self.size).unwrap();
-        GeneratorWrapper(SafeNode(node.into()))
+        SafeNode(node.into()).into()
     }
 }
 
 pub fn checkerboard(size: f32) -> GeneratorWrapper<Checkerboard> {
-    GeneratorWrapper(Checkerboard { size })
+    Checkerboard { size }.into()
 }
 
 #[derive(Clone, Debug)]
@@ -99,7 +104,7 @@ impl Generator for SineWave {
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("SineWave").unwrap();
         node.set("Scale", self.scale).unwrap();
-        GeneratorWrapper(SafeNode(node.into()))
+        SafeNode(node.into()).into()
     }
 }
 
@@ -123,7 +128,7 @@ where
         let mut node = Node::from_name("Add").unwrap();
         node.set("LHS", &self.lhs).unwrap();
         node.set("RHS", self.rhs.clone()).unwrap();
-        GeneratorWrapper(SafeNode(node.into()))
+        SafeNode(node.into()).into()
     }
 }
 
@@ -135,7 +140,7 @@ where
     type Output = GeneratorWrapper<Add<Lhs, Rhs>>;
 
     fn add(self, rhs: Rhs) -> Self::Output {
-        GeneratorWrapper(Add { lhs: self.0, rhs })
+        Add { lhs: self.0, rhs }.into()
     }
 }
 
@@ -159,7 +164,7 @@ where
         let mut node = Node::from_name("Subtract").unwrap();
         node.set("LHS", self.lhs.clone()).unwrap();
         node.set("RHS", self.rhs.clone()).unwrap();
-        GeneratorWrapper(SafeNode(node.into()))
+        SafeNode(node.into()).into()
     }
 }
 
@@ -171,7 +176,7 @@ where
     type Output = GeneratorWrapper<Subtract<Lhs, Rhs>>;
 
     fn sub(self, rhs: Rhs) -> Self::Output {
-        GeneratorWrapper(Subtract { lhs: self.0, rhs })
+        Subtract { lhs: self.0, rhs }.into()
     }
 }
 
@@ -204,7 +209,7 @@ where
             .unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
-        GeneratorWrapper(SafeNode(node.into()))
+        SafeNode(node.into()).into()
     }
 }
 
@@ -213,6 +218,6 @@ pub struct Perlin;
 
 impl Generator for Perlin {
     fn build(&self) -> GeneratorWrapper<SafeNode> {
-        GeneratorWrapper(SafeNode(Node::from_name("Perlin").unwrap().into()))
+        SafeNode(Node::from_name("Perlin").unwrap().into()).into()
     }
 }

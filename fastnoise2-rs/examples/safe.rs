@@ -138,7 +138,7 @@
 use std::time::Instant;
 
 use fastnoise2::{
-    gen::{checkerboard, FractalFBm, Generator, GeneratorWrapper, GeneratorWrapperExt, Perlin},
+    gen::{checkerboard, FractalFBm, Generator, GeneratorWrapper, Perlin},
     SafeNode,
 };
 use image::{GrayImage, Luma};
@@ -153,15 +153,14 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     // }
     // .build()
     let checkerboard = checkerboard(5.0).build();
-    FractalFBm {
-        source: Perlin.wrap() - checkerboard.clone(),
+    (GeneratorWrapper(FractalFBm {
+        source: Perlin,
         gain: 0.65,
-        weighted_strength: checkerboard + 0.5,
+        weighted_strength: checkerboard.clone() + 0.5,
         octaves: 4,
         lacunarity: 0.5,
-    }
-    .wrap()
-    .build()
+    }) + checkerboard)
+        .build()
 }
 
 fn main() {
