@@ -40,6 +40,7 @@ impl<J> Generator for CellularValue<J>
 where
     J: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularValue").unwrap();
         node.set("JitterModifier", self.jitter_modifier.clone())
@@ -55,6 +56,7 @@ impl<J> Generator for CellularDistance<J>
 where
     J: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularValue").unwrap();
         node.set("JitterModifier", self.jitter_modifier.clone())
@@ -74,6 +76,7 @@ where
     L: Generator,
     J: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularLookup").unwrap();
         node.set("Lookup", &self.lookup).unwrap();

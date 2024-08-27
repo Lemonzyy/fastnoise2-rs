@@ -36,6 +36,7 @@ where
     G: Hybrid,
     W: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainWarpFractalProgressive").unwrap();
         node.set("DomainWarpSource", &self.domain_warp_source)
@@ -55,6 +56,7 @@ where
     G: Hybrid,
     W: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainWarpFractalIndependant").unwrap();
         node.set("DomainWarpSource", &self.domain_warp_source)

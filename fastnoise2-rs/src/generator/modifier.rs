@@ -122,6 +122,7 @@ impl<S> Generator for DomainScale<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainScale").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -138,6 +139,7 @@ where
     Z: Hybrid,
     W: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainOffset").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -153,6 +155,7 @@ impl<S> Generator for DomainRotate<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainRotate").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -167,6 +170,7 @@ impl<S> Generator for SeedOffset<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("SeedOffset").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -179,6 +183,7 @@ impl<S> Generator for Remap<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Remap").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -194,6 +199,7 @@ impl<S> Generator for ConvertRgba8<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("ConvertRgba8").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -207,6 +213,7 @@ impl<S> Generator for Terrace<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Terrace").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -220,6 +227,7 @@ impl<S> Generator for DomainAxisScale<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainAxisScale").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -236,6 +244,7 @@ where
     S: Generator,
     N: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("AddDimension").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -249,6 +258,7 @@ impl<S> Generator for RemoveDimension<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("RemoveDimension").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -262,6 +272,7 @@ impl<S> Generator for GeneratorCache<S>
 where
     S: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("GeneratorCache").unwrap();
         node.set("Source", &self.source).unwrap();

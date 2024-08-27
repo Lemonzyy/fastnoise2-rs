@@ -44,14 +44,14 @@ pub trait Generator: Clone + Debug {
 }
 
 impl<T: Generator> Generator for &T {
-    #[cfg_attr(feature = "trace", tracing::instrument)]
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         (*self).build()
     }
 }
 
 impl Generator for SafeNode {
-    #[cfg_attr(feature = "trace", tracing::instrument)]
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         self.clone().into()
     }
@@ -93,7 +93,7 @@ impl<T> std::ops::Deref for GeneratorWrapper<T> {
 }
 
 impl<T: Generator> Generator for GeneratorWrapper<T> {
-    #[cfg_attr(feature = "trace", tracing::instrument)]
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         self.0.build()
     }

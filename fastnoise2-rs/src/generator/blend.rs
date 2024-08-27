@@ -122,6 +122,7 @@ where
     Lhs: Generator,
     Rhs: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Add").unwrap();
         node.set("LHS", &self.lhs).unwrap();
@@ -135,6 +136,7 @@ where
     Lhs: Hybrid,
     Rhs: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Subtract").unwrap();
         node.set("LHS", self.lhs.clone()).unwrap();
@@ -148,6 +150,7 @@ where
     Lhs: Generator,
     Rhs: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Multiply").unwrap();
         node.set("LHS", &self.lhs).unwrap();
@@ -161,6 +164,7 @@ where
     Lhs: Hybrid,
     Rhs: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Divide").unwrap();
         node.set("LHS", self.lhs.clone()).unwrap();
@@ -174,6 +178,7 @@ where
     Lhs: Generator,
     Rhs: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Min").unwrap();
         node.set("LHS", &self.lhs).unwrap();
@@ -187,6 +192,7 @@ where
     Lhs: Generator,
     Rhs: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Max").unwrap();
         node.set("LHS", &self.lhs).unwrap();
@@ -201,6 +207,7 @@ where
     Rhs: Hybrid,
     S: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("MinSmooth").unwrap();
         node.set("LHS", &self.lhs).unwrap();
@@ -216,6 +223,7 @@ where
     Rhs: Hybrid,
     S: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("MaxSmooth").unwrap();
         node.set("LHS", &self.lhs).unwrap();
@@ -231,6 +239,7 @@ where
     B: Generator,
     F: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Fade").unwrap();
         node.set("A", &self.a).unwrap();
@@ -245,6 +254,7 @@ where
     V: Hybrid,
     P: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("PowFloat").unwrap();
         node.set("Value", self.value.clone()).unwrap();
@@ -257,6 +267,7 @@ impl<V> Generator for PowInt<V>
 where
     V: Generator,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("PowInt").unwrap();
         node.set("Value", &self.value).unwrap();

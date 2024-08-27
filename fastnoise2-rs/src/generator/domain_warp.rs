@@ -20,6 +20,7 @@ where
     S: Generator,
     A: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainWarpGradient").unwrap();
         node.set("Source", &self.source).unwrap();

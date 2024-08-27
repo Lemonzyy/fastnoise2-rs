@@ -42,6 +42,7 @@ pub struct DistanceToPoint {
 }
 
 impl Generator for Constant {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Constant").unwrap();
         node.set("Value", self.value).unwrap();
@@ -50,12 +51,14 @@ impl Generator for Constant {
 }
 
 impl Generator for White {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         SafeNode(Node::from_name("White").unwrap().into()).into()
     }
 }
 
 impl Generator for Checkerboard {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Checkerboard").unwrap();
         node.set("Size", self.size).unwrap();
@@ -64,6 +67,7 @@ impl Generator for Checkerboard {
 }
 
 impl Generator for SineWave {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("SineWave").unwrap();
         node.set("Scale", self.scale).unwrap();
@@ -72,6 +76,7 @@ impl Generator for SineWave {
 }
 
 impl Generator for PositionOutput {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("PositionOutput").unwrap();
         node.set("MultiplierX", self.x_multiplier).unwrap();
@@ -87,6 +92,7 @@ impl Generator for PositionOutput {
 }
 
 impl Generator for DistanceToPoint {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DistanceToPoint").unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())

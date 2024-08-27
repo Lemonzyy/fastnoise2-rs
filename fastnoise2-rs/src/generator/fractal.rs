@@ -52,6 +52,7 @@ where
     G: Hybrid,
     W: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("FractalFBm").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -70,6 +71,7 @@ where
     G: Hybrid,
     W: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("FractalRidged").unwrap();
         node.set("Source", &self.source).unwrap();
@@ -89,6 +91,7 @@ where
     W: Hybrid,
     P: Hybrid,
 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("FractalFBm").unwrap();
         node.set("Source", &self.source).unwrap();

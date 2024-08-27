@@ -12,18 +12,21 @@ pub struct OpenSimplex2;
 pub struct OpenSimplex2S;
 
 impl Generator for Simplex {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         SafeNode(Node::from_name("Simplex").unwrap().into()).into()
     }
 }
 
 impl Generator for OpenSimplex2 {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         SafeNode(Node::from_name("OpenSimplex2").unwrap().into()).into()
     }
 }
 
 impl Generator for OpenSimplex2S {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         SafeNode(Node::from_name("OpenSimplex2S").unwrap().into()).into()
     }

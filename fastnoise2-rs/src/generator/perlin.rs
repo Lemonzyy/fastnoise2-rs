@@ -6,6 +6,7 @@ use super::{Generator, GeneratorWrapper};
 pub struct Perlin;
 
 impl Generator for Perlin {
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         SafeNode(Node::from_name("Perlin").unwrap().into()).into()
     }
