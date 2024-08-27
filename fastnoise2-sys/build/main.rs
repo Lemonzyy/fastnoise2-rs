@@ -32,6 +32,8 @@ fn main() {
         println!("cargo:warning={LIB_DIR_KEY} is not set; falling back to building from source");
         build_from_source();
     }
+
+    emit_std_cpp_link();
 }
 
 fn build_from_source() {
@@ -48,24 +50,36 @@ fn build_from_source() {
         source_path.join("include").join("FastNoise").display()
     );
 
+    let mut config = cmake::Config::new(&source_path);
+    config
+        .profile("Release")
+        .define("FASTNOISE2_NOISETOOL", "OFF")
+        .define("FASTNOISE2_TESTS", "OFF")
+        .define("BUILD_SHARED_LIBS", "OFF");
+
     // https://github.com/rust-lang/cmake-rs/issues/198:
     // cmake-rs add default arguments such as CMAKE_CXX_FLAGS_RELEASE to the build command.
     // Removing these would automatically add Release profile args to allow for better execution performance.
     // FastNoise2 wiki steps for compiling the library (https://github.com/Auburn/FastNoise2/wiki/Compiling-FastNoise2):
     // 1. cmake -S . -B build -D FASTNOISE2_NOISETOOL=OFF -D FASTNOISE2_TESTS=OFF -D BUILD_SHARED_LIBS=OFF
     // 2. cmake --build build --config Release
-    // This give us optimized build:
+    // This give us optimized build (with MSVC):
     // -> build/CMakeCache.txt: CMAKE_CXX_FLAGS_RELEASE:STRING=/MD /O2 /Ob2 /DNDEBUG
     // Whereas when using cmake-rs:
     // -> build/CMakeCache.txt: CMAKE_CXX_FLAGS_RELEASE:STRING= -nologo -MD -Brepro
     // Replace default arguments with those from the FastNoise2 manual build
-    let out_path = cmake::Config::new(&source_path)
-        .profile("Release")
-        .define("FASTNOISE2_NOISETOOL", "OFF")
-        .define("FASTNOISE2_TESTS", "OFF")
-        .define("BUILD_SHARED_LIBS", "OFF") // build as a static lib
-        .define("CMAKE_CXX_FLAGS_RELEASE", "/MD /O2 /Ob2 /DNDEBUG")
-        .build();
+
+    // Set optimization flags based on the target
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
+
+    match (target_os.as_str(), target_env.as_str()) {
+        ("windows", "msvc") => config.define("CMAKE_CXX_FLAGS_RELEASE", "/MD /O2 /Ob2 /DNDEBUG"),
+        // For GCC/Clang (Linux, macOS, MinGW)
+        _ => config.define("CMAKE_CXX_FLAGS_RELEASE", "-O3 -DNDEBUG"),
+    };
+
+    let out_path = config.build();
     let lib_path = out_path.join("lib");
 
     println!("cargo:rustc-link-search=native={}", lib_path.display());
@@ -105,4 +119,16 @@ fn default_source_path() -> PathBuf {
     path.push("build");
     path.push("FastNoise2");
     path
+}
+
+fn emit_std_cpp_link() {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
+
+    match (target_os.as_str(), target_env.as_str()) {
+        ("linux", _) | ("windows", "gnu") => println!("cargo:rustc-link-lib=dylib=stdc++"),
+        ("macos" | "freebsd", _) => println!("cargo:rustc-link-lib=dylib=c++"),
+        ("windows", "msvc") => {} // MSVC links C++ stdlib automatically
+        _ => println!("cargo:warning=Unknown target for C++ stdlib linking"),
+    }
 }
