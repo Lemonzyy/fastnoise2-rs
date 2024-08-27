@@ -58,7 +58,7 @@ where
 {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
-        let mut node = Node::from_name("CellularValue").unwrap();
+        let mut node = Node::from_name("CellularDistance").unwrap();
         node.set("JitterModifier", self.jitter_modifier.clone())
             .unwrap();
         node.set("DistanceFunction", &*self.distance_function.to_string())
