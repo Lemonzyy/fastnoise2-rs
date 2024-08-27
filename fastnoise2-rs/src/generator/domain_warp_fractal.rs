@@ -74,7 +74,7 @@ impl<S> GeneratorWrapper<S>
 where
     S: DomainWarpNode,
 {
-    pub fn warp_progressive<G, W>(
+    pub fn domain_warp_progressive<G, W>(
         self,
         gain: G,
         weighted_strength: W,
@@ -95,7 +95,7 @@ where
         .into()
     }
 
-    pub fn warp_independant<G, W>(
+    pub fn domain_warp_independant<G, W>(
         self,
         gain: G,
         weighted_strength: W,

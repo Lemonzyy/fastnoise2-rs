@@ -42,7 +42,7 @@ impl<S> GeneratorWrapper<S>
 where
     S: Generator,
 {
-    pub fn warp_gradient<A>(
+    pub fn domain_warp_gradient<A>(
         self,
         warp_amplitude: A,
         warp_frequency: f32,

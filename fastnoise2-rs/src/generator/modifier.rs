@@ -284,7 +284,7 @@ impl<S> GeneratorWrapper<S>
 where
     S: Generator,
 {
-    pub fn scale(self, scale: f32) -> GeneratorWrapper<DomainScale<S>> {
+    pub fn domain_scale(self, scale: f32) -> GeneratorWrapper<DomainScale<S>> {
         DomainScale {
             source: self.0,
             scale,
@@ -292,7 +292,7 @@ where
         .into()
     }
 
-    pub fn offset<X, Y, Z, W>(
+    pub fn domain_offset<X, Y, Z, W>(
         self,
         x_offset: X,
         y_offset: Y,
@@ -315,7 +315,12 @@ where
         .into()
     }
 
-    pub fn rotate(self, yaw: f32, pitch: f32, roll: f32) -> GeneratorWrapper<DomainRotate<S>> {
+    pub fn domain_rotate(
+        self,
+        yaw: f32,
+        pitch: f32,
+        roll: f32,
+    ) -> GeneratorWrapper<DomainRotate<S>> {
         DomainRotate {
             source: self.0,
             yaw,
@@ -368,7 +373,7 @@ where
         .into()
     }
 
-    pub fn axis_scale(self, scale: [f32; 4]) -> GeneratorWrapper<DomainAxisScale<S>> {
+    pub fn domain_axis_scale(self, scale: [f32; 4]) -> GeneratorWrapper<DomainAxisScale<S>> {
         let [x_scale, y_scale, z_scale, w_scale] = scale;
         DomainAxisScale {
             source: self.0,
