@@ -1,6 +1,6 @@
 [package]
 name = "fastnoise2"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "A safe Rust wrapper for FastNoise2, a node-based noise generation library optimized with SIMD."
 keywords = ["noise", "simd", "procedural", "perlin", "simplex"]
