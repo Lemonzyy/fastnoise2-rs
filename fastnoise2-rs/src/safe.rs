@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::{FastNoiseError, Node, OutputMinMax};
 
@@ -7,7 +7,10 @@ use crate::{FastNoiseError, Node, OutputMinMax};
 ///
 /// You can see how to use it in the [`generator`][`crate::generator`] module.
 #[derive(Debug, Clone)]
-pub struct SafeNode(pub(crate) Rc<Node>);
+pub struct SafeNode(pub(crate) Arc<Node>);
+
+unsafe impl Send for SafeNode {}
+unsafe impl Sync for SafeNode {}
 
 impl SafeNode {
     /// Creates a [`SafeNode`] instance from an encoded node tree.
@@ -16,7 +19,7 @@ impl SafeNode {
     /// Returns an error if the encoded node tree is invalid or if creation fails.
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
         Node::from_encoded_node_tree(encoded_node_tree)
-            .map(Rc::new)
+            .map(Arc::new)
             .map(Self)
     }
 
