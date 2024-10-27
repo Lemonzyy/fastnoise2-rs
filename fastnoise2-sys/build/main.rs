@@ -73,11 +73,14 @@ fn build_from_source() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
 
-    match (target_os.as_str(), target_env.as_str()) {
-        ("windows", "msvc") => config.define("CMAKE_CXX_FLAGS_RELEASE", "/MD /O2 /Ob2 /DNDEBUG"),
+    let cmake_cxx_flags_release =  match (target_os.as_str(), target_env.as_str()) {
+        ("windows", "msvc") => "/MD /O2 /Ob2 /DNDEBUG",
         // For GCC/Clang (Linux, macOS, MinGW)
-        _ => config.define("CMAKE_CXX_FLAGS_RELEASE", "-O3 -DNDEBUG"),
+        _ => "-O3 -DNDEBUG",
     };
+
+    println!("cargo:warning=CARGO_CFG_TARGET_OS='{target_os}' and CARGO_CFG_TARGET_ENV='{target_env}' => CMAKE_CXX_FLAGS_RELEASE='{cmake_cxx_flags_release}'");
+    config.define("CMAKE_CXX_FLAGS_RELEASE", cmake_cxx_flags_release);
 
     let out_path = config.build();
     let lib_path = out_path.join("lib");
