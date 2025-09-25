@@ -84,8 +84,10 @@ fn build_from_source() {
 
     let out_path = config.build();
     let lib_path = out_path.join("lib");
+    let lib64_path = out_path.join("lib64");
 
     println!("cargo:rustc-link-search=native={}", lib_path.display());
+    println!("cargo:rustc-link-search=native={}", lib64_path.display());
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
     generate_bindings(out_path);
