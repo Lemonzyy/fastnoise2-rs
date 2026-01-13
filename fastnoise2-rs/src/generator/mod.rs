@@ -30,10 +30,10 @@ pub mod value;
 pub mod prelude {
     //! Functions and [`Generator`] re-exports
     pub use super::{
-        basic::{checkerboard, constant, distance_to_point, position_output, sinewave, white},
+        basic::{checkerboard, constant, distance_to_point, gradient, sinewave, white},
         cellular::{cellular_distance, cellular_lookup, cellular_value},
         perlin::perlin,
-        simplex::{opensimplex2, opensimplex2s, simplex},
+        simplex::{simplex, supersimplex},
         value::value,
         Generator, GeneratorWrapper,
     };
@@ -66,11 +66,7 @@ impl<T: Generator> Hybrid for T {}
 impl<T: Generator> MemberValue for T {
     const TYPE: MemberType = MemberType::NodeLookup;
 
-    fn apply(
-        &self,
-        node: &mut Node,
-        member: &crate::metadata::Member,
-    ) -> Result<(), crate::FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &crate::metadata::Member) -> Result<(), crate::FastNoiseError> {
         node.set(&member.name, self.build().0 .0.as_ref())
     }
 }
@@ -104,32 +100,50 @@ impl Hybrid for GeneratorWrapper<f32> {}
 impl MemberValue for GeneratorWrapper<f32> {
     const TYPE: MemberType = MemberType::Float;
 
-    fn apply(
-        &self,
-        node: &mut Node,
-        member: &crate::metadata::Member,
-    ) -> Result<(), crate::FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &crate::metadata::Member) -> Result<(), crate::FastNoiseError> {
         self.0.apply(node, member)
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum DistanceFunction {
     Euclidean,
+    #[default]
     EuclideanSquared,
     Manhattan,
     Hybrid,
     MaxAxis,
+    Minkowski,
 }
 
 impl Display for DistanceFunction {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             DistanceFunction::Euclidean => f.write_str("Euclidean"),
-            DistanceFunction::EuclideanSquared => f.write_str("EuclideanSquared"),
+            DistanceFunction::EuclideanSquared => f.write_str("Euclidean Squared"),
             DistanceFunction::Manhattan => f.write_str("Manhattan"),
             DistanceFunction::Hybrid => f.write_str("Hybrid"),
-            DistanceFunction::MaxAxis => f.write_str("MaxAxis"),
+            DistanceFunction::MaxAxis => f.write_str("Max Axis"),
+            DistanceFunction::Minkowski => f.write_str("Minkowski"),
+        }
+    }
+}
+
+/// Interpolation type for Fade blending.
+#[derive(Clone, Debug, Default)]
+pub enum FadeInterpolation {
+    #[default]
+    Linear,
+    Hermite,
+    Quintic,
+}
+
+impl Display for FadeInterpolation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FadeInterpolation::Linear => f.write_str("Linear"),
+            FadeInterpolation::Hermite => f.write_str("Hermite"),
+            FadeInterpolation::Quintic => f.write_str("Quintic"),
         }
     }
 }

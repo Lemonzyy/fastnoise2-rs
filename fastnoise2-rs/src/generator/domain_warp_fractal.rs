@@ -1,6 +1,5 @@
-use crate::{safe::SafeNode, Node};
-
 use super::{domain_warp::DomainWarpNode, Generator, GeneratorWrapper, Hybrid};
+use crate::{safe::SafeNode, Node};
 
 #[derive(Clone, Debug)]
 pub struct DomainWarpFractalProgressive<S, G, W>
@@ -17,7 +16,7 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct DomainWarpFractalIndependant<S, G, W>
+pub struct DomainWarpFractalIndependent<S, G, W>
 where
     S: DomainWarpNode,
     G: Hybrid,
@@ -39,18 +38,16 @@ where
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainWarpFractalProgressive").unwrap();
-        node.set("DomainWarpSource", &self.domain_warp_source)
-            .unwrap();
+        node.set("DomainWarpSource", &self.domain_warp_source).unwrap();
         node.set("Gain", self.gain.clone()).unwrap();
-        node.set("WeightedStrength", self.weighted_strength.clone())
-            .unwrap();
+        node.set("WeightedStrength", self.weighted_strength.clone()).unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
         SafeNode(node.into()).into()
     }
 }
 
-impl<S, G, W> Generator for DomainWarpFractalIndependant<S, G, W>
+impl<S, G, W> Generator for DomainWarpFractalIndependent<S, G, W>
 where
     S: DomainWarpNode,
     G: Hybrid,
@@ -58,12 +55,10 @@ where
 {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
-        let mut node = Node::from_name("DomainWarpFractalIndependant").unwrap();
-        node.set("DomainWarpSource", &self.domain_warp_source)
-            .unwrap();
+        let mut node = Node::from_name("DomainWarpFractalIndependent").unwrap();
+        node.set("DomainWarpSource", &self.domain_warp_source).unwrap();
         node.set("Gain", self.gain.clone()).unwrap();
-        node.set("WeightedStrength", self.weighted_strength.clone())
-            .unwrap();
+        node.set("WeightedStrength", self.weighted_strength.clone()).unwrap();
         node.set("Octaves", self.octaves).unwrap();
         node.set("Lacunarity", self.lacunarity).unwrap();
         SafeNode(node.into()).into()
@@ -74,13 +69,7 @@ impl<S> GeneratorWrapper<S>
 where
     S: DomainWarpNode,
 {
-    pub fn domain_warp_progressive<G, W>(
-        self,
-        gain: G,
-        weighted_strength: W,
-        octaves: i32,
-        lacunarity: f32,
-    ) -> GeneratorWrapper<DomainWarpFractalProgressive<S, G, W>>
+    pub fn domain_warp_progressive<G, W>(self, gain: G, weighted_strength: W, octaves: i32, lacunarity: f32) -> GeneratorWrapper<DomainWarpFractalProgressive<S, G, W>>
     where
         G: Hybrid,
         W: Hybrid,
@@ -95,18 +84,12 @@ where
         .into()
     }
 
-    pub fn domain_warp_independant<G, W>(
-        self,
-        gain: G,
-        weighted_strength: W,
-        octaves: i32,
-        lacunarity: f32,
-    ) -> GeneratorWrapper<DomainWarpFractalIndependant<S, G, W>>
+    pub fn domain_warp_independent<G, W>(self, gain: G, weighted_strength: W, octaves: i32, lacunarity: f32) -> GeneratorWrapper<DomainWarpFractalIndependent<S, G, W>>
     where
         G: Hybrid,
         W: Hybrid,
     {
-        DomainWarpFractalIndependant {
+        DomainWarpFractalIndependent {
             domain_warp_source: self.0,
             gain,
             weighted_strength,

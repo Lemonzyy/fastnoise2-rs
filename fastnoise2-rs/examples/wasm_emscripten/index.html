@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FastNoise2 WASM</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #111;
+    }
+    canvas {
+      image-rendering: pixelated;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas" width="512" height="512"></canvas>
+  <script src="dist/fastnoise2_wasm.js"></script>
+  <script>
+    createFastNoise2Module().then(Module => {
+      const canvas = document.getElementById('canvas');
+      const ctx = canvas.getContext('2d');
+      const { width, height } = canvas;
+      const size = width * height;
+
+      const ptr = Module._malloc(size);
+      Module._generate_noise(ptr, width, height);
+
+      const data = Module.HEAPU8.subarray(ptr, ptr + size);
+      const img = ctx.createImageData(width, height);
+      for (let i = 0; i < size; i++) {
+        const v = data[i];
+        img.data[i * 4] = v;
+        img.data[i * 4 + 1] = v;
+        img.data[i * 4 + 2] = v;
+        img.data[i * 4 + 3] = 255;
+      }
+      ctx.putImageData(img, 0, 0);
+      Module._free(ptr);
+    });
+  </script>
+</body>
+</html>

@@ -1,6 +1,5 @@
-use crate::{safe::SafeNode, Node};
-
 use super::{DistanceFunction, Generator, GeneratorWrapper};
+use crate::{safe::SafeNode, Node};
 
 #[derive(Clone, Debug)]
 pub struct Constant {
@@ -17,19 +16,21 @@ pub struct Checkerboard {
 
 #[derive(Clone, Debug)]
 pub struct SineWave {
-    pub scale: f32,
+    pub feature_scale: f32,
 }
 
+/// Gradient generator (formerly PositionOutput in older FastNoise2 versions).
+/// Outputs a linear gradient based on position coordinates.
 #[derive(Clone, Debug)]
-pub struct PositionOutput {
-    pub x_multiplier: f32,
-    pub y_multiplier: f32,
-    pub z_multiplier: f32,
-    pub w_multiplier: f32,
-    pub x_offset: f32,
-    pub y_offset: f32,
-    pub z_offset: f32,
-    pub w_offset: f32,
+pub struct Gradient {
+    pub multiplier_x: f32,
+    pub multiplier_y: f32,
+    pub multiplier_z: f32,
+    pub multiplier_w: f32,
+    pub offset_x: f32,
+    pub offset_y: f32,
+    pub offset_z: f32,
+    pub offset_w: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -61,7 +62,7 @@ impl Generator for Checkerboard {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Checkerboard").unwrap();
-        node.set("Size", self.size).unwrap();
+        node.set("FeatureScale", self.size).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -70,23 +71,23 @@ impl Generator for SineWave {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("SineWave").unwrap();
-        node.set("Scale", self.scale).unwrap();
+        node.set("FeatureScale", self.feature_scale).unwrap();
         SafeNode(node.into()).into()
     }
 }
 
-impl Generator for PositionOutput {
+impl Generator for Gradient {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
-        let mut node = Node::from_name("PositionOutput").unwrap();
-        node.set("MultiplierX", self.x_multiplier).unwrap();
-        node.set("MultiplierY", self.y_multiplier).unwrap();
-        node.set("MultiplierZ", self.z_multiplier).unwrap();
-        node.set("MultiplierW", self.w_multiplier).unwrap();
-        node.set("OffsetX", self.x_offset).unwrap();
-        node.set("OffsetY", self.y_offset).unwrap();
-        node.set("OffsetZ", self.z_offset).unwrap();
-        node.set("OffsetW", self.w_offset).unwrap();
+        let mut node = Node::from_name("Gradient").unwrap();
+        node.set("MultiplierX", self.multiplier_x).unwrap();
+        node.set("MultiplierY", self.multiplier_y).unwrap();
+        node.set("MultiplierZ", self.multiplier_z).unwrap();
+        node.set("MultiplierW", self.multiplier_w).unwrap();
+        node.set("OffsetX", self.offset_x).unwrap();
+        node.set("OffsetY", self.offset_y).unwrap();
+        node.set("OffsetZ", self.offset_z).unwrap();
+        node.set("OffsetW", self.offset_w).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -95,8 +96,7 @@ impl Generator for DistanceToPoint {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DistanceToPoint").unwrap();
-        node.set("DistanceFunction", &*self.distance_function.to_string())
-            .unwrap();
+        node.set("DistanceFunction", &*self.distance_function.to_string()).unwrap();
         node.set("PointX", self.x_point).unwrap();
         node.set("PointY", self.y_point).unwrap();
         node.set("PointZ", self.z_point).unwrap();
@@ -116,30 +116,28 @@ pub fn white() -> GeneratorWrapper<White> {
 pub fn checkerboard(size: f32) -> GeneratorWrapper<Checkerboard> {
     Checkerboard { size }.into()
 }
-pub fn sinewave(scale: f32) -> GeneratorWrapper<SineWave> {
-    SineWave { scale }.into()
+pub fn sinewave(feature_scale: f32) -> GeneratorWrapper<SineWave> {
+    SineWave { feature_scale }.into()
 }
 
-pub fn position_output(multiplier: [f32; 4], offset: [f32; 4]) -> GeneratorWrapper<PositionOutput> {
-    let [x_multiplier, y_multiplier, z_multiplier, w_multiplier] = multiplier;
-    let [x_offset, y_offset, z_offset, w_offset] = offset;
-    PositionOutput {
-        x_multiplier,
-        y_multiplier,
-        z_multiplier,
-        w_multiplier,
-        x_offset,
-        y_offset,
-        z_offset,
-        w_offset,
+/// Creates a Gradient generator with the given multipliers and offsets.
+pub fn gradient(multiplier: [f32; 4], offset: [f32; 4]) -> GeneratorWrapper<Gradient> {
+    let [multiplier_x, multiplier_y, multiplier_z, multiplier_w] = multiplier;
+    let [offset_x, offset_y, offset_z, offset_w] = offset;
+    Gradient {
+        multiplier_x,
+        multiplier_y,
+        multiplier_z,
+        multiplier_w,
+        offset_x,
+        offset_y,
+        offset_z,
+        offset_w,
     }
     .into()
 }
 
-pub fn distance_to_point(
-    distance_function: DistanceFunction,
-    point: [f32; 4],
-) -> GeneratorWrapper<DistanceToPoint> {
+pub fn distance_to_point(distance_function: DistanceFunction, point: [f32; 4]) -> GeneratorWrapper<DistanceToPoint> {
     let [x_point, y_point, z_point, w_point] = point;
     DistanceToPoint {
         distance_function,

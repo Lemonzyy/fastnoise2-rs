@@ -17,21 +17,23 @@
 //! ```rust
 //! use fastnoise2::SafeNode;
 //!
-//! let (x_size, y_size) = (1000, 1000);
-//! let encoded_node_tree = "EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/";
+//! let (x_count, y_count) = (1000, 1000);
+//! let step_size = 0.01;
+//! let encoded_node_tree = "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==";
 //! let node = SafeNode::from_encoded_node_tree(encoded_node_tree).unwrap();
 //!
 //! // Allocate a buffer of enough size to hold all output data.
-//! let mut noise_out = vec![0.0; (x_size * y_size) as usize];
+//! let mut noise_out = vec![0.0; (x_count * y_count) as usize];
 //!
 //! let min_max = node.gen_uniform_grid_2d(
 //!     &mut noise_out,
-//!     -x_size / 2, // x offset
-//!     -y_size / 2, // y offset
-//!     x_size,
-//!     y_size,
-//!     0.01, // frequency
-//!     1337, // seed
+//!     -x_count as f32 / 2.0 * step_size, // x_offset
+//!     -y_count as f32 / 2.0 * step_size, // y_offset
+//!     x_count,                            // x_count
+//!     y_count,                            // y_count
+//!     step_size,                          // x_step_size
+//!     step_size,                          // y_step_size
+//!     1337,                               // seed
 //! );
 //!
 //! // use `noise_out`!
@@ -109,7 +111,8 @@ impl Node {
                 found: metadata_name,
             }
         })?;
-        let handle = unsafe { fnNewFromMetadata(metadata_id, 0) };
+        // Pass u32::MAX (~0u in C++) for auto-detect SIMD level
+        let handle = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
         Ok(Self {
             handle,
             metadata_id,
@@ -122,9 +125,9 @@ impl Node {
     /// Returns an error if the encoded node tree is invalid or if creation fails.
     #[cfg_attr(feature = "trace", tracing::instrument(level = "debug"))]
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
-        let cstring =
-            CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
-        let node_ptr = unsafe { fnNewFromEncodedNodeTree(cstring.as_ptr(), 0) };
+        let cstring = CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
+        // Pass u32::MAX (~0u in C++) for auto-detect SIMD level
+        let node_ptr = unsafe { fnNewFromEncodedNodeTree(cstring.as_ptr(), u32::MAX) };
         if node_ptr.is_null() {
             Err(FastNoiseError::NodeCreationFailed)
         } else {
@@ -166,7 +169,7 @@ impl Node {
     }
 
     /// # Safety
-    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size` values.
+    /// - The caller must ensure that `noise_out` has enough space to hold `x_count * y_count` values.
     /// - The internal state of the node must be correctly configured before calling this method.
     #[cfg_attr(
         feature = "trace",
@@ -175,11 +178,12 @@ impl Node {
     pub unsafe fn gen_uniform_grid_2d_unchecked(
         &self,
         noise_out: &mut [f32],
-        x_start: i32,
-        y_start: i32,
-        x_size: i32,
-        y_size: i32,
-        frequency: f32,
+        x_offset: f32,
+        y_offset: f32,
+        x_count: i32,
+        y_count: i32,
+        x_step_size: f32,
+        y_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
@@ -187,11 +191,12 @@ impl Node {
         fnGenUniformGrid2D(
             self.handle,
             noise_out.as_mut_ptr(),
-            x_start,
-            y_start,
-            x_size,
-            y_size,
-            frequency,
+            x_offset,
+            y_offset,
+            x_count,
+            y_count,
+            x_step_size,
+            y_step_size,
             seed,
             min_max.as_mut_ptr(),
         );
@@ -200,7 +205,7 @@ impl Node {
     }
 
     /// # Safety
-    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size * z_size` values.
+    /// - The caller must ensure that `noise_out` has enough space to hold `x_count * y_count * z_count` values.
     /// - The internal state of the node must be correctly configured before calling this method.
     #[cfg_attr(
         feature = "trace",
@@ -209,13 +214,15 @@ impl Node {
     pub unsafe fn gen_uniform_grid_3d_unchecked(
         &self,
         noise_out: &mut [f32],
-        x_start: i32,
-        y_start: i32,
-        z_start: i32,
-        x_size: i32,
-        y_size: i32,
-        z_size: i32,
-        frequency: f32,
+        x_offset: f32,
+        y_offset: f32,
+        z_offset: f32,
+        x_count: i32,
+        y_count: i32,
+        z_count: i32,
+        x_step_size: f32,
+        y_step_size: f32,
+        z_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
@@ -223,13 +230,15 @@ impl Node {
         fnGenUniformGrid3D(
             self.handle,
             noise_out.as_mut_ptr(),
-            x_start,
-            y_start,
-            z_start,
-            x_size,
-            y_size,
-            z_size,
-            frequency,
+            x_offset,
+            y_offset,
+            z_offset,
+            x_count,
+            y_count,
+            z_count,
+            x_step_size,
+            y_step_size,
+            z_step_size,
             seed,
             min_max.as_mut_ptr(),
         );
@@ -238,7 +247,7 @@ impl Node {
     }
 
     /// # Safety
-    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size * z_size * w_size` values.
+    /// - The caller must ensure that `noise_out` has enough space to hold `x_count * y_count * z_count * w_count` values.
     /// - The internal state of the node must be correctly configured before calling this method.
     #[cfg_attr(
         feature = "trace",
@@ -247,15 +256,18 @@ impl Node {
     pub unsafe fn gen_uniform_grid_4d_unchecked(
         &self,
         noise_out: &mut [f32],
-        x_start: i32,
-        y_start: i32,
-        z_start: i32,
-        w_start: i32,
-        x_size: i32,
-        y_size: i32,
-        z_size: i32,
-        w_size: i32,
-        frequency: f32,
+        x_offset: f32,
+        y_offset: f32,
+        z_offset: f32,
+        w_offset: f32,
+        x_count: i32,
+        y_count: i32,
+        z_count: i32,
+        w_count: i32,
+        x_step_size: f32,
+        y_step_size: f32,
+        z_step_size: f32,
+        w_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
@@ -263,15 +275,18 @@ impl Node {
         fnGenUniformGrid4D(
             self.handle,
             noise_out.as_mut_ptr(),
-            x_start,
-            y_start,
-            z_start,
-            w_start,
-            x_size,
-            y_size,
-            z_size,
-            w_size,
-            frequency,
+            x_offset,
+            y_offset,
+            z_offset,
+            w_offset,
+            x_count,
+            y_count,
+            z_count,
+            w_count,
+            x_step_size,
+            y_step_size,
+            z_step_size,
+            w_step_size,
             seed,
             min_max.as_mut_ptr(),
         );
@@ -402,7 +417,8 @@ impl Node {
         noise_out: &mut [f32],
         x_size: i32,
         y_size: i32,
-        frequency: f32,
+        x_step_size: f32,
+        y_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
         let mut min_max = [0.0; 2];
@@ -412,7 +428,8 @@ impl Node {
             noise_out.as_mut_ptr(),
             x_size,
             y_size,
-            frequency,
+            x_step_size,
+            y_step_size,
             seed,
             min_max.as_mut_ptr(),
         );
@@ -463,3 +480,6 @@ impl OutputMinMax {
         Self { min, max }
     }
 }
+
+#[cfg(test)]
+mod lib_test;

@@ -18,7 +18,7 @@ Here is an example of a encoded node tree, exported by FastNoise2's NoiseTool.
 use fastnoise2::SafeNode;
 
 let (x_size, y_size) = (1000, 1000);
-let encoded_node_tree = "EQACAAAAAAAgQBAAAAAAQBkAEwDD9Sg/DQAEAAAAAAAgQAkAAGZmJj8AAAAAPwEEAAAAAAAAAEBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAM3MTD4AMzMzPwAAAAA/";
+let encoded_node_tree = "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==";
 let node = SafeNode::from_encoded_node_tree(encoded_node_tree).unwrap();
 
 // Allocate a buffer of enough size to hold all output data.

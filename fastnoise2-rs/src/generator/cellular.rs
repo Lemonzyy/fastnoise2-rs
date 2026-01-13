@@ -1,145 +1,232 @@
+use super::{DistanceFunction, Generator, GeneratorWrapper, Hybrid};
 use crate::{safe::SafeNode, Node};
 
-use super::{DistanceFunction, Generator, GeneratorWrapper, Hybrid};
-
 #[derive(Clone, Debug)]
-pub struct CellularValue<J>
+pub struct CellularValue<J, M, S>
 where
     J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
 {
-    pub jitter_modifier: J,
+    pub grid_jitter: J,
     pub distance_function: DistanceFunction,
     pub value_index: i32,
+    pub minkowski_p: M,
+    pub size_jitter: S,
 }
 
 #[derive(Clone, Debug)]
-pub struct CellularDistance<J>
+pub struct CellularDistance<J, M, S>
 where
     J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
 {
-    pub jitter_modifier: J,
+    pub grid_jitter: J,
     pub distance_function: DistanceFunction,
     pub distance_index_0: i32,
     pub distance_index_1: i32,
     pub return_type: CellularDistanceReturnType,
+    pub minkowski_p: M,
+    pub size_jitter: S,
 }
 
 #[derive(Clone, Debug)]
-pub struct CellularLookup<L, J>
+pub struct CellularLookup<L, J, M, S>
 where
     L: Generator,
     J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
 {
     pub lookup: L,
-    pub jitter_modifier: J,
+    pub grid_jitter: J,
     pub distance_function: DistanceFunction,
-    pub lookup_frequency: f32,
+    pub minkowski_p: M,
+    pub size_jitter: S,
 }
 
-impl<J> Generator for CellularValue<J>
+impl<J, M, S> Generator for CellularValue<J, M, S>
 where
     J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
 {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularValue").unwrap();
-        node.set("JitterModifier", self.jitter_modifier.clone())
-            .unwrap();
-        node.set("DistanceFunction", &*self.distance_function.to_string())
-            .unwrap();
+        node.set("GridJitter", self.grid_jitter.clone()).unwrap();
+        node.set("DistanceFunction", &*self.distance_function.to_string()).unwrap();
         node.set("ValueIndex", self.value_index).unwrap();
+        node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
+        node.set("SizeJitter", self.size_jitter.clone()).unwrap();
         SafeNode(node.into()).into()
     }
 }
 
-impl<J> Generator for CellularDistance<J>
+impl<J, M, S> Generator for CellularDistance<J, M, S>
 where
     J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
 {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularDistance").unwrap();
-        node.set("JitterModifier", self.jitter_modifier.clone())
-            .unwrap();
-        node.set("DistanceFunction", &*self.distance_function.to_string())
-            .unwrap();
+        node.set("GridJitter", self.grid_jitter.clone()).unwrap();
+        node.set("DistanceFunction", &*self.distance_function.to_string()).unwrap();
         node.set("DistanceIndex0", self.distance_index_0).unwrap();
         node.set("DistanceIndex1", self.distance_index_1).unwrap();
-        node.set("ReturnType", &*self.return_type.to_string())
-            .unwrap();
+        node.set("ReturnType", &*self.return_type.to_string()).unwrap();
+        node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
+        node.set("SizeJitter", self.size_jitter.clone()).unwrap();
         SafeNode(node.into()).into()
     }
 }
 
-impl<L, J> Generator for CellularLookup<L, J>
+impl<L, J, M, S> Generator for CellularLookup<L, J, M, S>
 where
     L: Generator,
     J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
 {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularLookup").unwrap();
         node.set("Lookup", &self.lookup).unwrap();
-        node.set("JitterModifier", self.jitter_modifier.clone())
-            .unwrap();
-        node.set("DistanceFunction", &*self.distance_function.to_string())
-            .unwrap();
-        node.set("LookupFrequency", self.lookup_frequency).unwrap();
+        node.set("GridJitter", self.grid_jitter.clone()).unwrap();
+        node.set("DistanceFunction", &*self.distance_function.to_string()).unwrap();
+        node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
+        node.set("SizeJitter", self.size_jitter.clone()).unwrap();
         SafeNode(node.into()).into()
     }
 }
 
-pub fn cellular_value<J>(
-    jitter_modifier: J,
-    distance_function: DistanceFunction,
-    value_index: i32,
-) -> GeneratorWrapper<CellularValue<J>>
+/// Creates a CellularValue generator with default parameters.
+pub fn cellular_value<J>(grid_jitter: J, distance_function: DistanceFunction, value_index: i32) -> GeneratorWrapper<CellularValue<J, f32, f32>>
 where
     J: Hybrid,
 {
     CellularValue {
-        jitter_modifier,
+        grid_jitter,
         distance_function,
         value_index,
+        minkowski_p: 1.5,
+        size_jitter: 0.0,
     }
     .into()
 }
 
+/// Creates a CellularValue generator with all parameters.
+pub fn cellular_value_full<J, M, S>(
+    grid_jitter: J,
+    distance_function: DistanceFunction,
+    value_index: i32,
+    minkowski_p: M,
+    size_jitter: S,
+) -> GeneratorWrapper<CellularValue<J, M, S>>
+where
+    J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
+{
+    CellularValue {
+        grid_jitter,
+        distance_function,
+        value_index,
+        minkowski_p,
+        size_jitter,
+    }
+    .into()
+}
+
+/// Creates a CellularDistance generator with default parameters.
 pub fn cellular_distance<J>(
-    jitter_modifier: J,
+    grid_jitter: J,
     distance_function: DistanceFunction,
     distance_index_0: i32,
     distance_index_1: i32,
     return_type: CellularDistanceReturnType,
-) -> GeneratorWrapper<CellularDistance<J>>
+) -> GeneratorWrapper<CellularDistance<J, f32, f32>>
 where
     J: Hybrid,
 {
     CellularDistance {
-        jitter_modifier,
+        grid_jitter,
         distance_function,
         distance_index_0,
         distance_index_1,
         return_type,
+        minkowski_p: 1.5,
+        size_jitter: 0.0,
     }
     .into()
 }
 
-pub fn cellular_lookup<L, J>(
-    lookup: L,
-    jitter_modifier: J,
+/// Creates a CellularDistance generator with all parameters.
+pub fn cellular_distance_full<J, M, S>(
+    grid_jitter: J,
     distance_function: DistanceFunction,
-    lookup_frequency: f32,
-) -> GeneratorWrapper<CellularLookup<L, J>>
+    distance_index_0: i32,
+    distance_index_1: i32,
+    return_type: CellularDistanceReturnType,
+    minkowski_p: M,
+    size_jitter: S,
+) -> GeneratorWrapper<CellularDistance<J, M, S>>
+where
+    J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
+{
+    CellularDistance {
+        grid_jitter,
+        distance_function,
+        distance_index_0,
+        distance_index_1,
+        return_type,
+        minkowski_p,
+        size_jitter,
+    }
+    .into()
+}
+
+/// Creates a CellularLookup generator with default parameters.
+pub fn cellular_lookup<L, J>(lookup: L, grid_jitter: J, distance_function: DistanceFunction) -> GeneratorWrapper<CellularLookup<L, J, f32, f32>>
 where
     L: Generator,
     J: Hybrid,
 {
     CellularLookup {
         lookup,
-        jitter_modifier,
+        grid_jitter,
         distance_function,
-        lookup_frequency,
+        minkowski_p: 1.5,
+        size_jitter: 0.0,
+    }
+    .into()
+}
+
+/// Creates a CellularLookup generator with all parameters.
+pub fn cellular_lookup_full<L, J, M, S>(
+    lookup: L,
+    grid_jitter: J,
+    distance_function: DistanceFunction,
+    minkowski_p: M,
+    size_jitter: S,
+) -> GeneratorWrapper<CellularLookup<L, J, M, S>>
+where
+    L: Generator,
+    J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
+{
+    CellularLookup {
+        lookup,
+        grid_jitter,
+        distance_function,
+        minkowski_p,
+        size_jitter,
     }
     .into()
 }

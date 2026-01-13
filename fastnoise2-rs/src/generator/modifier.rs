@@ -1,6 +1,24 @@
-use crate::{safe::SafeNode, Node};
+use std::fmt::Display;
 
 use super::{Dimension, Generator, GeneratorWrapper, Hybrid};
+use crate::{safe::SafeNode, Node};
+
+/// Rotation type for DomainRotatePlane.
+#[derive(Clone, Debug, Default)]
+pub enum PlaneRotationType {
+    #[default]
+    ImproveXYPlanes,
+    ImproveXZPlanes,
+}
+
+impl Display for PlaneRotationType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            PlaneRotationType::ImproveXYPlanes => f.write_str("Improve XY Planes"),
+            PlaneRotationType::ImproveXZPlanes => f.write_str("Improve XZ Planes"),
+        }
+    }
+}
 
 #[derive(Clone, Debug)]
 pub struct DomainScale<S>
@@ -118,6 +136,45 @@ where
     pub source: S,
 }
 
+/// Creates flow patterns by 'ping-ponging' input values between extremes.
+#[derive(Clone, Debug)]
+pub struct PingPong<S, P>
+where
+    S: Generator,
+    P: Hybrid,
+{
+    pub source: S,
+    pub ping_pong_strength: P,
+}
+
+/// Returns the absolute value of the source output.
+#[derive(Clone, Debug)]
+pub struct Abs<S>
+where
+    S: Generator,
+{
+    pub source: S,
+}
+
+/// Returns the square root of the absolute value of the source output, preserving the original sign (signed square root).
+#[derive(Clone, Debug)]
+pub struct SignedSquareRoot<S>
+where
+    S: Generator,
+{
+    pub source: S,
+}
+
+/// Applies preset rotation to improve noise in specific 3D planes. Faster than DomainRotate.
+#[derive(Clone, Debug)]
+pub struct DomainRotatePlane<S>
+where
+    S: Generator,
+{
+    pub source: S,
+    pub rotation_type: PlaneRotationType,
+}
+
 impl<S> Generator for DomainScale<S>
 where
     S: Generator,
@@ -126,7 +183,7 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainScale").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("Scale", self.scale).unwrap();
+        node.set("Scaling", self.scale).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -217,7 +274,7 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Terrace").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("Multiplier", self.multiplier).unwrap();
+        node.set("StepCount", self.multiplier).unwrap();
         node.set("Smoothness", self.smoothness).unwrap();
         SafeNode(node.into()).into()
     }
@@ -231,10 +288,10 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainAxisScale").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("ScaleX", self.x_scale).unwrap();
-        node.set("ScaleY", self.y_scale).unwrap();
-        node.set("ScaleZ", self.z_scale).unwrap();
-        node.set("ScaleW", self.w_scale).unwrap();
+        node.set("ScalingX", self.x_scale).unwrap();
+        node.set("ScalingY", self.y_scale).unwrap();
+        node.set("ScalingZ", self.z_scale).unwrap();
+        node.set("ScalingW", self.w_scale).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -248,8 +305,7 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("AddDimension").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("NewDimensionPosition", self.new_dimension_position.clone())
-            .unwrap();
+        node.set("NewDimensionPosition", self.new_dimension_position.clone()).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -262,8 +318,7 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("RemoveDimension").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("RemoveDimension", &*self.remove_dimension.to_string())
-            .unwrap();
+        node.set("RemoveDimension", &*self.remove_dimension.to_string()).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -280,25 +335,66 @@ where
     }
 }
 
+impl<S, P> Generator for PingPong<S, P>
+where
+    S: Generator,
+    P: Hybrid,
+{
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        let mut node = Node::from_name("PingPong").unwrap();
+        node.set("Source", &self.source).unwrap();
+        node.set("PingPongStrength", self.ping_pong_strength.clone()).unwrap();
+        SafeNode(node.into()).into()
+    }
+}
+
+impl<S> Generator for Abs<S>
+where
+    S: Generator,
+{
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        let mut node = Node::from_name("Abs").unwrap();
+        node.set("Source", &self.source).unwrap();
+        SafeNode(node.into()).into()
+    }
+}
+
+impl<S> Generator for SignedSquareRoot<S>
+where
+    S: Generator,
+{
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        let mut node = Node::from_name("SignedSquareRoot").unwrap();
+        node.set("Source", &self.source).unwrap();
+        SafeNode(node.into()).into()
+    }
+}
+
+impl<S> Generator for DomainRotatePlane<S>
+where
+    S: Generator,
+{
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        let mut node = Node::from_name("DomainRotatePlane").unwrap();
+        node.set("Source", &self.source).unwrap();
+        node.set("RotationType", &*self.rotation_type.to_string()).unwrap();
+        SafeNode(node.into()).into()
+    }
+}
+
 impl<S> GeneratorWrapper<S>
 where
     S: Generator,
 {
     pub fn domain_scale(self, scale: f32) -> GeneratorWrapper<DomainScale<S>> {
-        DomainScale {
-            source: self.0,
-            scale,
-        }
-        .into()
+        DomainScale { source: self.0, scale }.into()
     }
 
-    pub fn domain_offset<X, Y, Z, W>(
-        self,
-        x_offset: X,
-        y_offset: Y,
-        z_offset: Z,
-        w_offset: W,
-    ) -> GeneratorWrapper<DomainOffset<S, X, Y, Z, W>>
+    pub fn domain_offset<X, Y, Z, W>(self, x_offset: X, y_offset: Y, z_offset: Z, w_offset: W) -> GeneratorWrapper<DomainOffset<S, X, Y, Z, W>>
     where
         X: Hybrid,
         Y: Hybrid,
@@ -315,36 +411,15 @@ where
         .into()
     }
 
-    pub fn domain_rotate(
-        self,
-        yaw: f32,
-        pitch: f32,
-        roll: f32,
-    ) -> GeneratorWrapper<DomainRotate<S>> {
-        DomainRotate {
-            source: self.0,
-            yaw,
-            pitch,
-            roll,
-        }
-        .into()
+    pub fn domain_rotate(self, yaw: f32, pitch: f32, roll: f32) -> GeneratorWrapper<DomainRotate<S>> {
+        DomainRotate { source: self.0, yaw, pitch, roll }.into()
     }
 
     pub fn seed_offset(self, seed_offset: i32) -> GeneratorWrapper<SeedOffset<S>> {
-        SeedOffset {
-            source: self.0,
-            seed_offset,
-        }
-        .into()
+        SeedOffset { source: self.0, seed_offset }.into()
     }
 
-    pub fn remap(
-        self,
-        from_min: f32,
-        from_max: f32,
-        to_min: f32,
-        to_max: f32,
-    ) -> GeneratorWrapper<Remap<S>> {
+    pub fn remap(self, from_min: f32, from_max: f32, to_min: f32, to_max: f32) -> GeneratorWrapper<Remap<S>> {
         Remap {
             source: self.0,
             from_min,
@@ -356,12 +431,7 @@ where
     }
 
     pub fn convert_rgba8(self, min: f32, max: f32) -> GeneratorWrapper<ConvertRgba8<S>> {
-        ConvertRgba8 {
-            source: self.0,
-            min,
-            max,
-        }
-        .into()
+        ConvertRgba8 { source: self.0, min, max }.into()
     }
 
     pub fn terrace(self, multiplier: f32, smoothness: f32) -> GeneratorWrapper<Terrace<S>> {
@@ -396,18 +466,47 @@ where
         .into()
     }
 
-    pub fn remove_dimension(
-        self,
-        remove_dimension: Dimension,
-    ) -> GeneratorWrapper<RemoveDimension<S>> {
-        RemoveDimension {
-            source: self.0,
-            remove_dimension,
-        }
-        .into()
+    pub fn remove_dimension(self, remove_dimension: Dimension) -> GeneratorWrapper<RemoveDimension<S>> {
+        RemoveDimension { source: self.0, remove_dimension }.into()
     }
 
     pub fn cache(self) -> GeneratorWrapper<GeneratorCache<S>> {
         GeneratorCache { source: self.0 }.into()
+    }
+
+    /// Creates flow patterns by 'ping-ponging' input values between extremes.
+    pub fn ping_pong<P>(self, ping_pong_strength: P) -> GeneratorWrapper<PingPong<S, P>>
+    where
+        P: Hybrid,
+    {
+        PingPong {
+            source: self.0,
+            ping_pong_strength,
+        }
+        .into()
+    }
+
+    /// Returns the absolute value of the source output.
+    pub fn abs(self) -> GeneratorWrapper<Abs<S>> {
+        Abs { source: self.0 }.into()
+    }
+
+    /// Returns the square root of the absolute value of the source output, preserving the original sign.
+    pub fn signed_sqrt(self) -> GeneratorWrapper<SignedSquareRoot<S>> {
+        SignedSquareRoot { source: self.0 }.into()
+    }
+
+    /// Applies preset rotation to improve noise in specific 3D planes. Uses ImproveXYPlanes by default.
+    pub fn domain_rotate_plane(self) -> GeneratorWrapper<DomainRotatePlane<S>> {
+        DomainRotatePlane {
+            source: self.0,
+            rotation_type: PlaneRotationType::default(),
+        }
+        .into()
+    }
+
+    /// Applies preset rotation to improve noise in specific 3D planes with a custom rotation type.
+    pub fn domain_rotate_plane_with_type(self, rotation_type: PlaneRotationType) -> GeneratorWrapper<DomainRotatePlane<S>> {
+        DomainRotatePlane { source: self.0, rotation_type }.into()
     }
 }

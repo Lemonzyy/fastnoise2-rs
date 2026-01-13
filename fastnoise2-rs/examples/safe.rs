@@ -7,6 +7,7 @@ use fastnoise2::{
         blend::{Add, Fade},
         prelude::*,
         simplex::Simplex,
+        FadeInterpolation,
     },
     SafeNode,
 };
@@ -22,18 +23,24 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     // that FastNoise2 handles differently. It is also easier to write "0.5".
     let _n = Add {
         lhs: Fade {
-            a: SineWave { scale: 0.1 },
-            b: SineWave { scale: -0.2 },
-            fade: Simplex,
+            a: SineWave { feature_scale: 0.1 },
+            b: SineWave { feature_scale: -0.2 },
+            fade: Simplex::default(),
+            fade_min: -1.0,
+            fade_max: 1.0,
+            interpolation: FadeInterpolation::Linear,
         },
         rhs: Constant { value: 0.5 }, // this uses a Constant node as entry to a hybrid member
     };
 
     let _n = Add {
         lhs: Fade {
-            a: SineWave { scale: 0.1 },
-            b: SineWave { scale: -0.2 },
-            fade: Simplex,
+            a: SineWave { feature_scale: 0.1 },
+            b: SineWave { feature_scale: -0.2 },
+            fade: Simplex::default(),
+            fade_min: -1.0,
+            fade_max: 1.0,
+            interpolation: FadeInterpolation::Linear,
         },
         rhs: 0.5, // and this uses a float directly
     };
@@ -44,16 +51,19 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
 
     // You can also mix the two writings. Note the use of the GeneratorWrapper type to enable use of the operator
     let _n = GeneratorWrapper(Fade {
-        a: SineWave { scale: 0.1 },
+        a: SineWave { feature_scale: 0.1 },
         b: sinewave(-0.2),
-        fade: Simplex,
+        fade: Simplex::default(),
+        fade_min: -1.0,
+        fade_max: 1.0,
+        interpolation: FadeInterpolation::Linear,
     }) + 0.5;
 
     // Qualifying the "fade" method can also lead to better syntax, although this is subjective.
     let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), simplex()) + 0.5;
 
     // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since GeneratorWrapper is not needed here.
-    let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), Simplex) + 0.5;
+    let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), Simplex::default()) + 0.5;
 
     // In the end, this is the most idiomatic writing, and it's easier to import functions by using "use fastnoise2::generator::prelude::*;"
     let n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5;
@@ -67,14 +77,16 @@ fn main() {
 
     let mut noise = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
+    let step_size = 0.02;
     let start = Instant::now();
     let min_max = node.gen_uniform_grid_2d(
         &mut noise,
-        -X_SIZE / 2,
-        -Y_SIZE / 2,
-        X_SIZE,
-        Y_SIZE,
-        0.02,
+        -X_SIZE as f32 / 2.0 * step_size, // x_offset
+        -Y_SIZE as f32 / 2.0 * step_size, // y_offset
+        X_SIZE,                           // x_count
+        Y_SIZE,                           // y_count
+        step_size,                        // x_step_size
+        step_size,                        // y_step_size
         1337,
     );
     let elapsed = start.elapsed();
@@ -102,9 +114,7 @@ fn main() {
 }
 
 fn save(img: GrayImage, filename: &str) {
-    let output_dir =
-        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default())
-            .join("examples_output");
+    let output_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default()).join("examples_output");
     std::fs::create_dir_all(&output_dir).expect("Failed to create directories");
     let output_path = output_dir.join(filename);
     img.save(&output_path).expect("Failed to save image");

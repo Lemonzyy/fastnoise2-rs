@@ -28,98 +28,116 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out.len() < x_size * y_size`.
+    /// Panics if `noise_out.len() < x_count * y_count`.
     pub fn gen_uniform_grid_2d(
         &self,
         noise_out: &mut [f32],
-        x_start: i32,
-        y_start: i32,
-        x_size: i32,
-        y_size: i32,
-        frequency: f32,
+        x_offset: f32,
+        y_offset: f32,
+        x_count: i32,
+        y_count: i32,
+        x_step_size: f32,
+        y_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() >= (x_size * y_size) as usize);
+        assert!(noise_out.len() >= (x_count * y_count) as usize);
 
         unsafe {
             self.0.gen_uniform_grid_2d_unchecked(
-                noise_out, x_start, y_start, x_size, y_size, frequency, seed,
+                noise_out,
+                x_offset,
+                y_offset,
+                x_count,
+                y_count,
+                x_step_size,
+                y_step_size,
+                seed,
             )
         }
     }
 
     /// # Panics
-    /// Panics if `noise_out.len() < x_size * y_size * z_size`.
+    /// Panics if `noise_out.len() < x_count * y_count * z_count`.
     pub fn gen_uniform_grid_3d(
         &self,
         noise_out: &mut [f32],
-        x_start: i32,
-        y_start: i32,
-        z_start: i32,
-        x_size: i32,
-        y_size: i32,
-        z_size: i32,
-        frequency: f32,
+        x_offset: f32,
+        y_offset: f32,
+        z_offset: f32,
+        x_count: i32,
+        y_count: i32,
+        z_count: i32,
+        x_step_size: f32,
+        y_step_size: f32,
+        z_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() >= (x_size * y_size * z_size) as usize);
+        assert!(noise_out.len() >= (x_count * y_count * z_count) as usize);
 
         unsafe {
             self.0.gen_uniform_grid_3d_unchecked(
-                noise_out, x_start, y_start, z_start, x_size, y_size, z_size, frequency, seed,
+                noise_out,
+                x_offset,
+                y_offset,
+                z_offset,
+                x_count,
+                y_count,
+                z_count,
+                x_step_size,
+                y_step_size,
+                z_step_size,
+                seed,
             )
         }
     }
 
     /// # Panics
-    /// Panics if `noise_out.len() < x_size * y_size * z_size * w_size`.
+    /// Panics if `noise_out.len() < x_count * y_count * z_count * w_count`.
     pub fn gen_uniform_grid_4d(
         &self,
         noise_out: &mut [f32],
-        x_start: i32,
-        y_start: i32,
-        z_start: i32,
-        w_start: i32,
-        x_size: i32,
-        y_size: i32,
-        z_size: i32,
-        w_size: i32,
-        frequency: f32,
+        x_offset: f32,
+        y_offset: f32,
+        z_offset: f32,
+        w_offset: f32,
+        x_count: i32,
+        y_count: i32,
+        z_count: i32,
+        w_count: i32,
+        x_step_size: f32,
+        y_step_size: f32,
+        z_step_size: f32,
+        w_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() >= (x_size * y_size * z_size * w_size) as usize);
+        assert!(noise_out.len() >= (x_count * y_count * z_count * w_count) as usize);
 
         unsafe {
             self.0.gen_uniform_grid_4d_unchecked(
-                noise_out, x_start, y_start, z_start, w_start, x_size, y_size, z_size, w_size,
-                frequency, seed,
+                noise_out,
+                x_offset,
+                y_offset,
+                z_offset,
+                w_offset,
+                x_count,
+                y_count,
+                z_count,
+                w_count,
+                x_step_size,
+                y_step_size,
+                z_step_size,
+                w_step_size,
+                seed,
             )
         }
     }
 
     /// # Panics
     /// Panics if `noise_out`, `x_pos_array`, and `y_pos_array` do not have the same length.
-    pub fn gen_position_array_2d(
-        &self,
-        noise_out: &mut [f32],
-        x_pos_array: &[f32],
-        y_pos_array: &[f32],
-        x_offset: f32,
-        y_offset: f32,
-        seed: i32,
-    ) -> OutputMinMax {
+    pub fn gen_position_array_2d(&self, noise_out: &mut [f32], x_pos_array: &[f32], y_pos_array: &[f32], x_offset: f32, y_offset: f32, seed: i32) -> OutputMinMax {
         assert!(noise_out.len() == x_pos_array.len() && x_pos_array.len() == y_pos_array.len());
 
-        unsafe {
-            self.0.gen_position_array_2d_unchecked(
-                noise_out,
-                x_pos_array,
-                y_pos_array,
-                x_offset,
-                y_offset,
-                seed,
-            )
-        }
+        unsafe { self.0.gen_position_array_2d_unchecked(noise_out, x_pos_array, y_pos_array, x_offset, y_offset, seed) }
     }
 
     /// # Panics
@@ -199,14 +217,21 @@ impl SafeNode {
         noise_out: &mut [f32],
         x_size: i32,
         y_size: i32,
-        frequency: f32,
+        x_step_size: f32,
+        y_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
         assert!(noise_out.len() >= (x_size * y_size) as usize);
 
         unsafe {
-            self.0
-                .gen_tileable_2d_unchecked(noise_out, x_size, y_size, frequency, seed)
+            self.0.gen_tileable_2d_unchecked(
+                noise_out,
+                x_size,
+                y_size,
+                x_step_size,
+                y_step_size,
+                seed,
+            )
         }
     }
 
