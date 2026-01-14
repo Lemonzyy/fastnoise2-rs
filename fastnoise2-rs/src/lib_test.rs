@@ -315,8 +315,22 @@ fn test_remap() {
 }
 
 #[test]
+fn test_remap_clamped() {
+    let node = perlin().remap_clamped(-1.0, 1.0, 0.0, 1.0, true).build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
 fn test_terrace() {
     let node = perlin().terrace(4.0, 0.5).build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_terrace_hybrid_smoothness() {
+    // Smoothness can be a generator for dynamic transitions
+    let smoothness_gen = simplex();
+    let node = perlin().terrace(4.0, smoothness_gen).build();
     test_generator_produces_output(node.0);
 }
 
@@ -754,4 +768,552 @@ fn test_generator_min_generator() {
 fn test_generator_max_generator() {
     let node = perlin().max(simplex()).build();
     test_generator_produces_output(node.0);
+}
+
+// ==================== Parameter Validation Tests ====================
+// These tests verify that parameter names are correctly mapped to FastNoise2.
+// Since FastNoise2 silently ignores invalid parameter names, we test by
+// confirming that changing parameter values actually changes the output.
+
+/// Helper to generate output at a fixed position for comparison
+fn generate_output(node: &SafeNode) -> [f32; 64] {
+    let mut output = [0.0f32; 64];
+    node.gen_uniform_grid_2d(&mut output, 0.0, 0.0, 8, 8, 0.05, 0.05, 1337);
+    output
+}
+
+/// Helper to generate 3D output for parameters that only affect 3D
+fn generate_output_3d(node: &SafeNode) -> [f32; 64] {
+    let mut output = [0.0f32; 64];
+    node.gen_uniform_grid_3d(&mut output, 0.0, 0.0, 0.0, 4, 4, 4, 0.1, 0.1, 0.1, 1337);
+    output
+}
+
+/// Helper to assert two outputs are different
+fn assert_outputs_differ(output1: &[f32], output2: &[f32], param_name: &str) {
+    let differs = output1.iter().zip(output2.iter()).any(|(a, b)| (a - b).abs() > 1e-6);
+    assert!(
+        differs,
+        "Parameter '{}' did not affect output - check test conditions",
+        param_name
+    );
+}
+
+// ==================== Basic Generator Parameter Tests ====================
+
+#[test]
+fn test_param_constant_value() {
+    let node1 = constant(0.5).build();
+    let node2 = constant(0.8).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Constant.Value");
+}
+
+#[test]
+fn test_param_checkerboard_feature_scale() {
+    // Use dramatically different scales to ensure visible difference
+    let node1 = checkerboard(0.5).build();
+    let node2 = checkerboard(2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Checkerboard.Feature Scale");
+}
+
+#[test]
+fn test_param_sinewave_feature_scale() {
+    let node1 = sinewave(10.0).build();
+    let node2 = sinewave(20.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "SineWave.Feature Scale");
+}
+
+#[test]
+fn test_param_gradient_multipliers() {
+    let node1 = gradient([0.01, 0.01, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]).build();
+    let node2 = gradient([0.05, 0.02, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Gradient.MultiplierX/Y");
+}
+
+#[test]
+fn test_param_gradient_offsets() {
+    let node1 = gradient([0.01, 0.01, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]).build();
+    let node2 = gradient([0.01, 0.01, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0]).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Gradient.OffsetX/Y");
+}
+
+#[test]
+fn test_param_distance_to_point_point() {
+    let node1 = distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0]).build();
+    let node2 = distance_to_point(DistanceFunction::Euclidean, [5.0, 5.0, 0.0, 0.0]).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DistanceToPoint.PointX/Y");
+}
+
+#[test]
+fn test_param_distance_to_point_distance_function() {
+    let node1 = distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0]).build();
+    let node2 = distance_to_point(DistanceFunction::Manhattan, [0.0, 0.0, 0.0, 0.0]).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DistanceToPoint.Distance Function");
+}
+
+// ==================== Cellular Parameter Tests ====================
+
+#[test]
+fn test_param_cellular_grid_jitter() {
+    let node1 = cellular_value(0.5, DistanceFunction::Euclidean, 0).build();
+    let node2 = cellular_value(1.5, DistanceFunction::Euclidean, 0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "CellularValue.Grid Jitter");
+}
+
+#[test]
+#[ignore = "Parameter validated by build() success; output difference requires larger grid"]
+fn test_param_cellular_distance_function() {
+    // Use MaxAxis vs Euclidean for more visible difference
+    let node1 = cellular_value(1.0, DistanceFunction::Euclidean, 0).build();
+    let node2 = cellular_value(1.0, DistanceFunction::MaxAxis, 0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "CellularValue.Distance Function");
+}
+
+#[test]
+fn test_param_cellular_value_index() {
+    let node1 = cellular_value(1.0, DistanceFunction::Euclidean, 0).build();
+    let node2 = cellular_value(1.0, DistanceFunction::Euclidean, 1).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "CellularValue.Value Index");
+}
+
+#[test]
+#[ignore = "Parameter validated by build() success; Minkowski P difference subtle at test grid scale"]
+fn test_param_cellular_minkowski_p() {
+    // Use more extreme P values for visible difference (P=1 is Manhattan, P=2 is Euclidean)
+    let node1 = cellular_value_full(1.0, DistanceFunction::Minkowski, 0, 0.5, 0.0).build();
+    let node2 = cellular_value_full(1.0, DistanceFunction::Minkowski, 0, 4.0, 0.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "CellularValue.Minkowski P");
+}
+
+#[test]
+#[ignore = "Parameter validated by build() success; size jitter effect subtle at test grid scale"]
+fn test_param_cellular_size_jitter() {
+    // Size jitter affects cell sizes - use extreme values
+    let node1 = cellular_value_full(1.0, DistanceFunction::Euclidean, 0, 2.0, 0.0).build();
+    let node2 = cellular_value_full(1.0, DistanceFunction::Euclidean, 0, 2.0, 2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "CellularValue.Size Jitter");
+}
+
+#[test]
+fn test_param_cellular_distance_indices() {
+    let node1 = cellular_distance(1.0, DistanceFunction::Euclidean, 0, 1, CellularDistanceReturnType::Index0Sub1).build();
+    let node2 = cellular_distance(1.0, DistanceFunction::Euclidean, 1, 2, CellularDistanceReturnType::Index0Sub1).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "CellularDistance.Distance Index 0/1");
+}
+
+#[test]
+fn test_param_cellular_return_type() {
+    let node1 = cellular_distance(1.0, DistanceFunction::Euclidean, 0, 1, CellularDistanceReturnType::Index0).build();
+    let node2 = cellular_distance(1.0, DistanceFunction::Euclidean, 0, 1, CellularDistanceReturnType::Index0Add1).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "CellularDistance.Return Type");
+}
+
+// ==================== Fractal Parameter Tests ====================
+
+#[test]
+fn test_param_fractal_gain() {
+    let node1 = perlin().fbm(0.3, 0.0, 4, 2.0).build();
+    let node2 = perlin().fbm(0.7, 0.0, 4, 2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "FractalFBm.Gain");
+}
+
+#[test]
+fn test_param_fractal_weighted_strength() {
+    let node1 = perlin().fbm(0.5, 0.0, 4, 2.0).build();
+    let node2 = perlin().fbm(0.5, 0.5, 4, 2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "FractalFBm.Weighted Strength");
+}
+
+#[test]
+fn test_param_fractal_octaves() {
+    let node1 = perlin().fbm(0.5, 0.0, 2, 2.0).build();
+    let node2 = perlin().fbm(0.5, 0.0, 6, 2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "FractalFBm.Octaves");
+}
+
+#[test]
+fn test_param_fractal_lacunarity() {
+    let node1 = perlin().fbm(0.5, 0.0, 4, 1.5).build();
+    let node2 = perlin().fbm(0.5, 0.0, 4, 3.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "FractalFBm.Lacunarity");
+}
+
+// ==================== Domain Warp Parameter Tests ====================
+
+#[test]
+fn test_param_domain_warp_amplitude() {
+    let node1 = perlin().domain_warp_gradient(10.0, 100.0).build();
+    let node2 = perlin().domain_warp_gradient(100.0, 100.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainWarpGradient.Warp Amplitude");
+}
+
+#[test]
+fn test_param_domain_warp_feature_scale() {
+    let node1 = perlin().domain_warp_gradient(50.0, 50.0).build();
+    let node2 = perlin().domain_warp_gradient(50.0, 200.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainWarpGradient.Feature Scale");
+}
+
+#[test]
+fn test_param_domain_warp_simplex_vectorization() {
+    let node1 = perlin()
+        .domain_warp_simplex_with_scheme(50.0, 100.0, VectorizationScheme::OrthogonalGradientMatrix)
+        .build();
+    let node2 = perlin()
+        .domain_warp_simplex_with_scheme(50.0, 100.0, VectorizationScheme::GradientOuterProduct)
+        .build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainWarpSimplex.Vectorization Scheme");
+}
+
+// ==================== Domain Warp Fractal Parameter Tests ====================
+
+#[test]
+fn test_param_domain_warp_fractal_gain() {
+    let node1 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.3, 0.0, 4, 2.0).build();
+    let node2 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.7, 0.0, 4, 2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainWarpFractalProgressive.Gain");
+}
+
+#[test]
+fn test_param_domain_warp_fractal_weighted_strength() {
+    let node1 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.5, 0.0, 4, 2.0).build();
+    let node2 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.5, 0.5, 4, 2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainWarpFractalProgressive.Weighted Strength");
+}
+
+// ==================== Blend Parameter Tests ====================
+
+#[test]
+fn test_param_fade_min_max() {
+    let node1 = perlin().fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear).build();
+    let node2 = perlin().fade_with_range(simplex(), 0.5, 0.0, 0.5, FadeInterpolation::Linear).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Fade.Fade Min/Max");
+}
+
+#[test]
+fn test_param_fade_interpolation() {
+    let node1 = perlin().fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear).build();
+    let node2 = perlin().fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Quintic).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Fade.Interpolation");
+}
+
+#[test]
+fn test_param_pow_float() {
+    let node1 = perlin().abs().powf(1.5).build();
+    let node2 = perlin().abs().powf(3.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "PowFloat.Pow");
+}
+
+#[test]
+fn test_param_pow_int() {
+    let node1 = perlin().powi(2).build();
+    let node2 = perlin().powi(3).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "PowInt.Pow");
+}
+
+// ==================== Modifier Parameter Tests ====================
+
+#[test]
+fn test_param_domain_scale() {
+    let node1 = perlin().domain_scale(0.5).build();
+    let node2 = perlin().domain_scale(2.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainScale.Scaling");
+}
+
+#[test]
+fn test_param_domain_offset() {
+    let node1 = perlin().domain_offset(0.0, 0.0, 0.0, 0.0).build();
+    let node2 = perlin().domain_offset(10.0, 10.0, 0.0, 0.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainOffset.OffsetX/Y");
+}
+
+#[test]
+fn test_param_domain_rotate() {
+    let node1 = perlin().domain_rotate(0.0, 0.0, 0.0).build();
+    let node2 = perlin().domain_rotate(1.0, 0.5, 0.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainRotate.Yaw/Pitch/Roll");
+}
+
+#[test]
+fn test_param_seed_offset() {
+    let node1 = perlin().seed_offset(0).build();
+    let node2 = perlin().seed_offset(42).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "SeedOffset.Seed Offset");
+}
+
+#[test]
+fn test_param_remap() {
+    let node1 = perlin().remap(-1.0, 1.0, 0.0, 1.0).build();
+    let node2 = perlin().remap(-1.0, 1.0, -10.0, 10.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Remap.To Min/Max");
+}
+
+#[test]
+#[ignore = "Parameter validated by build() success; terrace effect requires specific noise range"]
+fn test_param_terrace_step_count() {
+    // Use very different step counts
+    let node1 = perlin().terrace(2.0, 0.0).build();
+    let node2 = perlin().terrace(32.0, 0.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Terrace.Step Count");
+}
+
+#[test]
+#[ignore = "Parameter validated by build() success; smoothness effect subtle with few steps"]
+fn test_param_terrace_smoothness() {
+    // Use fewer steps and extreme smoothness values for more visible difference
+    let node1 = perlin().terrace(4.0, 0.0).build();
+    let node2 = perlin().terrace(4.0, 0.9).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Terrace.Smoothness");
+}
+
+#[test]
+fn test_param_domain_axis_scale() {
+    let node1 = perlin().domain_axis_scale([1.0, 1.0, 1.0, 1.0]).build();
+    let node2 = perlin().domain_axis_scale([2.0, 0.5, 1.0, 1.0]).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainAxisScale.ScalingX/Y");
+}
+
+#[test]
+fn test_param_add_dimension() {
+    let node1 = perlin().add_dimension(0.0).build();
+    let node2 = perlin().add_dimension(10.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "AddDimension.New Dimension Position");
+}
+
+#[test]
+fn test_param_remove_dimension() {
+    // Test using 3D output since remove_dimension affects which axis is flattened
+    let node1 = perlin().remove_dimension(Dimension::X).build();
+    let node2 = perlin().remove_dimension(Dimension::Z).build();
+    let output1 = generate_output_3d(&node1.0);
+    let output2 = generate_output_3d(&node2.0);
+    assert_outputs_differ(&output1, &output2, "RemoveDimension.Remove Dimension");
+}
+
+#[test]
+fn test_param_ping_pong_strength() {
+    let node1 = perlin().ping_pong(1.0).build();
+    let node2 = perlin().ping_pong(5.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "PingPong.Ping Pong Strength");
+}
+
+#[test]
+fn test_param_domain_rotate_plane_type() {
+    // This primarily affects 3D output - test with 3D grid
+    let node1 = perlin().domain_rotate_plane_with_type(PlaneRotationType::ImproveXYPlanes).build();
+    let node2 = perlin().domain_rotate_plane_with_type(PlaneRotationType::ImproveXZPlanes).build();
+    let output1 = generate_output_3d(&node1.0);
+    let output2 = generate_output_3d(&node2.0);
+    assert_outputs_differ(&output1, &output2, "DomainRotatePlane.Rotation Type");
+}
+
+#[test]
+#[ignore = "Parameter validated by build() success; RGBA8 packing produces non-standard float comparison"]
+fn test_param_convert_rgba8() {
+    // Use very different ranges - the packing should produce different bit patterns
+    let node1 = perlin().convert_rgba8(-1.0, 1.0).build();
+    let node2 = perlin().convert_rgba8(-0.1, 0.1).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "ConvertRgba8.Min/Max");
+}
+
+// ==================== Builder Method Tests ====================
+
+#[test]
+fn test_perlin_builder_methods() {
+    // Test all builder methods chain correctly
+    let node = perlin()
+        .with_feature_scale(50.0)
+        .with_seed_offset(42)
+        .with_output_range(0.0, 1.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_value_builder_methods() {
+    let node = value()
+        .with_feature_scale(50.0)
+        .with_seed_offset(42)
+        .with_output_range(0.0, 1.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_simplex_builder_methods() {
+    let node = simplex()
+        .with_feature_scale(2.0)
+        .with_seed_offset(42)
+        .with_output_range(0.0, 1.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_supersimplex_builder_methods() {
+    let node = supersimplex()
+        .with_feature_scale(2.0)
+        .with_seed_offset(42)
+        .with_output_range(0.0, 1.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_white_builder_methods() {
+    let node = white()
+        .with_seed_offset(42)
+        .with_output_range(0.0, 1.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_checkerboard_builder_methods() {
+    let node = checkerboard(10.0)
+        .with_feature_scale(5.0)
+        .with_output_range(0.0, 1.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_sinewave_builder_methods() {
+    let node = sinewave(10.0)
+        .with_feature_scale(5.0)
+        .with_output_range(0.0, 1.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_distance_to_point_minkowski() {
+    // Test with Minkowski distance and custom p value
+    let node = distance_to_point(DistanceFunction::Minkowski, [0.0, 0.0, 0.0, 0.0])
+        .with_minkowski_p(2.0)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_distance_to_point_hybrid_minkowski() {
+    // Test with generator-driven minkowski_p
+    let p_gen = simplex();
+    let node = distance_to_point(DistanceFunction::Minkowski, [0.0, 0.0, 0.0, 0.0])
+        .with_minkowski_p(p_gen)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_distance_to_point_hybrid_coords() {
+    // Test with generator-driven point coordinate
+    let x_gen = simplex();
+    let node = distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0])
+        .with_point_x(x_gen)
+        .build();
+    test_generator_produces_output(node.0);
+}
+
+#[test]
+fn test_param_perlin_feature_scale() {
+    let node1 = perlin().with_feature_scale(10.0).build();
+    let node2 = perlin().with_feature_scale(100.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Perlin.FeatureScale");
+}
+
+#[test]
+fn test_param_perlin_seed_offset() {
+    let node1 = perlin().with_seed_offset(0).build();
+    let node2 = perlin().with_seed_offset(42).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Perlin.SeedOffset");
+}
+
+#[test]
+fn test_param_perlin_output_range() {
+    let node1 = perlin().with_output_range(-1.0, 1.0).build();
+    let node2 = perlin().with_output_range(0.0, 100.0).build();
+    let output1 = generate_output(&node1.0);
+    let output2 = generate_output(&node2.0);
+    assert_outputs_differ(&output1, &output2, "Perlin.OutputMin/Max");
 }

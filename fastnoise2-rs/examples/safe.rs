@@ -23,8 +23,8 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     // that FastNoise2 handles differently. It is also easier to write "0.5".
     let _n = Add {
         lhs: Fade {
-            a: SineWave { feature_scale: 0.1 },
-            b: SineWave { feature_scale: -0.2 },
+            a: SineWave { feature_scale: 0.1, ..Default::default() },
+            b: SineWave { feature_scale: -0.2, ..Default::default() },
             fade: Simplex::default(),
             fade_min: -1.0,
             fade_max: 1.0,
@@ -35,8 +35,8 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
 
     let _n = Add {
         lhs: Fade {
-            a: SineWave { feature_scale: 0.1 },
-            b: SineWave { feature_scale: -0.2 },
+            a: SineWave { feature_scale: 0.1, ..Default::default() },
+            b: SineWave { feature_scale: -0.2, ..Default::default() },
             fade: Simplex::default(),
             fade_min: -1.0,
             fade_max: 1.0,
@@ -51,7 +51,7 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
 
     // You can also mix the two writings. Note the use of the GeneratorWrapper type to enable use of the operator
     let _n = GeneratorWrapper(Fade {
-        a: SineWave { feature_scale: 0.1 },
+        a: SineWave { feature_scale: 0.1, ..Default::default() },
         b: sinewave(-0.2),
         fade: Simplex::default(),
         fade_min: -1.0,
