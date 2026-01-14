@@ -18,6 +18,7 @@ Here is an example of a encoded node tree, exported by FastNoise2's NoiseTool.
 use fastnoise2::SafeNode;
 
 let (x_size, y_size) = (1000, 1000);
+let step_size = 1.0;
 let encoded_node_tree = "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==";
 let node = SafeNode::from_encoded_node_tree(encoded_node_tree).unwrap();
 
@@ -26,12 +27,13 @@ let mut noise_out = vec![0.0; (x_size * y_size) as usize];
 
 let min_max = node.gen_uniform_grid_2d(
     &mut noise_out,
-    -x_size / 2, // x offset
-    -y_size / 2, // y offset
-    x_size,
-    y_size,
-    0.01, // frequency
-    1337, // seed
+    -x_size as f32 / 2.0 * step_size, // x offset
+    -y_size as f32 / 2.0 * step_size, // y offset
+    x_size,                           // x size
+    y_size,                           // y size
+    step_size,                        // x step size
+    step_size,                        // y step size
+    1337,                             // seed
 );
 
 // use `noise_out`!
