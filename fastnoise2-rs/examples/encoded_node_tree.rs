@@ -27,7 +27,7 @@ fn main() {
     // Modifying parameters directly using `Node::set` can introduce the same risks as manually building the node tree.
     // Issues might arise due to incorrect parameter types, missing members, or other configuration errors.
     // Ensure that all modifications are valid and consult the FastNoise2 documentation for guidance on parameter types and expected values.
-    let step_size = 0.02;
+    let step_size = 1.0;
     let min_max = node.gen_uniform_grid_2d(
         &mut noise,
         -X_SIZE as f32 / 2.0 * step_size, // x_offset

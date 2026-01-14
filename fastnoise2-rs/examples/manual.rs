@@ -44,7 +44,7 @@ fn main() {
     // - Internal errors or limitations in the FastNoise2 library that may not be evident from Rust's type safety
     //   or runtime checks.
     // Verify that all node configurations and parameters are correct.
-    let step_size = 0.02;
+    let step_size = 1.0;
     let min_max = unsafe {
         node.gen_uniform_grid_2d_unchecked(
             &mut noise,

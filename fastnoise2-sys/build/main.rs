@@ -110,6 +110,12 @@ fn build_from_source() {
     println!("cargo:warning=building from source files located in '{}'", source_path.display());
     println!("cargo:rerun-if-changed={}", source_path.join("include").join("FastNoise").display());
 
+    // Pre-create pdb-files directory structure to prevent CMake install failure on Windows
+    // FastNoise2's CMakeLists.txt tries to install PDB files that may not exist in Release builds
+    let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let pdb_dir = out_dir.join("build").join("pdb-files").join("Release");
+    std::fs::create_dir_all(&pdb_dir).ok();
+
     let mut config = cmake::Config::new(&source_path);
     config
         .profile("Release")

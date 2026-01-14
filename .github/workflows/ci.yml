@@ -1,0 +1,123 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-native:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y cmake libclang-dev
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install cmake llvm
+
+      - name: Install dependencies (Windows)
+        if: runner.os == 'Windows'
+        run: choco install cmake llvm -y
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - name: Build
+        run: cargo build --release --workspace
+
+      - name: Run tests
+        run: cargo test --release --workspace
+
+  build-wasm:
+    name: Build (WASM/Emscripten)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Add wasm32-unknown-emscripten target
+        run: rustup target add wasm32-unknown-emscripten
+
+      - name: Setup Emscripten
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: 'latest'
+
+      - name: Verify Emscripten
+        run: emcc --version
+
+      - name: Install dependencies
+        run: sudo apt-get update && sudo apt-get install -y cmake libclang-dev
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+          key: wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: wasm-cargo-
+
+      - name: Build WASM demo
+        working-directory: fastnoise2-rs/examples/wasm_emscripten
+        run: |
+          EMCC_CFLAGS="-s MODULARIZE=1 -s EXPORT_NAME=createFastNoise2Module -s EXPORTED_FUNCTIONS=_generate_noise,_malloc,_free,_main -s EXPORTED_RUNTIME_METHODS=HEAPU8 -s ALLOW_MEMORY_GROWTH=1 -s ERROR_ON_UNDEFINED_SYMBOLS=0 -O3" \
+            cargo build --release --target wasm32-unknown-emscripten
+
+      - name: Verify WASM output
+        working-directory: fastnoise2-rs/examples/wasm_emscripten
+        run: |
+          ls -lh target/wasm32-unknown-emscripten/release/
+          test -f target/wasm32-unknown-emscripten/release/fastnoise2_wasm.wasm
+          test -f target/wasm32-unknown-emscripten/release/fastnoise2_wasm.js
+
+      - name: Package WASM demo
+        working-directory: fastnoise2-rs/examples/wasm_emscripten
+        run: |
+          mkdir -p artifact/dist
+          cp index.html artifact/
+          cp target/wasm32-unknown-emscripten/release/fastnoise2_wasm.wasm artifact/dist/
+          cp target/wasm32-unknown-emscripten/release/fastnoise2_wasm.js artifact/dist/
+          ls -lhR artifact/
+
+      - name: Upload WASM artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-demo
+          path: fastnoise2-rs/examples/wasm_emscripten/artifact/

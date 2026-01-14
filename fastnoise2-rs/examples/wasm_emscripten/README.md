@@ -23,12 +23,6 @@ make serve
 # Open http://localhost:8080
 ```
 
-By default, prebuilt FastNoise2 binaries are downloaded. To build FastNoise2 from source:
-
-```bash
-FASTNOISE2_BUILD_WASM_FROM_SOURCE=1 make build
-```
-
 ## Files
 
 - `src/main.rs` - Rust code exposing noise generation to JS

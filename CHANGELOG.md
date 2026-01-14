@@ -209,5 +209,3 @@ fractal_fbm(perlin(), 4)
 ## Upstream Reference
 
 FastNoise2 C++ version: `cee9ea69c00c6e83b57072831063dbe7e4234b03`
-
-[0.4.0]: https://github.com/Aidenwebb/fastnoise2-rs/compare/v0.3.1...v0.4.0
