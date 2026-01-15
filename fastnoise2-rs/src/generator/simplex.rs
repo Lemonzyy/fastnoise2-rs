@@ -80,7 +80,11 @@ pub fn simplex() -> GeneratorWrapper<Simplex> {
 
 /// Creates a Simplex noise generator with custom Feature Scale
 pub fn simplex_scaled(feature_scale: f32) -> GeneratorWrapper<Simplex> {
-    Simplex { feature_scale, ..Default::default() }.into()
+    Simplex {
+        feature_scale,
+        ..Default::default()
+    }
+    .into()
 }
 
 /// Creates a SuperSimplex noise generator with default Feature Scale of 1.0
@@ -90,7 +94,11 @@ pub fn supersimplex() -> GeneratorWrapper<SuperSimplex> {
 
 /// Creates a SuperSimplex noise generator with custom Feature Scale
 pub fn supersimplex_scaled(feature_scale: f32) -> GeneratorWrapper<SuperSimplex> {
-    SuperSimplex { feature_scale, ..Default::default() }.into()
+    SuperSimplex {
+        feature_scale,
+        ..Default::default()
+    }
+    .into()
 }
 
 impl GeneratorWrapper<Simplex> {

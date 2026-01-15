@@ -256,7 +256,11 @@ where
         node.set("FromMax", self.from_max).unwrap();
         node.set("ToMin", self.to_min).unwrap();
         node.set("ToMax", self.to_max).unwrap();
-        node.set("ClampOutput", if self.clamp_output { "True" } else { "False" }).unwrap();
+        node.set(
+            "ClampOutput",
+            if self.clamp_output { "True" } else { "False" },
+        )
+        .unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -315,7 +319,8 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("AddDimension").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("NewDimensionPosition", self.new_dimension_position.clone()).unwrap();
+        node.set("NewDimensionPosition", self.new_dimension_position.clone())
+            .unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -328,7 +333,8 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("RemoveDimension").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("RemoveDimension", &*self.remove_dimension.to_string()).unwrap();
+        node.set("RemoveDimension", &*self.remove_dimension.to_string())
+            .unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -354,7 +360,8 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("PingPong").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("PingPongStrength", self.ping_pong_strength.clone()).unwrap();
+        node.set("PingPongStrength", self.ping_pong_strength.clone())
+            .unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -391,7 +398,8 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("DomainRotatePlane").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("RotationType", &*self.rotation_type.to_string()).unwrap();
+        node.set("RotationType", &*self.rotation_type.to_string())
+            .unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -401,10 +409,20 @@ where
     S: Generator,
 {
     pub fn domain_scale(self, scaling: f32) -> GeneratorWrapper<DomainScale<S>> {
-        DomainScale { source: self.0, scaling }.into()
+        DomainScale {
+            source: self.0,
+            scaling,
+        }
+        .into()
     }
 
-    pub fn domain_offset<X, Y, Z, W>(self, offset_x: X, offset_y: Y, offset_z: Z, offset_w: W) -> GeneratorWrapper<DomainOffset<S, X, Y, Z, W>>
+    pub fn domain_offset<X, Y, Z, W>(
+        self,
+        offset_x: X,
+        offset_y: Y,
+        offset_z: Z,
+        offset_w: W,
+    ) -> GeneratorWrapper<DomainOffset<S, X, Y, Z, W>>
     where
         X: Hybrid,
         Y: Hybrid,
@@ -421,16 +439,37 @@ where
         .into()
     }
 
-    pub fn domain_rotate(self, yaw: f32, pitch: f32, roll: f32) -> GeneratorWrapper<DomainRotate<S>> {
-        DomainRotate { source: self.0, yaw, pitch, roll }.into()
+    pub fn domain_rotate(
+        self,
+        yaw: f32,
+        pitch: f32,
+        roll: f32,
+    ) -> GeneratorWrapper<DomainRotate<S>> {
+        DomainRotate {
+            source: self.0,
+            yaw,
+            pitch,
+            roll,
+        }
+        .into()
     }
 
     pub fn seed_offset(self, seed_offset: i32) -> GeneratorWrapper<SeedOffset<S>> {
-        SeedOffset { source: self.0, seed_offset }.into()
+        SeedOffset {
+            source: self.0,
+            seed_offset,
+        }
+        .into()
     }
 
     /// Remaps output from one range to another without clamping.
-    pub fn remap(self, from_min: f32, from_max: f32, to_min: f32, to_max: f32) -> GeneratorWrapper<Remap<S>> {
+    pub fn remap(
+        self,
+        from_min: f32,
+        from_max: f32,
+        to_min: f32,
+        to_max: f32,
+    ) -> GeneratorWrapper<Remap<S>> {
         Remap {
             source: self.0,
             from_min,
@@ -443,7 +482,14 @@ where
     }
 
     /// Remaps output from one range to another with optional clamping.
-    pub fn remap_clamped(self, from_min: f32, from_max: f32, to_min: f32, to_max: f32, clamp_output: bool) -> GeneratorWrapper<Remap<S>> {
+    pub fn remap_clamped(
+        self,
+        from_min: f32,
+        from_max: f32,
+        to_min: f32,
+        to_max: f32,
+        clamp_output: bool,
+    ) -> GeneratorWrapper<Remap<S>> {
         Remap {
             source: self.0,
             from_min,
@@ -456,7 +502,12 @@ where
     }
 
     pub fn convert_rgba8(self, min: f32, max: f32) -> GeneratorWrapper<ConvertRgba8<S>> {
-        ConvertRgba8 { source: self.0, min, max }.into()
+        ConvertRgba8 {
+            source: self.0,
+            min,
+            max,
+        }
+        .into()
     }
 
     /// Creates a terrace effect with the given step count and smoothness.
@@ -496,8 +547,15 @@ where
         .into()
     }
 
-    pub fn remove_dimension(self, remove_dimension: Dimension) -> GeneratorWrapper<RemoveDimension<S>> {
-        RemoveDimension { source: self.0, remove_dimension }.into()
+    pub fn remove_dimension(
+        self,
+        remove_dimension: Dimension,
+    ) -> GeneratorWrapper<RemoveDimension<S>> {
+        RemoveDimension {
+            source: self.0,
+            remove_dimension,
+        }
+        .into()
     }
 
     pub fn cache(self) -> GeneratorWrapper<GeneratorCache<S>> {
@@ -536,7 +594,14 @@ where
     }
 
     /// Applies preset rotation to improve noise in specific 3D planes with a custom rotation type.
-    pub fn domain_rotate_plane_with_type(self, rotation_type: PlaneRotationType) -> GeneratorWrapper<DomainRotatePlane<S>> {
-        DomainRotatePlane { source: self.0, rotation_type }.into()
+    pub fn domain_rotate_plane_with_type(
+        self,
+        rotation_type: PlaneRotationType,
+    ) -> GeneratorWrapper<DomainRotatePlane<S>> {
+        DomainRotatePlane {
+            source: self.0,
+            rotation_type,
+        }
+        .into()
     }
 }

@@ -125,7 +125,8 @@ impl Node {
     /// Returns an error if the encoded node tree is invalid or if creation fails.
     #[cfg_attr(feature = "trace", tracing::instrument(level = "debug"))]
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
-        let cstring = CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
+        let cstring =
+            CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
         // Pass u32::MAX (~0u in C++) for auto-detect SIMD level
         let node_ptr = unsafe { fnNewFromEncodedNodeTree(cstring.as_ptr(), u32::MAX) };
         if node_ptr.is_null() {

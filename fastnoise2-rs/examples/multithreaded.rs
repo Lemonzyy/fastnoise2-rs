@@ -1,7 +1,10 @@
 use fastnoise2::SafeNode;
 
 fn main() {
-    let node = SafeNode::from_encoded_node_tree("E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==").unwrap();
+    let node = SafeNode::from_encoded_node_tree(
+        "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==",
+    )
+    .unwrap();
 
     // A SafeNode is an Arc wrapping a Node. Thus, cloning a SafeNode does not reinstantiate it.
     let n1 = node.clone();

@@ -56,7 +56,8 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularValue").unwrap();
         node.set("GridJitter", self.grid_jitter.clone()).unwrap();
-        node.set("DistanceFunction", &*self.distance_function.to_string()).unwrap();
+        node.set("DistanceFunction", &*self.distance_function.to_string())
+            .unwrap();
         node.set("ValueIndex", self.value_index).unwrap();
         node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
         node.set("SizeJitter", self.size_jitter.clone()).unwrap();
@@ -74,10 +75,12 @@ where
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("CellularDistance").unwrap();
         node.set("GridJitter", self.grid_jitter.clone()).unwrap();
-        node.set("DistanceFunction", &*self.distance_function.to_string()).unwrap();
+        node.set("DistanceFunction", &*self.distance_function.to_string())
+            .unwrap();
         node.set("DistanceIndex0", self.distance_index_0).unwrap();
         node.set("DistanceIndex1", self.distance_index_1).unwrap();
-        node.set("ReturnType", &*self.return_type.to_string()).unwrap();
+        node.set("ReturnType", &*self.return_type.to_string())
+            .unwrap();
         node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
         node.set("SizeJitter", self.size_jitter.clone()).unwrap();
         SafeNode(node.into()).into()
@@ -96,7 +99,8 @@ where
         let mut node = Node::from_name("CellularLookup").unwrap();
         node.set("Lookup", &self.lookup).unwrap();
         node.set("GridJitter", self.grid_jitter.clone()).unwrap();
-        node.set("DistanceFunction", &*self.distance_function.to_string()).unwrap();
+        node.set("DistanceFunction", &*self.distance_function.to_string())
+            .unwrap();
         node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
         node.set("SizeJitter", self.size_jitter.clone()).unwrap();
         SafeNode(node.into()).into()
@@ -104,7 +108,11 @@ where
 }
 
 /// Creates a CellularValue generator with default parameters.
-pub fn cellular_value<J>(grid_jitter: J, distance_function: DistanceFunction, value_index: i32) -> GeneratorWrapper<CellularValue<J, f32, f32>>
+pub fn cellular_value<J>(
+    grid_jitter: J,
+    distance_function: DistanceFunction,
+    value_index: i32,
+) -> GeneratorWrapper<CellularValue<J, f32, f32>>
 where
     J: Hybrid,
 {
@@ -192,7 +200,11 @@ where
 }
 
 /// Creates a CellularLookup generator with default parameters.
-pub fn cellular_lookup<L, J>(lookup: L, grid_jitter: J, distance_function: DistanceFunction) -> GeneratorWrapper<CellularLookup<L, J, f32, f32>>
+pub fn cellular_lookup<L, J>(
+    lookup: L,
+    grid_jitter: J,
+    distance_function: DistanceFunction,
+) -> GeneratorWrapper<CellularLookup<L, J, f32, f32>>
 where
     L: Generator,
     J: Hybrid,

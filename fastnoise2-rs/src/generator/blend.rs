@@ -277,7 +277,8 @@ where
         node.set("Fade", self.fade.clone()).unwrap();
         node.set("FadeMin", self.fade_min.clone()).unwrap();
         node.set("FadeMax", self.fade_max.clone()).unwrap();
-        node.set("Interpolation", &*self.interpolation.to_string()).unwrap();
+        node.set("Interpolation", &*self.interpolation.to_string())
+            .unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -398,20 +399,38 @@ where
         Max { lhs: self.0, rhs }.into()
     }
 
-    pub fn min_smooth<Rhs, S>(self, rhs: Rhs, smoothness: S) -> GeneratorWrapper<MinSmooth<Lhs, Rhs, S>>
+    pub fn min_smooth<Rhs, S>(
+        self,
+        rhs: Rhs,
+        smoothness: S,
+    ) -> GeneratorWrapper<MinSmooth<Lhs, Rhs, S>>
     where
         Rhs: Hybrid,
         S: Hybrid,
     {
-        MinSmooth { lhs: self.0, rhs, smoothness }.into()
+        MinSmooth {
+            lhs: self.0,
+            rhs,
+            smoothness,
+        }
+        .into()
     }
 
-    pub fn max_smooth<Rhs, S>(self, rhs: Rhs, smoothness: S) -> GeneratorWrapper<MaxSmooth<Lhs, Rhs, S>>
+    pub fn max_smooth<Rhs, S>(
+        self,
+        rhs: Rhs,
+        smoothness: S,
+    ) -> GeneratorWrapper<MaxSmooth<Lhs, Rhs, S>>
     where
         Rhs: Hybrid,
         S: Hybrid,
     {
-        MaxSmooth { lhs: self.0, rhs, smoothness }.into()
+        MaxSmooth {
+            lhs: self.0,
+            rhs,
+            smoothness,
+        }
+        .into()
     }
 }
 
@@ -437,7 +456,14 @@ where
     }
 
     /// Fades between two generators with custom min/max range and interpolation.
-    pub fn fade_with_range<B, F, FMin, FMax>(self, b: B, fade: F, fade_min: FMin, fade_max: FMax, interpolation: FadeInterpolation) -> GeneratorWrapper<Fade<A, B, F, FMin, FMax>>
+    pub fn fade_with_range<B, F, FMin, FMax>(
+        self,
+        b: B,
+        fade: F,
+        fade_min: FMin,
+        fade_max: FMax,
+        interpolation: FadeInterpolation,
+    ) -> GeneratorWrapper<Fade<A, B, F, FMin, FMax>>
     where
         B: Generator,
         F: Hybrid,
@@ -482,6 +508,10 @@ where
     T: Hybrid,
 {
     pub fn recip(self) -> GeneratorWrapper<Divide<f32, T>> {
-        Divide { lhs: 1.0, rhs: self.0 }.into()
+        Divide {
+            lhs: 1.0,
+            rhs: self.0,
+        }
+        .into()
     }
 }

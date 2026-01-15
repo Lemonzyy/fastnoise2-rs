@@ -1,7 +1,10 @@
 use super::*;
 use generator::prelude::*;
 use generator::{
-    cellular::{cellular_distance_full, cellular_lookup_full, cellular_value_full, CellularDistanceReturnType},
+    cellular::{
+        cellular_distance_full, cellular_lookup_full, cellular_value_full,
+        CellularDistanceReturnType,
+    },
     domain_warp::VectorizationScheme,
     modifier::PlaneRotationType,
     simplex::supersimplex_scaled,
@@ -101,7 +104,14 @@ fn test_cellular_value_with_minkowski() {
 
 #[test]
 fn test_cellular_distance() {
-    let node = cellular_distance(1.0, DistanceFunction::EuclideanSquared, 0, 1, CellularDistanceReturnType::Index0).build();
+    let node = cellular_distance(
+        1.0,
+        DistanceFunction::EuclideanSquared,
+        0,
+        1,
+        CellularDistanceReturnType::Index0,
+    )
+    .build();
     test_generator_produces_output(node.0);
 }
 
@@ -169,7 +179,9 @@ fn test_domain_warp_simplex() {
 
 #[test]
 fn test_domain_warp_simplex_with_scheme() {
-    let node = perlin().domain_warp_simplex_with_scheme(50.0, 100.0, VectorizationScheme::GradientOuterProduct).build();
+    let node = perlin()
+        .domain_warp_simplex_with_scheme(50.0, 100.0, VectorizationScheme::GradientOuterProduct)
+        .build();
     test_generator_produces_output(node.0);
 }
 
@@ -184,13 +196,19 @@ fn test_domain_warp_super_simplex() {
 #[test]
 fn test_domain_warp_fractal_progressive() {
     // Domain warp fractal methods work on DomainWarpNode types
-    let node = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.5, 0.0, 4, 2.0).build();
+    let node = perlin()
+        .domain_warp_gradient(50.0, 100.0)
+        .domain_warp_progressive(0.5, 0.0, 4, 2.0)
+        .build();
     test_generator_produces_output(node.0);
 }
 
 #[test]
 fn test_domain_warp_fractal_independent() {
-    let node = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_independent(0.5, 0.0, 4, 2.0).build();
+    let node = perlin()
+        .domain_warp_gradient(50.0, 100.0)
+        .domain_warp_independent(0.5, 0.0, 4, 2.0)
+        .build();
     test_generator_produces_output(node.0);
 }
 
@@ -266,7 +284,9 @@ fn test_fade() {
 
 #[test]
 fn test_fade_with_range() {
-    let node = perlin().fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Hermite).build();
+    let node = perlin()
+        .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Hermite)
+        .build();
     test_generator_produces_output(node.0);
 }
 
@@ -386,7 +406,9 @@ fn test_domain_rotate_plane() {
 
 #[test]
 fn test_domain_rotate_plane_xz() {
-    let node = perlin().domain_rotate_plane_with_type(PlaneRotationType::ImproveXZPlanes).build();
+    let node = perlin()
+        .domain_rotate_plane_with_type(PlaneRotationType::ImproveXZPlanes)
+        .build();
     test_generator_produces_output(node.0);
 }
 
@@ -405,13 +427,19 @@ fn test_complex_terrain() {
 
 #[test]
 fn test_ridged_mountains() {
-    let node = perlin().ridged(0.5, 0.5, 5, 2.0).abs().terrace(8.0, 0.3).build();
+    let node = perlin()
+        .ridged(0.5, 0.5, 5, 2.0)
+        .abs()
+        .terrace(8.0, 0.3)
+        .build();
     test_generator_produces_output(node.0);
 }
 
 #[test]
 fn test_cellular_with_domain_warp() {
-    let node = cellular_value(1.0, DistanceFunction::Euclidean, 0).domain_warp_simplex(30.0, 100.0).build();
+    let node = cellular_value(1.0, DistanceFunction::Euclidean, 0)
+        .domain_warp_simplex(30.0, 100.0)
+        .build();
     test_generator_produces_output(node.0);
 }
 
@@ -469,7 +497,9 @@ fn test_encoded_node_tree() {
 fn test_gen_uniform_grid_3d() {
     let node = perlin().build();
     let mut output = [0.0f32; 64]; // 4x4x4
-    let min_max = node.0.gen_uniform_grid_3d(&mut output, 0.0, 0.0, 0.0, 4, 4, 4, 0.1, 0.1, 0.1, 1337);
+    let min_max =
+        node.0
+            .gen_uniform_grid_3d(&mut output, 0.0, 0.0, 0.0, 4, 4, 4, 0.1, 0.1, 0.1, 1337);
     assert!(min_max.min.is_finite());
     assert!(min_max.max.is_finite());
     assert!(output.iter().any(|&v| v != output[0]));
@@ -479,7 +509,22 @@ fn test_gen_uniform_grid_3d() {
 fn test_gen_uniform_grid_4d() {
     let node = perlin().build();
     let mut output = [0.0f32; 16]; // 2x2x2x2
-    let min_max = node.0.gen_uniform_grid_4d(&mut output, 0.0, 0.0, 0.0, 0.0, 2, 2, 2, 2, 0.1, 0.1, 0.1, 0.1, 1337);
+    let min_max = node.0.gen_uniform_grid_4d(
+        &mut output,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2,
+        2,
+        2,
+        2,
+        0.1,
+        0.1,
+        0.1,
+        0.1,
+        1337,
+    );
     assert!(min_max.min.is_finite());
     assert!(min_max.max.is_finite());
     assert!(output.iter().any(|&v| v != output[0]));
@@ -491,7 +536,9 @@ fn test_gen_position_array_2d() {
     let x_pos = [0.0, 0.1, 0.2, 0.3];
     let y_pos = [0.0, 0.1, 0.2, 0.3];
     let mut output = [0.0f32; 4];
-    let min_max = node.0.gen_position_array_2d(&mut output, &x_pos, &y_pos, 0.0, 0.0, 1337);
+    let min_max = node
+        .0
+        .gen_position_array_2d(&mut output, &x_pos, &y_pos, 0.0, 0.0, 1337);
     assert!(min_max.min.is_finite());
     assert!(min_max.max.is_finite());
     assert!(output.iter().all(|&v| v.is_finite()));
@@ -504,7 +551,9 @@ fn test_gen_position_array_3d() {
     let y_pos = [0.0, 0.1, 0.2, 0.3];
     let z_pos = [0.0, 0.1, 0.2, 0.3];
     let mut output = [0.0f32; 4];
-    let min_max = node.0.gen_position_array_3d(&mut output, &x_pos, &y_pos, &z_pos, 0.0, 0.0, 0.0, 1337);
+    let min_max =
+        node.0
+            .gen_position_array_3d(&mut output, &x_pos, &y_pos, &z_pos, 0.0, 0.0, 0.0, 1337);
     assert!(min_max.min.is_finite());
     assert!(min_max.max.is_finite());
     assert!(output.iter().all(|&v| v.is_finite()));
@@ -518,7 +567,18 @@ fn test_gen_position_array_4d() {
     let z_pos = [0.0, 0.1, 0.2, 0.3];
     let w_pos = [0.0, 0.1, 0.2, 0.3];
     let mut output = [0.0f32; 4];
-    let min_max = node.0.gen_position_array_4d(&mut output, &x_pos, &y_pos, &z_pos, &w_pos, 0.0, 0.0, 0.0, 0.0, 1337);
+    let min_max = node.0.gen_position_array_4d(
+        &mut output,
+        &x_pos,
+        &y_pos,
+        &z_pos,
+        &w_pos,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1337,
+    );
     assert!(min_max.min.is_finite());
     assert!(min_max.max.is_finite());
     assert!(output.iter().all(|&v| v.is_finite()));
@@ -556,7 +616,9 @@ fn test_convert_rgba8() {
     let node = perlin().convert_rgba8(-1.0, 1.0).build();
     let mut output = [0.0f32; 16];
     // This won't produce standard noise values - it packs RGBA8 into floats
-    let _min_max = node.0.gen_uniform_grid_2d(&mut output, 0.0, 0.0, 4, 4, 0.1, 0.1, 1337);
+    let _min_max = node
+        .0
+        .gen_uniform_grid_2d(&mut output, 0.0, 0.0, 4, 4, 0.1, 0.1, 1337);
     // Just verify the node runs without crashing
 }
 
@@ -565,7 +627,9 @@ fn test_recip() {
     // recip() creates 1.0 / value
     let node = (constant(2.0) + constant(0.0)).recip().build();
     let mut output = [0.0f32; 4];
-    let min_max = node.0.gen_uniform_grid_2d(&mut output, 0.0, 0.0, 2, 2, 0.1, 0.1, 1337);
+    let min_max = node
+        .0
+        .gen_uniform_grid_2d(&mut output, 0.0, 0.0, 2, 2, 0.1, 0.1, 1337);
     assert!(min_max.min.is_finite());
     assert!(min_max.max.is_finite());
     // 1/2 = 0.5
@@ -575,7 +639,11 @@ fn test_recip() {
 #[test]
 fn test_domain_warp_super_simplex_with_scheme() {
     let node = perlin()
-        .domain_warp_super_simplex_with_scheme(50.0, 100.0, VectorizationScheme::GradientOuterProduct)
+        .domain_warp_super_simplex_with_scheme(
+            50.0,
+            100.0,
+            VectorizationScheme::GradientOuterProduct,
+        )
         .build();
     test_generator_produces_output(node.0);
 }
@@ -593,7 +661,8 @@ fn test_cellular_distance_return_types() {
     ];
 
     for return_type in return_types {
-        let node = cellular_distance(1.0, DistanceFunction::EuclideanSquared, 0, 1, return_type).build();
+        let node =
+            cellular_distance(1.0, DistanceFunction::EuclideanSquared, 0, 1, return_type).build();
         test_generator_produces_output(node.0);
     }
 }
@@ -631,9 +700,14 @@ fn test_remove_dimension_all() {
 
 #[test]
 fn test_plane_rotation_types() {
-    let rotation_types = [PlaneRotationType::ImproveXYPlanes, PlaneRotationType::ImproveXZPlanes];
+    let rotation_types = [
+        PlaneRotationType::ImproveXYPlanes,
+        PlaneRotationType::ImproveXZPlanes,
+    ];
     for rotation_type in rotation_types {
-        let node = perlin().domain_rotate_plane_with_type(rotation_type).build();
+        let node = perlin()
+            .domain_rotate_plane_with_type(rotation_type)
+            .build();
         test_generator_produces_output(node.0);
     }
 }
@@ -642,9 +716,14 @@ fn test_plane_rotation_types() {
 
 #[test]
 fn test_vectorization_schemes() {
-    let schemes = [VectorizationScheme::OrthogonalGradientMatrix, VectorizationScheme::GradientOuterProduct];
+    let schemes = [
+        VectorizationScheme::OrthogonalGradientMatrix,
+        VectorizationScheme::GradientOuterProduct,
+    ];
     for scheme in schemes {
-        let node = perlin().domain_warp_simplex_with_scheme(50.0, 100.0, scheme).build();
+        let node = perlin()
+            .domain_warp_simplex_with_scheme(50.0, 100.0, scheme)
+            .build();
         test_generator_produces_output(node.0);
     }
 }
@@ -700,7 +779,9 @@ fn test_hybrid_cellular_jitter() {
 fn test_hybrid_domain_offset() {
     // Using generators for offset parameters
     let offset_gen = simplex().domain_scale(0.1);
-    let node = perlin().domain_offset(offset_gen.clone(), offset_gen, 0.0, 0.0).build();
+    let node = perlin()
+        .domain_offset(offset_gen.clone(), offset_gen, 0.0, 0.0)
+        .build();
     test_generator_produces_output(node.0);
 }
 
@@ -791,7 +872,10 @@ fn generate_output_3d(node: &SafeNode) -> [f32; 64] {
 
 /// Helper to assert two outputs are different
 fn assert_outputs_differ(output1: &[f32], output2: &[f32], param_name: &str) {
-    let differs = output1.iter().zip(output2.iter()).any(|(a, b)| (a - b).abs() > 1e-6);
+    let differs = output1
+        .iter()
+        .zip(output2.iter())
+        .any(|(a, b)| (a - b).abs() > 1e-6);
     assert!(
         differs,
         "Parameter '{}' did not affect output - check test conditions",
@@ -920,8 +1004,22 @@ fn test_param_cellular_size_jitter() {
 
 #[test]
 fn test_param_cellular_distance_indices() {
-    let node1 = cellular_distance(1.0, DistanceFunction::Euclidean, 0, 1, CellularDistanceReturnType::Index0Sub1).build();
-    let node2 = cellular_distance(1.0, DistanceFunction::Euclidean, 1, 2, CellularDistanceReturnType::Index0Sub1).build();
+    let node1 = cellular_distance(
+        1.0,
+        DistanceFunction::Euclidean,
+        0,
+        1,
+        CellularDistanceReturnType::Index0Sub1,
+    )
+    .build();
+    let node2 = cellular_distance(
+        1.0,
+        DistanceFunction::Euclidean,
+        1,
+        2,
+        CellularDistanceReturnType::Index0Sub1,
+    )
+    .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "CellularDistance.Distance Index 0/1");
@@ -929,8 +1027,22 @@ fn test_param_cellular_distance_indices() {
 
 #[test]
 fn test_param_cellular_return_type() {
-    let node1 = cellular_distance(1.0, DistanceFunction::Euclidean, 0, 1, CellularDistanceReturnType::Index0).build();
-    let node2 = cellular_distance(1.0, DistanceFunction::Euclidean, 0, 1, CellularDistanceReturnType::Index0Add1).build();
+    let node1 = cellular_distance(
+        1.0,
+        DistanceFunction::Euclidean,
+        0,
+        1,
+        CellularDistanceReturnType::Index0,
+    )
+    .build();
+    let node2 = cellular_distance(
+        1.0,
+        DistanceFunction::Euclidean,
+        0,
+        1,
+        CellularDistanceReturnType::Index0Add1,
+    )
+    .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "CellularDistance.Return Type");
@@ -1011,8 +1123,14 @@ fn test_param_domain_warp_simplex_vectorization() {
 
 #[test]
 fn test_param_domain_warp_fractal_gain() {
-    let node1 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.3, 0.0, 4, 2.0).build();
-    let node2 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.7, 0.0, 4, 2.0).build();
+    let node1 = perlin()
+        .domain_warp_gradient(50.0, 100.0)
+        .domain_warp_progressive(0.3, 0.0, 4, 2.0)
+        .build();
+    let node2 = perlin()
+        .domain_warp_gradient(50.0, 100.0)
+        .domain_warp_progressive(0.7, 0.0, 4, 2.0)
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "DomainWarpFractalProgressive.Gain");
@@ -1020,19 +1138,33 @@ fn test_param_domain_warp_fractal_gain() {
 
 #[test]
 fn test_param_domain_warp_fractal_weighted_strength() {
-    let node1 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.5, 0.0, 4, 2.0).build();
-    let node2 = perlin().domain_warp_gradient(50.0, 100.0).domain_warp_progressive(0.5, 0.5, 4, 2.0).build();
+    let node1 = perlin()
+        .domain_warp_gradient(50.0, 100.0)
+        .domain_warp_progressive(0.5, 0.0, 4, 2.0)
+        .build();
+    let node2 = perlin()
+        .domain_warp_gradient(50.0, 100.0)
+        .domain_warp_progressive(0.5, 0.5, 4, 2.0)
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
-    assert_outputs_differ(&output1, &output2, "DomainWarpFractalProgressive.Weighted Strength");
+    assert_outputs_differ(
+        &output1,
+        &output2,
+        "DomainWarpFractalProgressive.Weighted Strength",
+    );
 }
 
 // ==================== Blend Parameter Tests ====================
 
 #[test]
 fn test_param_fade_min_max() {
-    let node1 = perlin().fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear).build();
-    let node2 = perlin().fade_with_range(simplex(), 0.5, 0.0, 0.5, FadeInterpolation::Linear).build();
+    let node1 = perlin()
+        .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear)
+        .build();
+    let node2 = perlin()
+        .fade_with_range(simplex(), 0.5, 0.0, 0.5, FadeInterpolation::Linear)
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "Fade.Fade Min/Max");
@@ -1040,8 +1172,12 @@ fn test_param_fade_min_max() {
 
 #[test]
 fn test_param_fade_interpolation() {
-    let node1 = perlin().fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear).build();
-    let node2 = perlin().fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Quintic).build();
+    let node1 = perlin()
+        .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear)
+        .build();
+    let node2 = perlin()
+        .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Quintic)
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "Fade.Interpolation");
@@ -1174,8 +1310,12 @@ fn test_param_ping_pong_strength() {
 #[test]
 fn test_param_domain_rotate_plane_type() {
     // This primarily affects 3D output - test with 3D grid
-    let node1 = perlin().domain_rotate_plane_with_type(PlaneRotationType::ImproveXYPlanes).build();
-    let node2 = perlin().domain_rotate_plane_with_type(PlaneRotationType::ImproveXZPlanes).build();
+    let node1 = perlin()
+        .domain_rotate_plane_with_type(PlaneRotationType::ImproveXYPlanes)
+        .build();
+    let node2 = perlin()
+        .domain_rotate_plane_with_type(PlaneRotationType::ImproveXZPlanes)
+        .build();
     let output1 = generate_output_3d(&node1.0);
     let output2 = generate_output_3d(&node2.0);
     assert_outputs_differ(&output1, &output2, "DomainRotatePlane.Rotation Type");

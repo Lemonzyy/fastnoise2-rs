@@ -134,10 +134,27 @@ impl SafeNode {
 
     /// # Panics
     /// Panics if `noise_out`, `x_pos_array`, and `y_pos_array` do not have the same length.
-    pub fn gen_position_array_2d(&self, noise_out: &mut [f32], x_pos_array: &[f32], y_pos_array: &[f32], x_offset: f32, y_offset: f32, seed: i32) -> OutputMinMax {
+    pub fn gen_position_array_2d(
+        &self,
+        noise_out: &mut [f32],
+        x_pos_array: &[f32],
+        y_pos_array: &[f32],
+        x_offset: f32,
+        y_offset: f32,
+        seed: i32,
+    ) -> OutputMinMax {
         assert!(noise_out.len() == x_pos_array.len() && x_pos_array.len() == y_pos_array.len());
 
-        unsafe { self.0.gen_position_array_2d_unchecked(noise_out, x_pos_array, y_pos_array, x_offset, y_offset, seed) }
+        unsafe {
+            self.0.gen_position_array_2d_unchecked(
+                noise_out,
+                x_pos_array,
+                y_pos_array,
+                x_offset,
+                y_offset,
+                seed,
+            )
+        }
     }
 
     /// # Panics

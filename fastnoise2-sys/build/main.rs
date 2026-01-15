@@ -30,7 +30,9 @@ fn main() {
     let feature_build_from_source = env::var("CARGO_FEATURE_BUILD_FROM_SOURCE").is_ok();
 
     if feature_build_from_source {
-        println!("cargo:warning=feature 'build-from-source' is enabled; building FastNoise2 from source");
+        println!(
+            "cargo:warning=feature 'build-from-source' is enabled; building FastNoise2 from source"
+        );
         build_from_source();
     } else if let Ok(lib_dir) = env::var(LIB_DIR_KEY) {
         println!("cargo:warning=using precompiled library located in '{lib_dir}'");
@@ -47,7 +49,9 @@ fn main() {
 }
 
 fn build_wasm() {
-    let source_path = env::var(SOURCE_DIR_KEY).map(PathBuf::from).unwrap_or_else(|_| default_source_path());
+    let source_path = env::var(SOURCE_DIR_KEY)
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| default_source_path());
 
     println!("cargo:warning=Building FastNoise2 for WASM with SIMD128 support");
 
@@ -55,13 +59,21 @@ fn build_wasm() {
     if let Ok(emsdk) = env::var("EMSDK") {
         println!("cargo:warning=EMSDK path: {}", emsdk);
     }
-    println!("cargo:rerun-if-changed={}", source_path.join("include").join("FastNoise").display());
+    println!(
+        "cargo:rerun-if-changed={}",
+        source_path.join("include").join("FastNoise").display()
+    );
 
     // Get Emscripten SDK path from environment
-    let emsdk_path = env::var("EMSDK").expect("EMSDK environment variable required for WASM builds. Install from https://emscripten.org");
+    let emsdk_path = env::var("EMSDK").expect(
+        "EMSDK environment variable required for WASM builds. Install from https://emscripten.org",
+    );
 
     // Use Emscripten's CMake toolchain file - this properly configures compilers and sysroot
-    let toolchain_file = format!("{}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake", emsdk_path);
+    let toolchain_file = format!(
+        "{}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
+        emsdk_path
+    );
 
     // Build FastNoise2 for WASM as a pure static library using Emscripten toolchain
     // FastSIMD has native WASM SIMD128 support - we just need to enable it
@@ -90,7 +102,10 @@ fn build_wasm() {
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
     // Copy Utility headers that cmake doesn't install
-    let src_utility = source_path.join("include").join("FastNoise").join("Utility");
+    let src_utility = source_path
+        .join("include")
+        .join("FastNoise")
+        .join("Utility");
     let dst_utility = out_path.join("include").join("FastNoise").join("Utility");
     if src_utility.exists() && !dst_utility.exists() {
         std::fs::create_dir_all(&dst_utility).expect("Failed to create Utility dir");
@@ -105,10 +120,18 @@ fn build_wasm() {
 }
 
 fn build_from_source() {
-    let source_path = env::var(SOURCE_DIR_KEY).map(PathBuf::from).unwrap_or_else(|_| default_source_path());
+    let source_path = env::var(SOURCE_DIR_KEY)
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| default_source_path());
 
-    println!("cargo:warning=building from source files located in '{}'", source_path.display());
-    println!("cargo:rerun-if-changed={}", source_path.join("include").join("FastNoise").display());
+    println!(
+        "cargo:warning=building from source files located in '{}'",
+        source_path.display()
+    );
+    println!(
+        "cargo:rerun-if-changed={}",
+        source_path.join("include").join("FastNoise").display()
+    );
 
     // Pre-create pdb-files directory structure to prevent CMake install failure on Windows
     // FastNoise2's CMakeLists.txt tries to install PDB files that may not exist in Release builds
@@ -162,7 +185,10 @@ fn build_from_source() {
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
     // Copy Utility headers that cmake doesn't install
-    let src_utility = source_path.join("include").join("FastNoise").join("Utility");
+    let src_utility = source_path
+        .join("include")
+        .join("FastNoise")
+        .join("Utility");
     let dst_utility = out_path.join("include").join("FastNoise").join("Utility");
     if src_utility.exists() && !dst_utility.exists() {
         std::fs::create_dir_all(&dst_utility).expect("Failed to create Utility dir");
@@ -184,8 +210,12 @@ fn generate_bindings(source_path: PathBuf) {
     if let Ok(cache_dir) = env::var(BINDINGS_CACHE_KEY) {
         let cached_bindings = PathBuf::from(&cache_dir).join("bindings.rs");
         if cached_bindings.exists() {
-            println!("cargo:warning=using cached bindings from '{}'", cached_bindings.display());
-            std::fs::copy(&cached_bindings, &bindings_path).expect("Failed to copy cached bindings");
+            println!(
+                "cargo:warning=using cached bindings from '{}'",
+                cached_bindings.display()
+            );
+            std::fs::copy(&cached_bindings, &bindings_path)
+                .expect("Failed to copy cached bindings");
             return;
         }
     }
@@ -216,15 +246,23 @@ fn generate_bindings(source_path: PathBuf) {
     if target_arch == "wasm32" {
         // Use host triple for parsing - the bindings are ABI-compatible
         let host = env::var("HOST").unwrap_or_else(|_| "x86_64-unknown-linux-gnu".to_string());
-        println!("cargo:warning=cross-compiling to WASM, using host target '{}' for bindgen", host);
+        println!(
+            "cargo:warning=cross-compiling to WASM, using host target '{}' for bindgen",
+            host
+        );
         builder = builder.clang_arg(format!("--target={}", host));
     }
 
     let bindings = builder.generate().expect("Unable to generate bindings");
 
-    bindings.write_to_file(&bindings_path).expect("Couldn't write bindings!");
+    bindings
+        .write_to_file(&bindings_path)
+        .expect("Couldn't write bindings!");
 
-    println!("cargo:warning=bindings generated successfully and written to '{}'", bindings_path.display());
+    println!(
+        "cargo:warning=bindings generated successfully and written to '{}'",
+        bindings_path.display()
+    );
 
     // Save to cache if dir is set
     if let Ok(cache_dir) = env::var(BINDINGS_CACHE_KEY) {
@@ -232,7 +270,10 @@ fn generate_bindings(source_path: PathBuf) {
         std::fs::create_dir_all(&cache_path).ok();
         let cached_bindings = cache_path.join("bindings.rs");
         std::fs::copy(&bindings_path, &cached_bindings).ok();
-        println!("cargo:warning=bindings cached to '{}'", cached_bindings.display());
+        println!(
+            "cargo:warning=bindings cached to '{}'",
+            cached_bindings.display()
+        );
     }
 }
 

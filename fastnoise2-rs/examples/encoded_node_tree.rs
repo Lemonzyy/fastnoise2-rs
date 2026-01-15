@@ -5,13 +5,16 @@ use fastnoise2::SafeNode;
 use image::{GrayImage, Luma};
 
 // "Simple Terrain" tree integrated into NoiseTool.
-const DEFAULT_ENCODED_NODE_TREE: &str = "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==";
+const DEFAULT_ENCODED_NODE_TREE: &str =
+    "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==";
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
 fn main() {
     let encoded_node_tree = std::env::args().nth(1).unwrap_or_else(|| {
-        println!("Invalid or unspecified encoded node tree, defaulting to '{DEFAULT_ENCODED_NODE_TREE}'");
+        println!(
+            "Invalid or unspecified encoded node tree, defaulting to '{DEFAULT_ENCODED_NODE_TREE}'"
+        );
         DEFAULT_ENCODED_NODE_TREE.to_string()
     });
 
@@ -63,7 +66,9 @@ fn main() {
 }
 
 fn save(img: GrayImage, filename: &str) {
-    let output_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default()).join("examples_output");
+    let output_dir =
+        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default())
+            .join("examples_output");
     std::fs::create_dir_all(&output_dir).expect("Failed to create directories");
     let output_path = output_dir.join(filename);
     img.save(&output_path).expect("Failed to save image");

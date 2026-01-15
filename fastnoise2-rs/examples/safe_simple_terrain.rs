@@ -8,10 +8,11 @@ const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
 fn create_node() -> GeneratorWrapper<SafeNode> {
-    (supersimplex().fbm(0.65, 0.5, 4, 2.5).domain_scale(0.66) + gradient([0.0, 3.0, 0.0, 0.0], [0.0; 4]))
-        .domain_warp_gradient(0.2, 2.0)
-        .domain_warp_progressive(0.7, 0.5, 2, 2.5)
-        .build()
+    (supersimplex().fbm(0.65, 0.5, 4, 2.5).domain_scale(0.66)
+        + gradient([0.0, 3.0, 0.0, 0.0], [0.0; 4]))
+    .domain_warp_gradient(0.2, 2.0)
+    .domain_warp_progressive(0.7, 0.5, 2, 2.5)
+    .build()
 }
 
 fn main() {
@@ -57,7 +58,9 @@ fn main() {
 }
 
 fn save(img: GrayImage, filename: &str) {
-    let output_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default()).join("examples_output");
+    let output_dir =
+        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default())
+            .join("examples_output");
     std::fs::create_dir_all(&output_dir).expect("Failed to create directories");
     let output_path = output_dir.join(filename);
     img.save(&output_path).expect("Failed to save image");

@@ -66,7 +66,11 @@ impl<T: Generator> Hybrid for T {}
 impl<T: Generator> MemberValue for T {
     const TYPE: MemberType = MemberType::NodeLookup;
 
-    fn apply(&self, node: &mut Node, member: &crate::metadata::Member) -> Result<(), crate::FastNoiseError> {
+    fn apply(
+        &self,
+        node: &mut Node,
+        member: &crate::metadata::Member,
+    ) -> Result<(), crate::FastNoiseError> {
         node.set(&member.name, self.build().0 .0.as_ref())
     }
 }
@@ -100,7 +104,11 @@ impl Hybrid for GeneratorWrapper<f32> {}
 impl MemberValue for GeneratorWrapper<f32> {
     const TYPE: MemberType = MemberType::Float;
 
-    fn apply(&self, node: &mut Node, member: &crate::metadata::Member) -> Result<(), crate::FastNoiseError> {
+    fn apply(
+        &self,
+        node: &mut Node,
+        member: &crate::metadata::Member,
+    ) -> Result<(), crate::FastNoiseError> {
         self.0.apply(node, member)
     }
 }
