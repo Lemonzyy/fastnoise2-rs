@@ -249,12 +249,15 @@ impl MemberValue for &Node {
     fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::NodeLookup => {
-                if !unsafe { fnSetNodeLookup(node.handle, member.index, self.handle) } {
+                // C API expects pointer to SmartNode-like structure (pointer at offset 0)
+                // Pass address of handle so C can dereference to get the Generator*
+                if !unsafe { fnSetNodeLookup(node.handle, member.index, &self.handle as *const _ as *const _) } {
                     return Err(FastNoiseError::SetNodeLookupFailed);
                 }
             }
             MemberType::Hybrid => {
-                if !unsafe { fnSetHybridNodeLookup(node.handle, member.index, self.handle) } {
+                // Same fix for hybrid node lookups
+                if !unsafe { fnSetHybridNodeLookup(node.handle, member.index, &self.handle as *const _ as *const _) } {
                     return Err(FastNoiseError::SetHybridNodeLookupFailed);
                 }
             }

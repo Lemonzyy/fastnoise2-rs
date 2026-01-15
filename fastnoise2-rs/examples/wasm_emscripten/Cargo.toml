@@ -1,0 +1,19 @@
+[package]
+name = "fastnoise2-wasm-emscripten"
+version = "0.1.0"
+edition = "2021"
+
+# Exclude from parent workspace
+[workspace]
+
+# Build as binary for emscripten target to generate JS glue code
+[[bin]]
+name = "fastnoise2_wasm"
+path = "src/main.rs"
+
+[dependencies]
+fastnoise2 = { path = "../.." }
+
+[profile.release]
+opt-level = "s"
+lto = true

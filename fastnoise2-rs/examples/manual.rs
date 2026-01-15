@@ -44,14 +44,16 @@ fn main() {
     // - Internal errors or limitations in the FastNoise2 library that may not be evident from Rust's type safety
     //   or runtime checks.
     // Verify that all node configurations and parameters are correct.
+    let step_size = 1.0;
     let min_max = unsafe {
         node.gen_uniform_grid_2d_unchecked(
             &mut noise,
-            -X_SIZE / 2,
-            -Y_SIZE / 2,
-            X_SIZE,
-            Y_SIZE,
-            0.02,
+            -X_SIZE as f32 / 2.0 * step_size, // x_offset
+            -Y_SIZE as f32 / 2.0 * step_size, // y_offset
+            X_SIZE,                           // x_count
+            Y_SIZE,                           // y_count
+            step_size,                        // x_step_size
+            step_size,                        // y_step_size
             1337,
         )
     };
@@ -80,9 +82,7 @@ fn main() {
 }
 
 fn save(img: GrayImage, filename: &str) {
-    let output_dir =
-        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default())
-            .join("examples_output");
+    let output_dir = std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default()).join("examples_output");
     std::fs::create_dir_all(&output_dir).expect("Failed to create directories");
     let output_path = output_dir.join(filename);
     img.save(&output_path).expect("Failed to save image");

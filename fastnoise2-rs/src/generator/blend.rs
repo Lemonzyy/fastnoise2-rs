@@ -1,6 +1,5 @@
+use super::{FadeInterpolation, Generator, GeneratorWrapper, Hybrid};
 use crate::{safe::SafeNode, Node};
-
-use super::{Generator, GeneratorWrapper, Hybrid};
 
 #[derive(Clone, Debug)]
 pub struct Add<Lhs, Rhs>
@@ -34,6 +33,16 @@ where
 
 #[derive(Clone, Debug)]
 pub struct Divide<Lhs, Rhs>
+where
+    Lhs: Hybrid,
+    Rhs: Hybrid,
+{
+    pub lhs: Lhs,
+    pub rhs: Rhs,
+}
+
+#[derive(Clone, Debug)]
+pub struct Modulus<Lhs, Rhs>
 where
     Lhs: Hybrid,
     Rhs: Hybrid,
@@ -87,15 +96,20 @@ where
 }
 
 #[derive(Clone, Debug)]
-pub struct Fade<A, B, F>
+pub struct Fade<A, B, F, FMin, FMax>
 where
     A: Generator,
     B: Generator,
     F: Hybrid,
+    FMin: Hybrid,
+    FMax: Hybrid,
 {
     pub a: A,
     pub b: B,
     pub fade: F,
+    pub fade_min: FMin,
+    pub fade_max: FMax,
+    pub interpolation: FadeInterpolation,
 }
 
 #[derive(Clone, Debug)]
@@ -173,6 +187,20 @@ where
     }
 }
 
+impl<Lhs, Rhs> Generator for Modulus<Lhs, Rhs>
+where
+    Lhs: Hybrid,
+    Rhs: Hybrid,
+{
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
+    fn build(&self) -> GeneratorWrapper<SafeNode> {
+        let mut node = Node::from_name("Modulus").unwrap();
+        node.set("LHS", self.lhs.clone()).unwrap();
+        node.set("RHS", self.rhs.clone()).unwrap();
+        SafeNode(node.into()).into()
+    }
+}
+
 impl<Lhs, Rhs> Generator for Min<Lhs, Rhs>
 where
     Lhs: Generator,
@@ -233,11 +261,13 @@ where
     }
 }
 
-impl<A, B, F> Generator for Fade<A, B, F>
+impl<A, B, F, FMin, FMax> Generator for Fade<A, B, F, FMin, FMax>
 where
     A: Generator,
     B: Generator,
     F: Hybrid,
+    FMin: Hybrid,
+    FMax: Hybrid,
 {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
@@ -245,6 +275,9 @@ where
         node.set("A", &self.a).unwrap();
         node.set("B", &self.b).unwrap();
         node.set("Fade", self.fade.clone()).unwrap();
+        node.set("FadeMin", self.fade_min.clone()).unwrap();
+        node.set("FadeMax", self.fade_max.clone()).unwrap();
+        node.set("Interpolation", &*self.interpolation.to_string()).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -335,6 +368,18 @@ where
     }
 }
 
+impl<Lhs, Rhs> std::ops::Rem<Rhs> for GeneratorWrapper<Lhs>
+where
+    Lhs: Hybrid,
+    Rhs: Hybrid,
+{
+    type Output = GeneratorWrapper<Modulus<Lhs, Rhs>>;
+
+    fn rem(self, rhs: Rhs) -> Self::Output {
+        Modulus { lhs: self.0, rhs }.into()
+    }
+}
+
 impl<Lhs> GeneratorWrapper<Lhs>
 where
     Lhs: Generator,
@@ -353,38 +398,20 @@ where
         Max { lhs: self.0, rhs }.into()
     }
 
-    pub fn min_smooth<Rhs, S>(
-        self,
-        rhs: Rhs,
-        smoothness: S,
-    ) -> GeneratorWrapper<MinSmooth<Lhs, Rhs, S>>
+    pub fn min_smooth<Rhs, S>(self, rhs: Rhs, smoothness: S) -> GeneratorWrapper<MinSmooth<Lhs, Rhs, S>>
     where
         Rhs: Hybrid,
         S: Hybrid,
     {
-        MinSmooth {
-            lhs: self.0,
-            rhs,
-            smoothness,
-        }
-        .into()
+        MinSmooth { lhs: self.0, rhs, smoothness }.into()
     }
 
-    pub fn max_smooth<Rhs, S>(
-        self,
-        rhs: Rhs,
-        smoothness: S,
-    ) -> GeneratorWrapper<MaxSmooth<Lhs, Rhs, S>>
+    pub fn max_smooth<Rhs, S>(self, rhs: Rhs, smoothness: S) -> GeneratorWrapper<MaxSmooth<Lhs, Rhs, S>>
     where
         Rhs: Hybrid,
         S: Hybrid,
     {
-        MaxSmooth {
-            lhs: self.0,
-            rhs,
-            smoothness,
-        }
-        .into()
+        MaxSmooth { lhs: self.0, rhs, smoothness }.into()
     }
 }
 
@@ -392,12 +419,40 @@ impl<A> GeneratorWrapper<A>
 where
     A: Generator,
 {
-    pub fn fade<B, F>(self, b: B, fade: F) -> GeneratorWrapper<Fade<A, B, F>>
+    /// Fades between two generators with default min/max (-1.0, 1.0) and linear interpolation.
+    pub fn fade<B, F>(self, b: B, fade: F) -> GeneratorWrapper<Fade<A, B, F, f32, f32>>
     where
         B: Generator,
         F: Hybrid,
     {
-        Fade { a: self.0, b, fade }.into()
+        Fade {
+            a: self.0,
+            b,
+            fade,
+            fade_min: -1.0,
+            fade_max: 1.0,
+            interpolation: FadeInterpolation::default(),
+        }
+        .into()
+    }
+
+    /// Fades between two generators with custom min/max range and interpolation.
+    pub fn fade_with_range<B, F, FMin, FMax>(self, b: B, fade: F, fade_min: FMin, fade_max: FMax, interpolation: FadeInterpolation) -> GeneratorWrapper<Fade<A, B, F, FMin, FMax>>
+    where
+        B: Generator,
+        F: Hybrid,
+        FMin: Hybrid,
+        FMax: Hybrid,
+    {
+        Fade {
+            a: self.0,
+            b,
+            fade,
+            fade_min,
+            fade_max,
+            interpolation,
+        }
+        .into()
     }
 }
 
@@ -427,10 +482,6 @@ where
     T: Hybrid,
 {
     pub fn recip(self) -> GeneratorWrapper<Divide<f32, T>> {
-        Divide {
-            lhs: 1.0,
-            rhs: self.0,
-        }
-        .into()
+        Divide { lhs: 1.0, rhs: self.0 }.into()
     }
 }
