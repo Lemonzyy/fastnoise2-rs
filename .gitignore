@@ -2,3 +2,4 @@ Cargo.lock
 **/target
 **/examples_output
 **/dist
+/.direnv
