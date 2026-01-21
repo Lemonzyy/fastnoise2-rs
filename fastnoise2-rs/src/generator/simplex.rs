@@ -142,3 +142,74 @@ impl GeneratorWrapper<SuperSimplex> {
         self
     }
 }
+
+#[cfg(test)]
+
+mod tests {
+    use super::*;
+    use crate::test_utils::*;
+
+    #[test]
+    fn test_simplex() {
+        let node = simplex().build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_simplex_default_feature_scale() {
+        // Test that simplex now has the correct default feature scale of 100.0
+        let simplex_node = simplex().build();
+        // Create a simplex node with explicit feature scale of 100.0 for comparison
+        let simplex_100 = simplex().with_feature_scale(100.0).build();
+        // These should produce the same output since 100.0 is now the default
+        let output1 = generate_output(&simplex_node.0);
+        let output2 = generate_output(&simplex_100.0);
+        // If they're the same, the difference should be very small (just floating point precision)
+        let diff: f32 = output1
+            .iter()
+            .zip(output2.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum();
+
+        assert!(
+            diff < 0.01,
+            "Simplex default feature scale test failed: outputs differ by {}",
+            diff
+        );
+    }
+
+    #[test]
+    fn test_supersimplex() {
+        let node = supersimplex().build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_supersimplex_scaled() {
+        let node = supersimplex_scaled(0.5).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_simplex_builder_methods() {
+        let node = simplex()
+            .with_feature_scale(2.0)
+            .with_seed_offset(42)
+            .with_output_range(0.0, 1.0)
+            .build();
+
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+
+    fn test_supersimplex_builder_methods() {
+        let node = supersimplex()
+            .with_feature_scale(2.0)
+            .with_seed_offset(42)
+            .with_output_range(0.0, 1.0)
+            .build();
+
+        test_generator_produces_output(node.0);
+    }
+}

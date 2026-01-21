@@ -115,3 +115,62 @@ where
         .into()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{generator::perlin::perlin, test_utils::*};
+
+    #[test]
+    fn test_domain_warp_fractal_progressive() {
+        // Domain warp fractal methods work on DomainWarpNode types
+        let node = perlin()
+            .domain_warp_gradient(50.0, 100.0)
+            .domain_warp_progressive(0.5, 0.0, 4, 2.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_domain_warp_fractal_independent() {
+        let node = perlin()
+            .domain_warp_gradient(50.0, 100.0)
+            .domain_warp_independent(0.5, 0.0, 4, 2.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_param_domain_warp_fractal_gain() {
+        let node1 = perlin()
+            .domain_warp_gradient(50.0, 100.0)
+            .domain_warp_progressive(0.3, 0.0, 4, 2.0)
+            .build();
+        let node2 = perlin()
+            .domain_warp_gradient(50.0, 100.0)
+            .domain_warp_progressive(0.7, 0.0, 4, 2.0)
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "DomainWarpFractalProgressive.Gain");
+    }
+
+    #[test]
+    fn test_param_domain_warp_fractal_weighted_strength() {
+        let node1 = perlin()
+            .domain_warp_gradient(50.0, 100.0)
+            .domain_warp_progressive(0.5, 0.0, 4, 2.0)
+            .build();
+        let node2 = perlin()
+            .domain_warp_gradient(50.0, 100.0)
+            .domain_warp_progressive(0.5, 0.5, 4, 2.0)
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(
+            &output1,
+            &output2,
+            "DomainWarpFractalProgressive.Weighted Strength",
+        );
+    }
+}

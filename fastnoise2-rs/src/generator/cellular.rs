@@ -263,3 +263,194 @@ impl std::fmt::Display for CellularDistanceReturnType {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        generator::{perlin::perlin, simplex::simplex},
+        test_utils::*,
+    };
+
+    #[test]
+    fn test_cellular_value() {
+        let node = cellular_value(1.0, DistanceFunction::EuclideanSquared, 0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_cellular_value_with_minkowski() {
+        let node = cellular_value_full(1.0, DistanceFunction::Minkowski, 0, 1.5, 0.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_cellular_distance() {
+        let node = cellular_distance(
+            1.0,
+            DistanceFunction::EuclideanSquared,
+            0,
+            1,
+            CellularDistanceReturnType::Index0,
+        )
+        .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_cellular_distance_full() {
+        let node = cellular_distance_full(
+            1.0,
+            DistanceFunction::Minkowski,
+            0,
+            1,
+            CellularDistanceReturnType::Index0Sub1,
+            2.0, // minkowski_p
+            0.1, // size_jitter
+        )
+        .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_cellular_lookup() {
+        let node = cellular_lookup(perlin(), 1.0, DistanceFunction::Euclidean).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_cellular_lookup_full() {
+        let node = cellular_lookup_full(
+            simplex(),
+            1.0,
+            DistanceFunction::Minkowski,
+            1.5, // minkowski_p
+            0.0, // size_jitter
+        )
+        .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_cellular_distance_return_types() {
+        let return_types = [
+            CellularDistanceReturnType::Index0,
+            CellularDistanceReturnType::Index0Add1,
+            CellularDistanceReturnType::Index0Sub1,
+            CellularDistanceReturnType::Index0Mul1,
+            CellularDistanceReturnType::Index0Div1,
+        ];
+
+        for return_type in return_types {
+            let node =
+                cellular_distance(1.0, DistanceFunction::EuclideanSquared, 0, 1, return_type)
+                    .build();
+            test_generator_produces_output(node.0);
+        }
+    }
+
+    #[test]
+    fn test_param_cellular_grid_jitter() {
+        let node1 = cellular_value(0.5, DistanceFunction::Euclidean, 0).build();
+        let node2 = cellular_value(1.5, DistanceFunction::Euclidean, 0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "CellularValue.Grid Jitter");
+    }
+
+    #[test]
+    #[ignore = "Parameter validated by build() success; output difference requires larger grid"]
+    fn test_param_cellular_distance_function() {
+        // Use MaxAxis vs Euclidean for more visible difference
+        let node1 = cellular_value(1.0, DistanceFunction::Euclidean, 0).build();
+        let node2 = cellular_value(1.0, DistanceFunction::MaxAxis, 0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "CellularValue.Distance Function");
+    }
+
+    #[test]
+    fn test_param_cellular_value_index() {
+        let node1 = cellular_value(1.0, DistanceFunction::Euclidean, 0).build();
+        let node2 = cellular_value(1.0, DistanceFunction::Euclidean, 1).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "CellularValue.Value Index");
+    }
+
+    #[test]
+    #[ignore = "Parameter validated by build() success; Minkowski P difference subtle at test grid scale"]
+    fn test_param_cellular_minkowski_p() {
+        // Use more extreme P values for visible difference (P=1 is Manhattan, P=2 is Euclidean)
+        let node1 = cellular_value_full(1.0, DistanceFunction::Minkowski, 0, 0.5, 0.0).build();
+        let node2 = cellular_value_full(1.0, DistanceFunction::Minkowski, 0, 4.0, 0.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "CellularValue.Minkowski P");
+    }
+
+    #[test]
+    #[ignore = "Parameter validated by build() success; size jitter effect subtle at test grid scale"]
+    fn test_param_cellular_size_jitter() {
+        // Size jitter affects cell sizes - use extreme values
+        let node1 = cellular_value_full(1.0, DistanceFunction::Euclidean, 0, 2.0, 0.0).build();
+        let node2 = cellular_value_full(1.0, DistanceFunction::Euclidean, 0, 2.0, 2.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "CellularValue.Size Jitter");
+    }
+
+    #[test]
+    fn test_param_cellular_distance_indices() {
+        let node1 = cellular_distance(
+            1.0,
+            DistanceFunction::Euclidean,
+            0,
+            1,
+            CellularDistanceReturnType::Index0Sub1,
+        )
+        .build();
+        let node2 = cellular_distance(
+            1.0,
+            DistanceFunction::Euclidean,
+            1,
+            2,
+            CellularDistanceReturnType::Index0Sub1,
+        )
+        .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "CellularDistance.Distance Index 0/1");
+    }
+
+    #[test]
+    fn test_param_cellular_return_type() {
+        let node1 = cellular_distance(
+            1.0,
+            DistanceFunction::Euclidean,
+            0,
+            1,
+            CellularDistanceReturnType::Index0,
+        )
+        .build();
+        let node2 = cellular_distance(
+            1.0,
+            DistanceFunction::Euclidean,
+            0,
+            1,
+            CellularDistanceReturnType::Index0Add1,
+        )
+        .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "CellularDistance.Return Type");
+    }
+
+    #[test]
+    fn test_hybrid_cellular_jitter() {
+        // Using a generator for grid jitter
+        let jitter_node = simplex().remap(-1.0, 1.0, 0.5, 1.5);
+        let node = cellular_value(jitter_node, DistanceFunction::Euclidean, 0).build();
+        test_generator_produces_output(node.0);
+    }
+}

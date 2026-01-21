@@ -64,3 +64,53 @@ impl GeneratorWrapper<Perlin> {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::*;
+
+    #[test]
+    fn test_perlin() {
+        let node = perlin().build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_perlin_builder_methods() {
+        // Test all builder methods chain correctly
+        let node = perlin()
+            .with_feature_scale(50.0)
+            .with_seed_offset(42)
+            .with_output_range(0.0, 1.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_param_perlin_feature_scale() {
+        let node1 = perlin().with_feature_scale(10.0).build();
+        let node2 = perlin().with_feature_scale(100.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Perlin.FeatureScale");
+    }
+
+    #[test]
+    fn test_param_perlin_seed_offset() {
+        let node1 = perlin().with_seed_offset(0).build();
+        let node2 = perlin().with_seed_offset(42).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Perlin.SeedOffset");
+    }
+
+    #[test]
+    fn test_param_perlin_output_range() {
+        let node1 = perlin().with_output_range(-1.0, 1.0).build();
+        let node2 = perlin().with_output_range(0.0, 100.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Perlin.OutputMin/Max");
+    }
+}

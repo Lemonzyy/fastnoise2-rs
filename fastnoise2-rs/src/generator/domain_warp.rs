@@ -230,3 +230,107 @@ where
         .into()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        generator::{perlin::perlin, simplex::simplex},
+        test_utils::*,
+    };
+
+    #[test]
+    fn test_domain_warp_gradient() {
+        let node = simplex().domain_warp_gradient(50.0, 100.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_domain_warp_simplex() {
+        let node = perlin().domain_warp_simplex(50.0, 100.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_domain_warp_simplex_with_scheme() {
+        let node = perlin()
+            .domain_warp_simplex_with_scheme(50.0, 100.0, VectorizationScheme::GradientOuterProduct)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_domain_warp_super_simplex() {
+        let node = perlin().domain_warp_super_simplex(50.0, 100.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_domain_warp_super_simplex_with_scheme() {
+        let node = perlin()
+            .domain_warp_super_simplex_with_scheme(
+                50.0,
+                100.0,
+                VectorizationScheme::GradientOuterProduct,
+            )
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_vectorization_schemes() {
+        let schemes = [
+            VectorizationScheme::OrthogonalGradientMatrix,
+            VectorizationScheme::GradientOuterProduct,
+        ];
+        for scheme in schemes {
+            let node = perlin()
+                .domain_warp_simplex_with_scheme(50.0, 100.0, scheme)
+                .build();
+            test_generator_produces_output(node.0);
+        }
+    }
+
+    #[test]
+    fn test_param_domain_warp_amplitude() {
+        let node1 = perlin().domain_warp_gradient(10.0, 100.0).build();
+        let node2 = perlin().domain_warp_gradient(100.0, 100.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "DomainWarpGradient.Warp Amplitude");
+    }
+
+    #[test]
+    fn test_param_domain_warp_feature_scale() {
+        let node1 = perlin().domain_warp_gradient(50.0, 50.0).build();
+        let node2 = perlin().domain_warp_gradient(50.0, 200.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "DomainWarpGradient.Feature Scale");
+    }
+
+    #[test]
+    fn test_param_domain_warp_simplex_vectorization() {
+        let node1 = perlin()
+            .domain_warp_simplex_with_scheme(
+                50.0,
+                100.0,
+                VectorizationScheme::OrthogonalGradientMatrix,
+            )
+            .build();
+        let node2 = perlin()
+            .domain_warp_simplex_with_scheme(50.0, 100.0, VectorizationScheme::GradientOuterProduct)
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "DomainWarpSimplex.Vectorization Scheme");
+    }
+
+    #[test]
+    fn test_hybrid_warp_amplitude() {
+        // Using a generator as warp amplitude (hybrid)
+        let amplitude_node = simplex().remap(-1.0, 1.0, 10.0, 50.0);
+        let node = perlin().domain_warp_gradient(amplitude_node, 100.0).build();
+        test_generator_produces_output(node.0);
+    }
+}

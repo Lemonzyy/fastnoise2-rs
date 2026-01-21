@@ -64,3 +64,25 @@ impl GeneratorWrapper<Value> {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_utils::*;
+
+    #[test]
+    fn test_value() {
+        let node = value().build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_value_builder_methods() {
+        let node = value()
+            .with_feature_scale(50.0)
+            .with_seed_offset(42)
+            .with_output_range(0.0, 1.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+}

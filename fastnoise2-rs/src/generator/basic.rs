@@ -471,3 +471,310 @@ impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
         self
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{generator::simplex::simplex, test_utils::*};
+
+    #[test]
+    fn test_constant() {
+        let node = constant(0.5).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_white_noise() {
+        let node = white().build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_checkerboard() {
+        let node = checkerboard(10.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_sinewave() {
+        let node = sinewave(10.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_gradient() {
+        let node = gradient()
+            .with_multipliers([0.01, 0.01, 0.0, 0.0])
+            .with_offsets([0.0, 0.0, 0.0, 0.0])
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_distance_to_point() {
+        let node = distance_to_point()
+            .with_distance_function(DistanceFunction::Euclidean)
+            .with_point([0.0, 0.0, 0.0, 0.0])
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_gradient_builder_patterns() {
+        // Test the new gradient builder methods
+        {
+            let gradient = gradient().with_multiplier_x(0.5).with_offset_y(1.0).build();
+
+            test_generator_produces_output(gradient.0);
+        }
+
+        // Test setting all multipliers at once
+        let gradient2 = gradient()
+            .with_multipliers([0.1, 0.2, 0.3, 0.4])
+            .with_offsets([1.0, 2.0, 3.0, 4.0])
+            .build();
+
+        test_generator_produces_output(gradient2.0);
+    }
+
+    #[test]
+    fn test_distance_to_point_builder_patterns() {
+        // Test the enhanced distance_to_point builder methods
+        let distance = distance_to_point()
+            .with_distance_function(DistanceFunction::Euclidean)
+            .with_point([1.0, 2.0, 3.0, 4.0])
+            .build();
+
+        test_generator_produces_output(distance.0);
+
+        // Test individual point setters
+        let distance2 = distance_to_point()
+            .with_point_x(5.0)
+            .with_point_y(10.0)
+            .with_distance_function(DistanceFunction::Manhattan)
+            .build();
+
+        test_generator_produces_output(distance2.0);
+    }
+
+    #[test]
+    fn test_builder_patterns_produce_different_outputs() {
+        // Test that different builder configurations produce different outputs
+        let gradient1 = gradient().build();
+        let gradient2 = gradient().with_multiplier_x(1.0).build();
+
+        let output1 = generate_output(&gradient1.0);
+        let output2 = generate_output(&gradient2.0);
+
+        // These should produce different outputs
+        assert_outputs_differ(&output1, &output2, "Gradient builder patterns");
+
+        // Test distance_to_point differences
+        let distance1 = distance_to_point().build();
+        let distance2 = distance_to_point().with_point([1.0, 0.0, 0.0, 0.0]).build();
+
+        let output3 = generate_output(&distance1.0);
+        let output4 = generate_output(&distance2.0);
+
+        // These should produce different outputs
+        assert_outputs_differ(&output3, &output4, "DistanceToPoint builder patterns");
+    }
+
+    #[test]
+    fn test_checkerboard_default_feature_scale() {
+        // Test that checkerboard now has the correct default feature scale of 100.0
+        let checkerboard_node = checkerboard(100.0).build();
+
+        // Create a checkerboard node with explicit feature scale of 100.0 for comparison
+        let checkerboard_100 = checkerboard(100.0).with_feature_scale(100.0).build();
+
+        // These should produce the same output since 100.0 is now the default
+        let output1 = generate_output(&checkerboard_node.0);
+        let output2 = generate_output(&checkerboard_100.0);
+        // If they're the same, the difference should be very small (just floating point precision)
+        let diff: f32 = output1
+            .iter()
+            .zip(output2.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum();
+        assert!(
+            diff < 0.01,
+            "Checkerboard default feature scale test failed: outputs differ by {}",
+            diff
+        );
+    }
+
+    #[test]
+    fn test_sinewave_default_feature_scale() {
+        // Test that sinewave now has the correct default feature scale of 100.0
+        let sinewave_node = sinewave(100.0).build();
+
+        // Create a sinewave node with explicit feature scale of 100.0 for comparison
+        let sinewave_100 = sinewave(100.0).with_feature_scale(100.0).build();
+
+        // These should produce the same output since 100.0 is now the default
+        let output1 = generate_output(&sinewave_node.0);
+        let output2 = generate_output(&sinewave_100.0);
+        // If they're the same, the difference should be very small (just floating point precision)
+        let diff: f32 = output1
+            .iter()
+            .zip(output2.iter())
+            .map(|(a, b)| (a - b).abs())
+            .sum();
+        assert!(
+            diff < 0.01,
+            "SineWave default feature scale test failed: outputs differ by {}",
+            diff
+        );
+    }
+
+    #[test]
+    fn test_param_constant_value() {
+        let node1 = constant(0.5).build();
+        let node2 = constant(0.8).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Constant.Value");
+    }
+
+    #[test]
+    fn test_param_checkerboard_feature_scale() {
+        // Use dramatically different scales to ensure visible difference
+        let node1 = checkerboard(0.5).build();
+        let node2 = checkerboard(2.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Checkerboard.Feature Scale");
+    }
+
+    #[test]
+    fn test_param_sinewave_feature_scale() {
+        let node1 = sinewave(10.0).build();
+        let node2 = sinewave(20.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "SineWave.Feature Scale");
+    }
+
+    #[test]
+    fn test_param_gradient_multipliers() {
+        let node1 = gradient()
+            .with_multipliers([0.01, 0.01, 0.0, 0.0])
+            .with_offsets([0.0, 0.0, 0.0, 0.0])
+            .build();
+        let node2 = gradient()
+            .with_multipliers([0.05, 0.02, 0.0, 0.0])
+            .with_offsets([0.0, 0.0, 0.0, 0.0])
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Gradient.MultiplierX/Y");
+    }
+
+    #[test]
+    fn test_param_gradient_offsets() {
+        let node1 = gradient()
+            .with_multipliers([0.01, 0.01, 0.0, 0.0])
+            .with_offsets([0.0, 0.0, 0.0, 0.0])
+            .build();
+        let node2 = gradient()
+            .with_multipliers([0.01, 0.01, 0.0, 0.0])
+            .with_offsets([1.0, 1.0, 0.0, 0.0])
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Gradient.OffsetX/Y");
+    }
+
+    #[test]
+    fn test_param_distance_to_point_point() {
+        let node1 = distance_to_point()
+            .with_distance_function(DistanceFunction::Euclidean)
+            .with_point([0.0, 0.0, 0.0, 0.0])
+            .build();
+        let node2 = distance_to_point()
+            .with_distance_function(DistanceFunction::Euclidean)
+            .with_point([5.0, 5.0, 0.0, 0.0])
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "DistanceToPoint.PointX/Y");
+    }
+
+    #[test]
+    fn test_param_distance_to_point_distance_function() {
+        let node1 = distance_to_point()
+            .with_distance_function(DistanceFunction::Euclidean)
+            .with_point([0.0, 0.0, 0.0, 0.0])
+            .build();
+        let node2 = distance_to_point()
+            .with_distance_function(DistanceFunction::Manhattan)
+            .with_point([0.0, 0.0, 0.0, 0.0])
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "DistanceToPoint.Distance Function");
+    }
+
+    #[test]
+    fn test_white_builder_methods() {
+        let node = white()
+            .with_seed_offset(42)
+            .with_output_range(0.0, 1.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_checkerboard_builder_methods() {
+        let node = checkerboard(10.0)
+            .with_feature_scale(5.0)
+            .with_output_range(0.0, 1.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_sinewave_builder_methods() {
+        let node = sinewave(10.0)
+            .with_feature_scale(5.0)
+            .with_output_range(0.0, 1.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_distance_to_point_minkowski() {
+        // Test with Minkowski distance and custom p value
+        let node = distance_to_point()
+            .with_distance_function(DistanceFunction::Minkowski)
+            .with_point([0.0, 0.0, 0.0, 0.0])
+            .with_minkowski_p(2.0)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_distance_to_point_hybrid_minkowski() {
+        // Test with generator-driven minkowski_p
+        let p_gen = simplex();
+        let node = distance_to_point()
+            .with_distance_function(DistanceFunction::Minkowski)
+            .with_point([0.0, 0.0, 0.0, 0.0])
+            .with_minkowski_p(p_gen)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_distance_to_point_hybrid_coords() {
+        // Test with generator-driven point coordinate
+        let x_gen = simplex();
+        let node = distance_to_point()
+            .with_distance_function(DistanceFunction::Euclidean)
+            .with_point([0.0, 0.0, 0.0, 0.0])
+            .with_point_x(x_gen)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+}

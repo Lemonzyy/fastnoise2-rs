@@ -515,3 +515,220 @@ where
         .into()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        generator::{basic::constant, perlin::perlin, simplex::simplex, value::value},
+        test_utils::*,
+    };
+
+    #[test]
+    fn test_add() {
+        let node = (perlin() + 0.5).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_subtract() {
+        let node = (perlin() - simplex()).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_multiply() {
+        let node = (perlin() * 2.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_divide() {
+        let node = (perlin() / 2.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_modulus() {
+        let node = (perlin() % 0.5).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_min() {
+        let node = perlin().min(0.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_max() {
+        let node = perlin().max(0.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_negate() {
+        let node = (-perlin()).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_min_smooth() {
+        let node = perlin().min_smooth(simplex(), 0.1).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_max_smooth() {
+        let node = perlin().max_smooth(simplex(), 0.1).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_fade() {
+        let node = perlin().fade(simplex(), 0.5).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_fade_with_range() {
+        let node = perlin()
+            .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Hermite)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_powf() {
+        let node = perlin().abs().powf(2.0).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_powi() {
+        let node = perlin().powi(2).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_recip() {
+        // recip() creates 1.0 / value
+        let node = (constant(2.0) + constant(0.0)).recip().build();
+        let mut output = [0.0f32; 4];
+        let min_max = node
+            .0
+            .gen_uniform_grid_2d(&mut output, 0.0, 0.0, 2, 2, 0.1, 0.1, 1337);
+        assert!(min_max.min.is_finite());
+        assert!(min_max.max.is_finite());
+        // 1/2 = 0.5
+        assert!(output.iter().all(|&v| (v - 0.5).abs() < 0.001));
+    }
+
+    #[test]
+    fn test_fade_interpolation_linear() {
+        let node = perlin()
+            .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_fade_interpolation_quintic() {
+        let node = perlin()
+            .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Quintic)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_hybrid_fade() {
+        // Using a generator for fade value
+        let fade_gen = simplex();
+        let node = perlin().fade(value(), fade_gen).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_hybrid_min_smooth() {
+        // Using a generator for smoothness
+        let smooth_gen = simplex().remap(-1.0, 1.0, 0.05, 0.2);
+        let node = perlin().min_smooth(value(), smooth_gen).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_hybrid_powf() {
+        // Using a generator for power
+        let pow_gen = simplex().remap(-1.0, 1.0, 1.5, 2.5);
+        let node = perlin().abs().powf(pow_gen).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_generator_add_generator() {
+        let node = (perlin() + simplex()).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_generator_multiply_generator() {
+        let node = (perlin() * simplex()).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_generator_min_generator() {
+        let node = perlin().min(simplex()).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_generator_max_generator() {
+        let node = perlin().max(simplex()).build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_param_fade_min_max() {
+        let node1 = perlin()
+            .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear)
+            .build();
+        let node2 = perlin()
+            .fade_with_range(simplex(), 0.5, 0.0, 0.5, FadeInterpolation::Linear)
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Fade.Fade Min/Max");
+    }
+
+    #[test]
+    fn test_param_fade_interpolation() {
+        let node1 = perlin()
+            .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Linear)
+            .build();
+        let node2 = perlin()
+            .fade_with_range(simplex(), 0.5, -1.0, 1.0, FadeInterpolation::Quintic)
+            .build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "Fade.Interpolation");
+    }
+
+    #[test]
+    fn test_param_pow_float() {
+        let node1 = perlin().abs().powf(1.5).build();
+        let node2 = perlin().abs().powf(3.0).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "PowFloat.Pow");
+    }
+
+    #[test]
+    fn test_param_pow_int() {
+        let node1 = perlin().powi(2).build();
+        let node2 = perlin().powi(3).build();
+        let output1 = generate_output(&node1.0);
+        let output2 = generate_output(&node2.0);
+        assert_outputs_differ(&output1, &output2, "PowInt.Pow");
+    }
+}
