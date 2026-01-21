@@ -1,4 +1,4 @@
-// This example illustrates the use of the typed API with generators to build safe trees. It builds the "Simple Terrain" integrated into NoiseTool.
+// This example illustrates the use of the typed API with generators to build safe trees. It builds the "Simple Terrain" example integrated into an old version of NoiseTool.
 use std::time::Instant;
 
 use fastnoise2::{generator::prelude::*, SafeNode};

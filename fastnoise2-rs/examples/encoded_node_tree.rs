@@ -4,9 +4,9 @@ use std::time::Instant;
 use fastnoise2::SafeNode;
 use image::{GrayImage, Luma};
 
-// "Simple Terrain" tree integrated into NoiseTool.
+// "Mountain Terrain" tree integrated into NoiseTool.
 const DEFAULT_ENCODED_NODE_TREE: &str =
-    "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==";
+    "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
@@ -30,7 +30,7 @@ fn main() {
     // Modifying parameters directly using `Node::set` can introduce the same risks as manually building the node tree.
     // Issues might arise due to incorrect parameter types, missing members, or other configuration errors.
     // Ensure that all modifications are valid and consult the FastNoise2 documentation for guidance on parameter types and expected values.
-    let step_size = 1.0;
+    let step_size = 3.0;
     let min_max = node.gen_uniform_grid_2d(
         &mut noise,
         -X_SIZE as f32 / 2.0 * step_size, // x_offset

@@ -2,7 +2,7 @@ use fastnoise2::SafeNode;
 
 fn main() {
     let node = SafeNode::from_encoded_node_tree(
-        "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==",
+        "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==",
     )
     .unwrap();
 

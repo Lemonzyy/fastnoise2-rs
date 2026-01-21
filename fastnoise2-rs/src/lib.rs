@@ -18,8 +18,8 @@
 //! use fastnoise2::SafeNode;
 //!
 //! let (x_count, y_count) = (1000, 1000);
-//! let step_size = 0.01;
-//! let encoded_node_tree = "E@BBZEE@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAE@BC@AIEAJBwQDZmYmPwsAAIA/HAMAAHBCBA==";
+//! let step_size = 3.0;
+//! let encoded_node_tree = "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
 //! let node = SafeNode::from_encoded_node_tree(encoded_node_tree).unwrap();
 //!
 //! // Allocate a buffer of enough size to hold all output data.
