@@ -1,10 +1,10 @@
-// This example illustrates the use of "SafeNode::from_encoded_node_tree" to build a safe tree from an encoded node tree exported by NoiseTool.
+// This example illustrates the use of "SafeNode::from_encoded_node_tree" to build a safe tree from an encoded node tree exported by the Node Editor.
 use std::time::Instant;
 
 use fastnoise2::SafeNode;
 use image::{GrayImage, Luma};
 
-// "Mountain Terrain" tree integrated into NoiseTool.
+// "Mountain Terrain" tree integrated into FastNoise2 Node Editor.
 const DEFAULT_ENCODED_NODE_TREE: &str =
     "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
 const X_SIZE: i32 = 1024;

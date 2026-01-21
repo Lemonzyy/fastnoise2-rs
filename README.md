@@ -6,13 +6,14 @@
 
 fastnoise2 provides an easy-to-use and mostly safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
 
-![NoiseTool Node Tree](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/noisetool.png)
+![Node Editor Node Tree](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/nodeeditor.png)
+![Node Editor Node Tree Output](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/nodeeditor_output.bmp)
 
 This crate acts as a wrapper around [fastnoise2-sys](https://crates.io/crates/fastnoise2-sys), the unsafe bindings for FastNoise2.
 
 ## Examples
 
-Here is an example of a encoded node tree, exported by FastNoise2's NoiseTool.
+Here is an example of a encoded node tree, exported by FastNoise2's Node Editor.
 
 ```rust
 use fastnoise2::SafeNode;
