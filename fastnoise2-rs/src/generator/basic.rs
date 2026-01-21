@@ -21,7 +21,7 @@ pub struct White {
 /// Checkerboard pattern generator.
 #[derive(Clone, Debug)]
 pub struct Checkerboard {
-    /// Feature Scale (effectively 1/frequency). Default: 1.0
+    /// Feature Scale (effectively 1/frequency). Default: 100.0
     pub feature_scale: f32,
     /// Minimum output value. Default: -1.0
     pub output_min: f32,
@@ -32,7 +32,7 @@ pub struct Checkerboard {
 /// Sine wave generator.
 #[derive(Clone, Debug)]
 pub struct SineWave {
-    /// Feature Scale (effectively 1/frequency). Default: 1.0
+    /// Feature Scale (effectively 1/frequency). Default: 100.0
     pub feature_scale: f32,
     /// Minimum output value. Default: -1.0
     pub output_min: f32,
@@ -78,6 +78,21 @@ where
     pub minkowski_p: M,
 }
 
+impl Default for Gradient {
+    fn default() -> Self {
+        Self {
+            multiplier_x: 0.0,
+            multiplier_y: 0.0,
+            multiplier_z: 0.0,
+            multiplier_w: 0.0,
+            offset_x: 0.0,
+            offset_y: 0.0,
+            offset_z: 0.0,
+            offset_w: 0.0,
+        }
+    }
+}
+
 impl Default for White {
     fn default() -> Self {
         Self {
@@ -88,10 +103,23 @@ impl Default for White {
     }
 }
 
+impl Default for DistanceToPoint<f32, f32, f32, f32, f32> {
+    fn default() -> Self {
+        Self {
+            distance_function: DistanceFunction::EuclideanSquared,
+            point_x: 0.0,
+            point_y: 0.0,
+            point_z: 0.0,
+            point_w: 0.0,
+            minkowski_p: 1.5,
+        }
+    }
+}
+
 impl Default for Checkerboard {
     fn default() -> Self {
         Self {
-            feature_scale: 1.0,
+            feature_scale: 100.0,
             output_min: -1.0,
             output_max: 1.0,
         }
@@ -101,7 +129,7 @@ impl Default for Checkerboard {
 impl Default for SineWave {
     fn default() -> Self {
         Self {
-            feature_scale: 1.0,
+            feature_scale: 100.0,
             output_min: -1.0,
             output_max: 1.0,
         }

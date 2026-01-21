@@ -4,7 +4,7 @@ use crate::{FastNoiseError, Node, OutputMinMax};
 
 /// Unlike [`Node`], this structure is safe to use because it is built from typed nodes
 /// that implement the [`Generator`][`crate::generator::Generator`] trait, or built by an encoded node tree produced by the [Node Editor](https://github.com/Auburn/FastNoise2?tab=readme-ov-file#node-editor).
-/// 
+///
 /// You can create and test node trees using the [Web WASM Node Editor](https://auburn.github.io/fastnoise2nodeeditor/) or download desktop binaries from [FastNoise2 Releases](https://github.com/Auburn/FastNoise2/releases/latest).
 ///
 /// You can see how to use it in the [`generator`][`crate::generator`] module.

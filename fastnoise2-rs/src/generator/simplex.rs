@@ -4,7 +4,7 @@ use crate::{safe::SafeNode, Node};
 /// Simplex noise generator.
 #[derive(Clone, Debug)]
 pub struct Simplex {
-    /// Feature Scale (effectively 1/frequency). Default: 1.0
+    /// Feature Scale (effectively 1/frequency). Default: 100.0
     pub feature_scale: f32,
     /// Offset applied to the seed. Default: 0
     pub seed_offset: i32,
@@ -17,7 +17,7 @@ pub struct Simplex {
 /// SuperSimplex noise generator (K.jpg's improved simplex variant).
 #[derive(Clone, Debug)]
 pub struct SuperSimplex {
-    /// Feature Scale (effectively 1/frequency). Default: 1.0
+    /// Feature Scale (effectively 1/frequency). Default: 100.0
     pub feature_scale: f32,
     /// Offset applied to the seed. Default: 0
     pub seed_offset: i32,
@@ -30,7 +30,7 @@ pub struct SuperSimplex {
 impl Default for Simplex {
     fn default() -> Self {
         Self {
-            feature_scale: 1.0,
+            feature_scale: 100.0,
             seed_offset: 0,
             output_min: -1.0,
             output_max: 1.0,
@@ -41,7 +41,7 @@ impl Default for Simplex {
 impl Default for SuperSimplex {
     fn default() -> Self {
         Self {
-            feature_scale: 1.0,
+            feature_scale: 100.0,
             seed_offset: 0,
             output_min: -1.0,
             output_max: 1.0,

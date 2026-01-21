@@ -77,6 +77,78 @@ fn test_simplex() {
 }
 
 #[test]
+fn test_simplex_default_feature_scale() {
+    // Test that simplex now has the correct default feature scale of 100.0
+    let simplex_node = simplex().build();
+
+    // Create a simplex node with explicit feature scale of 100.0 for comparison
+    let simplex_100 = simplex().with_feature_scale(100.0).build();
+
+    // These should produce the same output since 100.0 is now the default
+    let output1 = generate_output(&simplex_node.0);
+    let output2 = generate_output(&simplex_100.0);
+    // If they're the same, the difference should be very small (just floating point precision)
+    let diff: f32 = output1
+        .iter()
+        .zip(output2.iter())
+        .map(|(a, b)| (a - b).abs())
+        .sum();
+    assert!(
+        diff < 0.01,
+        "Simplex default feature scale test failed: outputs differ by {}",
+        diff
+    );
+}
+
+#[test]
+fn test_checkerboard_default_feature_scale() {
+    // Test that checkerboard now has the correct default feature scale of 100.0
+    let checkerboard_node = checkerboard(100.0).build();
+
+    // Create a checkerboard node with explicit feature scale of 100.0 for comparison
+    let checkerboard_100 = checkerboard(100.0).with_feature_scale(100.0).build();
+
+    // These should produce the same output since 100.0 is now the default
+    let output1 = generate_output(&checkerboard_node.0);
+    let output2 = generate_output(&checkerboard_100.0);
+    // If they're the same, the difference should be very small (just floating point precision)
+    let diff: f32 = output1
+        .iter()
+        .zip(output2.iter())
+        .map(|(a, b)| (a - b).abs())
+        .sum();
+    assert!(
+        diff < 0.01,
+        "Checkerboard default feature scale test failed: outputs differ by {}",
+        diff
+    );
+}
+
+#[test]
+fn test_sinewave_default_feature_scale() {
+    // Test that sinewave now has the correct default feature scale of 100.0
+    let sinewave_node = sinewave(100.0).build();
+
+    // Create a sinewave node with explicit feature scale of 100.0 for comparison
+    let sinewave_100 = sinewave(100.0).with_feature_scale(100.0).build();
+
+    // These should produce the same output since 100.0 is now the default
+    let output1 = generate_output(&sinewave_node.0);
+    let output2 = generate_output(&sinewave_100.0);
+    // If they're the same, the difference should be very small (just floating point precision)
+    let diff: f32 = output1
+        .iter()
+        .zip(output2.iter())
+        .map(|(a, b)| (a - b).abs())
+        .sum();
+    assert!(
+        diff < 0.01,
+        "SineWave default feature scale test failed: outputs differ by {}",
+        diff
+    );
+}
+
+#[test]
 fn test_supersimplex() {
     let node = supersimplex().build();
     test_generator_produces_output(node.0);
