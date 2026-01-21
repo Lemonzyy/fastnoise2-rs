@@ -244,38 +244,14 @@ pub fn sinewave(feature_scale: f32) -> GeneratorWrapper<SineWave> {
     .into()
 }
 
-/// Creates a Gradient generator with the given multipliers and offsets.
-pub fn gradient(multiplier: [f32; 4], offset: [f32; 4]) -> GeneratorWrapper<Gradient> {
-    let [multiplier_x, multiplier_y, multiplier_z, multiplier_w] = multiplier;
-    let [offset_x, offset_y, offset_z, offset_w] = offset;
-    Gradient {
-        multiplier_x,
-        multiplier_y,
-        multiplier_z,
-        multiplier_w,
-        offset_x,
-        offset_y,
-        offset_z,
-        offset_w,
-    }
-    .into()
+/// Creates a Gradient generator with default parameters (all multipliers = 0.0, all offsets = 0.0).
+pub fn gradient() -> GeneratorWrapper<Gradient> {
+    Gradient::default().into()
 }
 
-/// Creates a distance to point generator with f32 coordinates and default minkowski_p.
-pub fn distance_to_point(
-    distance_function: DistanceFunction,
-    point: [f32; 4],
-) -> GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
-    let [point_x, point_y, point_z, point_w] = point;
-    DistanceToPoint {
-        distance_function,
-        point_x,
-        point_y,
-        point_z,
-        point_w,
-        minkowski_p: 1.5,
-    }
-    .into()
+/// Creates a distance to point generator with all default parameters.
+pub fn distance_to_point() -> GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
+    DistanceToPoint::default().into()
 }
 
 // Builder methods for White
@@ -326,8 +302,85 @@ impl GeneratorWrapper<SineWave> {
     }
 }
 
+// Builder methods for Gradient
+impl GeneratorWrapper<Gradient> {
+    /// Sets the X multiplier for the gradient.
+    pub fn with_multiplier_x(mut self, multiplier: f32) -> Self {
+        self.0.multiplier_x = multiplier;
+        self
+    }
+
+    /// Sets the Y multiplier for the gradient.
+    pub fn with_multiplier_y(mut self, multiplier: f32) -> Self {
+        self.0.multiplier_y = multiplier;
+        self
+    }
+
+    /// Sets the Z multiplier for the gradient.
+    pub fn with_multiplier_z(mut self, multiplier: f32) -> Self {
+        self.0.multiplier_z = multiplier;
+        self
+    }
+
+    /// Sets the W multiplier for the gradient.
+    pub fn with_multiplier_w(mut self, multiplier: f32) -> Self {
+        self.0.multiplier_w = multiplier;
+        self
+    }
+
+    /// Sets all multipliers at once.
+    pub fn with_multipliers(mut self, multipliers: [f32; 4]) -> Self {
+        let [mx, my, mz, mw] = multipliers;
+        self.0.multiplier_x = mx;
+        self.0.multiplier_y = my;
+        self.0.multiplier_z = mz;
+        self.0.multiplier_w = mw;
+        self
+    }
+
+    /// Sets the X offset for the gradient.
+    pub fn with_offset_x(mut self, offset: f32) -> Self {
+        self.0.offset_x = offset;
+        self
+    }
+
+    /// Sets the Y offset for the gradient.
+    pub fn with_offset_y(mut self, offset: f32) -> Self {
+        self.0.offset_y = offset;
+        self
+    }
+
+    /// Sets the Z offset for the gradient.
+    pub fn with_offset_z(mut self, offset: f32) -> Self {
+        self.0.offset_z = offset;
+        self
+    }
+
+    /// Sets the W offset for the gradient.
+    pub fn with_offset_w(mut self, offset: f32) -> Self {
+        self.0.offset_w = offset;
+        self
+    }
+
+    /// Sets all offsets at once.
+    pub fn with_offsets(mut self, offsets: [f32; 4]) -> Self {
+        let [ox, oy, oz, ow] = offsets;
+        self.0.offset_x = ox;
+        self.0.offset_y = oy;
+        self.0.offset_z = oz;
+        self.0.offset_w = ow;
+        self
+    }
+}
+
 // Builder methods for DistanceToPoint with f32 coordinates
 impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
+    /// Sets the distance function for distance calculation.
+    pub fn with_distance_function(mut self, distance_function: DistanceFunction) -> Self {
+        self.0.distance_function = distance_function;
+        self
+    }
+
     /// Sets the minkowski P value for Minkowski distance function.
     pub fn with_minkowski_p<M: Hybrid>(
         self,
@@ -406,5 +459,15 @@ impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
             minkowski_p: self.0.minkowski_p,
         }
         .into()
+    }
+
+    /// Sets all point coordinates at once.
+    pub fn with_point(mut self, point: [f32; 4]) -> Self {
+        let [px, py, pz, pw] = point;
+        self.0.point_x = px;
+        self.0.point_y = py;
+        self.0.point_z = pz;
+        self.0.point_w = pw;
+        self
     }
 }

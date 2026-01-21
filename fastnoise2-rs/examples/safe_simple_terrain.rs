@@ -9,7 +9,9 @@ const Y_SIZE: i32 = 1024;
 
 fn create_node() -> GeneratorWrapper<SafeNode> {
     (supersimplex().fbm(0.65, 0.5, 4, 2.5).domain_scale(0.66)
-        + gradient([0.0, 3.0, 0.0, 0.0], [0.0; 4]))
+        + gradient()
+            .with_multipliers([0.0, 3.0, 0.0, 0.0])
+            .with_offsets([0.0; 4]))
     .domain_warp_gradient(0.2, 2.0)
     .domain_warp_progressive(0.7, 0.5, 2, 2.5)
     .build()

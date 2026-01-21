@@ -1,6 +1,7 @@
 use super::*;
 use generator::prelude::*;
 use generator::{
+    basic::{distance_to_point, gradient},
     cellular::{
         cellular_distance_full, cellular_lookup_full, cellular_value_full,
         CellularDistanceReturnType,
@@ -52,13 +53,19 @@ fn test_sinewave() {
 
 #[test]
 fn test_gradient() {
-    let node = gradient([0.01, 0.01, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]).build();
+    let node = gradient()
+        .with_multipliers([0.01, 0.01, 0.0, 0.0])
+        .with_offsets([0.0, 0.0, 0.0, 0.0])
+        .build();
     test_generator_produces_output(node.0);
 }
 
 #[test]
 fn test_distance_to_point() {
-    let node = distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0]).build();
+    let node = distance_to_point()
+        .with_distance_function(DistanceFunction::Euclidean)
+        .with_point([0.0, 0.0, 0.0, 0.0])
+        .build();
     test_generator_produces_output(node.0);
 }
 
@@ -146,6 +153,67 @@ fn test_sinewave_default_feature_scale() {
         "SineWave default feature scale test failed: outputs differ by {}",
         diff
     );
+}
+
+#[test]
+fn test_gradient_builder_patterns() {
+    // Test the new gradient builder methods
+    {
+        let gradient = gradient().with_multiplier_x(0.5).with_offset_y(1.0).build();
+
+        test_generator_produces_output(gradient.0);
+    }
+
+    // Test setting all multipliers at once
+    let gradient2 = gradient()
+        .with_multipliers([0.1, 0.2, 0.3, 0.4])
+        .with_offsets([1.0, 2.0, 3.0, 4.0])
+        .build();
+
+    test_generator_produces_output(gradient2.0);
+}
+
+#[test]
+fn test_distance_to_point_builder_patterns() {
+    // Test the enhanced distance_to_point builder methods
+    let distance = distance_to_point()
+        .with_distance_function(DistanceFunction::Euclidean)
+        .with_point([1.0, 2.0, 3.0, 4.0])
+        .build();
+
+    test_generator_produces_output(distance.0);
+
+    // Test individual point setters
+    let distance2 = distance_to_point()
+        .with_point_x(5.0)
+        .with_point_y(10.0)
+        .with_distance_function(DistanceFunction::Manhattan)
+        .build();
+
+    test_generator_produces_output(distance2.0);
+}
+
+#[test]
+fn test_builder_patterns_produce_different_outputs() {
+    // Test that different builder configurations produce different outputs
+    let gradient1 = gradient().build();
+    let gradient2 = gradient().with_multiplier_x(1.0).build();
+
+    let output1 = generate_output(&gradient1.0);
+    let output2 = generate_output(&gradient2.0);
+
+    // These should produce different outputs
+    assert_outputs_differ(&output1, &output2, "Gradient builder patterns");
+
+    // Test distance_to_point differences
+    let distance1 = distance_to_point().build();
+    let distance2 = distance_to_point().with_point([1.0, 0.0, 0.0, 0.0]).build();
+
+    let output3 = generate_output(&distance1.0);
+    let output4 = generate_output(&distance2.0);
+
+    // These should produce different outputs
+    assert_outputs_differ(&output3, &output4, "DistanceToPoint builder patterns");
 }
 
 #[test]
@@ -987,8 +1055,14 @@ fn test_param_sinewave_feature_scale() {
 
 #[test]
 fn test_param_gradient_multipliers() {
-    let node1 = gradient([0.01, 0.01, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]).build();
-    let node2 = gradient([0.05, 0.02, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]).build();
+    let node1 = gradient()
+        .with_multipliers([0.01, 0.01, 0.0, 0.0])
+        .with_offsets([0.0, 0.0, 0.0, 0.0])
+        .build();
+    let node2 = gradient()
+        .with_multipliers([0.05, 0.02, 0.0, 0.0])
+        .with_offsets([0.0, 0.0, 0.0, 0.0])
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "Gradient.MultiplierX/Y");
@@ -996,8 +1070,14 @@ fn test_param_gradient_multipliers() {
 
 #[test]
 fn test_param_gradient_offsets() {
-    let node1 = gradient([0.01, 0.01, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]).build();
-    let node2 = gradient([0.01, 0.01, 0.0, 0.0], [1.0, 1.0, 0.0, 0.0]).build();
+    let node1 = gradient()
+        .with_multipliers([0.01, 0.01, 0.0, 0.0])
+        .with_offsets([0.0, 0.0, 0.0, 0.0])
+        .build();
+    let node2 = gradient()
+        .with_multipliers([0.01, 0.01, 0.0, 0.0])
+        .with_offsets([1.0, 1.0, 0.0, 0.0])
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "Gradient.OffsetX/Y");
@@ -1005,8 +1085,14 @@ fn test_param_gradient_offsets() {
 
 #[test]
 fn test_param_distance_to_point_point() {
-    let node1 = distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0]).build();
-    let node2 = distance_to_point(DistanceFunction::Euclidean, [5.0, 5.0, 0.0, 0.0]).build();
+    let node1 = distance_to_point()
+        .with_distance_function(DistanceFunction::Euclidean)
+        .with_point([0.0, 0.0, 0.0, 0.0])
+        .build();
+    let node2 = distance_to_point()
+        .with_distance_function(DistanceFunction::Euclidean)
+        .with_point([5.0, 5.0, 0.0, 0.0])
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "DistanceToPoint.PointX/Y");
@@ -1014,8 +1100,14 @@ fn test_param_distance_to_point_point() {
 
 #[test]
 fn test_param_distance_to_point_distance_function() {
-    let node1 = distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0]).build();
-    let node2 = distance_to_point(DistanceFunction::Manhattan, [0.0, 0.0, 0.0, 0.0]).build();
+    let node1 = distance_to_point()
+        .with_distance_function(DistanceFunction::Euclidean)
+        .with_point([0.0, 0.0, 0.0, 0.0])
+        .build();
+    let node2 = distance_to_point()
+        .with_distance_function(DistanceFunction::Manhattan)
+        .with_point([0.0, 0.0, 0.0, 0.0])
+        .build();
     let output1 = generate_output(&node1.0);
     let output2 = generate_output(&node2.0);
     assert_outputs_differ(&output1, &output2, "DistanceToPoint.Distance Function");
@@ -1477,7 +1569,9 @@ fn test_sinewave_builder_methods() {
 #[test]
 fn test_distance_to_point_minkowski() {
     // Test with Minkowski distance and custom p value
-    let node = distance_to_point(DistanceFunction::Minkowski, [0.0, 0.0, 0.0, 0.0])
+    let node = distance_to_point()
+        .with_distance_function(DistanceFunction::Minkowski)
+        .with_point([0.0, 0.0, 0.0, 0.0])
         .with_minkowski_p(2.0)
         .build();
     test_generator_produces_output(node.0);
@@ -1487,7 +1581,9 @@ fn test_distance_to_point_minkowski() {
 fn test_distance_to_point_hybrid_minkowski() {
     // Test with generator-driven minkowski_p
     let p_gen = simplex();
-    let node = distance_to_point(DistanceFunction::Minkowski, [0.0, 0.0, 0.0, 0.0])
+    let node = distance_to_point()
+        .with_distance_function(DistanceFunction::Minkowski)
+        .with_point([0.0, 0.0, 0.0, 0.0])
         .with_minkowski_p(p_gen)
         .build();
     test_generator_produces_output(node.0);
@@ -1497,7 +1593,9 @@ fn test_distance_to_point_hybrid_minkowski() {
 fn test_distance_to_point_hybrid_coords() {
     // Test with generator-driven point coordinate
     let x_gen = simplex();
-    let node = distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0])
+    let node = distance_to_point()
+        .with_distance_function(DistanceFunction::Euclidean)
+        .with_point([0.0, 0.0, 0.0, 0.0])
         .with_point_x(x_gen)
         .build();
     test_generator_produces_output(node.0);
