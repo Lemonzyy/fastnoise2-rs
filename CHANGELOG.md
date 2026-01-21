@@ -5,9 +5,9 @@ All notable changes to fastnoise2-rs will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.4.0] - 2026-01-14
+## [0.4.0] - 2026-01-21
 
-Updated FastNoise2 C++ submodule from `f8facba` to `cee9ea6`:
+Updated FastNoise2 C++ submodule from `f8facba` to `3728fde`:
 - NewFastSIMD integration with native WASM SIMD128 support
 - Cellular lookup metadata fixes
 - Optional clamping for Remap node output
@@ -62,6 +62,11 @@ Updated FastNoise2 C++ submodule from `f8facba` to `cee9ea6`:
     - Made point coordinates Hybrid (can be f32 or Generator)
     - Added `minkowski_p` as Hybrid field (default 1.5)
     - Builder methods: `.with_point_x/y/z/w()`, `.with_minkowski_p()`
+    - Added `.with_distance_function()` and `.with_point()` builder methods
+  - `Gradient`:
+    - Added builder methods for multipliers and offsets:
+      - `.with_multiplier_x/y/z/w()`, `.with_multipliers()`
+      - `.with_offset_x/y/z/w()`, `.with_offsets()`
   - `Remap`:
     - Added `clamp_output: bool` field
     - New constructor: `remap_clamped(from_min, from_max, to_min, to_max, clamp_output)`
@@ -167,6 +172,23 @@ Simplex::default()
 simplex()  // helper function still works
 ```
 
+### Constructor Changes
+
+```rust
+// Old
+gradient([0.0, 3.0, 0.0, 0.0], [0.0; 4])
+distance_to_point(DistanceFunction::Euclidean, [0.0; 4])
+
+// New
+gradient()
+    .with_multipliers([0.0, 3.0, 0.0, 0.0])
+    .with_offsets([0.0; 4])
+
+distance_to_point()
+    .with_distance_function(DistanceFunction::Euclidean)
+    .with_point([0.0; 4])
+```
+
 ### Builder Pattern Usage
 
 ```rust
@@ -186,9 +208,15 @@ simplex()
     .with_output_range(-0.5, 0.5)
 
 // Generator-driven parameters
-distance_to_point(DistanceFunction::Euclidean, [0.0, 0.0, 0.0, 0.0])
+distance_to_point()
+    .with_distance_function(DistanceFunction::Euclidean)
+    .with_point([0.0, 0.0, 0.0, 0.0])
     .with_point_x(simplex())  // moving point!
     .with_minkowski_p(2.0)
+
+gradient()
+    .with_multipliers([0.0, 3.0, 0.0, 0.0])
+    .with_offsets([0.0; 4])
 
 terrace(4.0, simplex())  // spatially-varying smoothness
 ```
@@ -208,4 +236,4 @@ fractal_fbm(perlin(), 4)
 
 ## Upstream Reference
 
-FastNoise2 C++ version: `cee9ea69c00c6e83b57072831063dbe7e4234b03`
+FastNoise2 C++ version: `3728fde069704509fcf2973825b2d385348bf336`
