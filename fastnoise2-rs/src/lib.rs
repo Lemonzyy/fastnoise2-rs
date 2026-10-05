@@ -110,13 +110,12 @@ impl Node {
     /// Returns an error if the metadata name is not found in the FastNoise2 metadata system.
     #[cfg_attr(feature = "trace", tracing::instrument(level = "debug"))]
     pub fn from_name(metadata_name: &str) -> Result<Self, FastNoiseError> {
-        let metadata_name = format_lookup(metadata_name);
-        let metadata_id = *METADATA_NAME_LOOKUP.get(&metadata_name).ok_or_else(|| {
-            FastNoiseError::MetadataNameNotFound {
-                expected: METADATA_NAME_LOOKUP.keys().cloned().collect(),
-                found: metadata_name,
-            }
-        })?;
+        let metadata_id = *METADATA_NAME_LOOKUP
+            .get(&format_lookup(metadata_name))
+            .ok_or_else(|| FastNoiseError::MetadataNameNotFound {
+                expected: NODE_METADATA.iter().map(|m| m.name.clone()).collect(),
+                found: metadata_name.to_string(),
+            })?;
         // Pass u32::MAX (~0u in C++) for auto-detect feature set
         let handle = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
         Ok(Self {
@@ -164,13 +163,13 @@ impl Node {
         V: MemberValue + Debug,
     {
         let metadata = &NODE_METADATA[self.metadata_id as usize];
-        let member_name = format_lookup(member_name);
-        let member = metadata.members.get(&member_name).ok_or_else(|| {
-            FastNoiseError::MemberNameNotFound {
-                expected: metadata.members.values().map(|m| m.name.clone()).collect(),
-                found: member_name,
-            }
-        })?;
+        let member =
+            metadata
+                .member(member_name)
+                .ok_or_else(|| FastNoiseError::MemberNameNotFound {
+                    expected: metadata.members.iter().map(|m| m.name.clone()).collect(),
+                    found: member_name.to_string(),
+                })?;
 
         value.apply(self, member)
     }

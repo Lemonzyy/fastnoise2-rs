@@ -1,4 +1,10 @@
-use std::{any::type_name, collections::HashMap, ffi::CStr, fmt, sync::LazyLock};
+use std::{
+    any::type_name,
+    collections::HashMap,
+    ffi::{c_char, CStr},
+    fmt,
+    sync::LazyLock,
+};
 
 use fastnoise2_sys::*;
 
@@ -6,19 +12,40 @@ use crate::{FastNoiseError, Node};
 
 #[derive(Debug)]
 pub(crate) struct Metadata {
-    #[allow(dead_code)]
-    pub id: i32,
-    #[allow(dead_code)]
+    /// Node name, as displayed by FastNoise2 (e.g. "Perlin").
     pub name: String,
-    pub members: HashMap<String, Member>,
+    /// Members in FastNoise2 metadata order: variables, node lookups, then hybrids.
+    pub members: Vec<Member>,
+    /// Index into `members` by formatted lookup name.
+    member_lookup: HashMap<String, usize>,
+}
+
+impl Metadata {
+    pub fn member(&self, name: &str) -> Option<&Member> {
+        self.member_lookup
+            .get(&format_lookup(name))
+            .map(|&index| &self.members[index])
+    }
 }
 
 #[derive(Debug, Clone)]
 pub struct Member {
+    /// Member name, as displayed by FastNoise2 (e.g. "Feature Scale", "Multiplier X").
     pub name: String,
     pub member_type: MemberType,
     pub index: i32,
-    pub enum_names: HashMap<String, i32>,
+    /// Enum values in FastNoise2 order, the position is the enum index.
+    pub enum_values: Vec<String>,
+}
+
+impl Member {
+    pub fn enum_index(&self, value: &str) -> Option<i32> {
+        let value = format_lookup(value);
+        self.enum_values
+            .iter()
+            .position(|enum_value| format_lookup(enum_value) == value)
+            .map(|index| index as i32)
+    }
 }
 
 /// Defines the type of value or reference a node can handle.
@@ -49,124 +76,98 @@ impl fmt::Display for MemberType {
 }
 
 pub(crate) static METADATA_NAME_LOOKUP: LazyLock<HashMap<String, i32>> = LazyLock::new(|| {
-    let metadata_count = unsafe { fnGetMetadataCount() };
-    let mut lookup = HashMap::new();
-
-    for id in 0..metadata_count {
-        let name =
-            format_lookup(&unsafe { CStr::from_ptr(fnGetMetadataName(id)) }.to_string_lossy());
-        lookup.insert(name, id);
-    }
-    lookup
+    NODE_METADATA
+        .iter()
+        .enumerate()
+        .map(|(id, metadata)| (format_lookup(&metadata.name), id as i32))
+        .collect()
 });
 
 pub(crate) static NODE_METADATA: LazyLock<Vec<Metadata>> = LazyLock::new(|| {
     let metadata_count = unsafe { fnGetMetadataCount() };
-    let mut metadata_vec = Vec::with_capacity(metadata_count as usize);
-    for id in 0..metadata_count {
-        let name =
-            format_lookup(&unsafe { CStr::from_ptr(fnGetMetadataName(id)) }.to_string_lossy());
-        let mut members = HashMap::new();
-
-        let variable_count = unsafe { fnGetMetadataVariableCount(id) };
-        let node_lookup_count = unsafe { fnGetMetadataNodeLookupCount(id) };
-        let hybrid_count = unsafe { fnGetMetadataHybridCount(id) };
-
-        for variable_idx in 0..variable_count {
-            let member_type = match unsafe { fnGetMetadataVariableType(id, variable_idx) } {
-                0 => MemberType::Float,
-                1 => MemberType::Int,
-                2 => MemberType::Enum,
-                _ => MemberType::Hybrid,
-            };
-            let dimension_idx = unsafe { fnGetMetadataVariableDimensionIdx(id, variable_idx) };
-            let name = format_dimension_member(
-                &format_lookup(
-                    &unsafe { CStr::from_ptr(fnGetMetadataVariableName(id, variable_idx)) }
-                        .to_string_lossy(),
-                ),
-                dimension_idx,
-            );
-            let mut enum_names = HashMap::new();
-            if let MemberType::Enum = member_type {
-                let enum_count = unsafe { fnGetMetadataEnumCount(id, variable_idx) };
-                for enum_idx in 0..enum_count {
-                    let enum_name = format_lookup(
-                        &unsafe {
-                            CStr::from_ptr(fnGetMetadataEnumName(id, variable_idx, enum_idx))
-                        }
-                        .to_string_lossy(),
-                    );
-                    enum_names.insert(enum_name, enum_idx);
-                }
-            }
-            members.insert(
-                name.clone(),
-                Member {
-                    name,
-                    member_type,
-                    index: variable_idx,
-                    enum_names,
-                },
-            );
-        }
-
-        for node_lookup_idx in 0..node_lookup_count {
-            let dimension_idx = unsafe { fnGetMetadataNodeLookupDimensionIdx(id, node_lookup_idx) };
-            let name = format_dimension_member(
-                &format_lookup(
-                    &unsafe { CStr::from_ptr(fnGetMetadataNodeLookupName(id, node_lookup_idx)) }
-                        .to_string_lossy(),
-                ),
-                dimension_idx,
-            );
-            members.insert(
-                name.clone(),
-                Member {
-                    name,
-                    member_type: MemberType::NodeLookup,
-                    index: node_lookup_idx,
-                    enum_names: HashMap::new(),
-                },
-            );
-        }
-
-        for hybrid_idx in 0..hybrid_count {
-            let dimension_idx = unsafe { fnGetMetadataHybridDimensionIdx(id, hybrid_idx) };
-            let name = format_dimension_member(
-                &format_lookup(
-                    &unsafe { CStr::from_ptr(fnGetMetadataHybridName(id, hybrid_idx)) }
-                        .to_string_lossy(),
-                ),
-                dimension_idx,
-            );
-            members.insert(
-                name.clone(),
-                Member {
-                    name,
-                    member_type: MemberType::Hybrid,
-                    index: hybrid_idx,
-                    enum_names: HashMap::new(),
-                },
-            );
-        }
-
-        metadata_vec.push(Metadata { id, name, members });
-    }
-    metadata_vec
+    (0..metadata_count).map(load_metadata).collect()
 });
+
+fn load_metadata(id: i32) -> Metadata {
+    let mut members = Vec::new();
+
+    for variable_idx in 0..unsafe { fnGetMetadataVariableCount(id) } {
+        let member_type = match unsafe { fnGetMetadataVariableType(id, variable_idx) } {
+            0 => MemberType::Float,
+            1 => MemberType::Int,
+            2 => MemberType::Enum,
+            _ => MemberType::Hybrid,
+        };
+        let enum_values = match member_type {
+            MemberType::Enum => (0..unsafe { fnGetMetadataEnumCount(id, variable_idx) })
+                .map(|enum_idx| {
+                    to_string(unsafe { fnGetMetadataEnumName(id, variable_idx, enum_idx) })
+                })
+                .collect(),
+            _ => Vec::new(),
+        };
+        members.push(Member {
+            name: dimension_member_name(
+                to_string(unsafe { fnGetMetadataVariableName(id, variable_idx) }),
+                unsafe { fnGetMetadataVariableDimensionIdx(id, variable_idx) },
+            ),
+            member_type,
+            index: variable_idx,
+            enum_values,
+        });
+    }
+
+    for node_lookup_idx in 0..unsafe { fnGetMetadataNodeLookupCount(id) } {
+        members.push(Member {
+            name: dimension_member_name(
+                to_string(unsafe { fnGetMetadataNodeLookupName(id, node_lookup_idx) }),
+                unsafe { fnGetMetadataNodeLookupDimensionIdx(id, node_lookup_idx) },
+            ),
+            member_type: MemberType::NodeLookup,
+            index: node_lookup_idx,
+            enum_values: Vec::new(),
+        });
+    }
+
+    for hybrid_idx in 0..unsafe { fnGetMetadataHybridCount(id) } {
+        members.push(Member {
+            name: dimension_member_name(
+                to_string(unsafe { fnGetMetadataHybridName(id, hybrid_idx) }),
+                unsafe { fnGetMetadataHybridDimensionIdx(id, hybrid_idx) },
+            ),
+            member_type: MemberType::Hybrid,
+            index: hybrid_idx,
+            enum_values: Vec::new(),
+        });
+    }
+
+    let member_lookup = members
+        .iter()
+        .enumerate()
+        .map(|(index, member)| (format_lookup(&member.name), index))
+        .collect();
+
+    Metadata {
+        name: to_string(unsafe { fnGetMetadataName(id) }),
+        members,
+        member_lookup,
+    }
+}
+
+fn to_string(c_str: *const c_char) -> String {
+    unsafe { CStr::from_ptr(c_str) }
+        .to_string_lossy()
+        .into_owned()
+}
 
 pub(crate) fn format_lookup(name: &str) -> String {
     name.replace(" ", "").to_lowercase()
 }
 
-fn format_dimension_member(name: &str, dim_idx: i32) -> String {
-    if dim_idx >= 0 {
-        let dim_suffix = ['x', 'y', 'z', 'w'];
-        let suffix = dim_suffix[dim_idx as usize];
-        format!("{name}{suffix}")
-    } else {
-        name.to_string()
+fn dimension_member_name(name: String, dim_idx: i32) -> String {
+    match dim_idx {
+        0..=3 => format!("{name} {}", ['X', 'Y', 'Z', 'W'][dim_idx as usize]),
+        _ => name,
     }
 }
 
@@ -227,13 +228,14 @@ impl MemberValue for &str {
     fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         match member.member_type {
             MemberType::Enum => {
-                let enum_idx = member.enum_names.get(&format_lookup(self)).ok_or_else(|| {
-                    FastNoiseError::EnumValueNotFound {
-                        expected: member.enum_names.keys().cloned().collect(),
-                        found: self.to_string(),
-                    }
-                })?;
-                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *enum_idx) } {
+                let enum_idx =
+                    member
+                        .enum_index(self)
+                        .ok_or_else(|| FastNoiseError::EnumValueNotFound {
+                            expected: member.enum_values.clone(),
+                            found: self.to_string(),
+                        })?;
+                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, enum_idx) } {
                     return Err(FastNoiseError::SetEnumFailed);
                 }
             }
@@ -261,5 +263,43 @@ impl MemberValue for &Node {
             _ => return Err(Self::invalid_member_type_error(member)),
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Node;
+
+    #[test]
+    fn test_member_name_not_found_lists_display_names_in_order() {
+        let error = Node::from_name("Perlin")
+            .unwrap()
+            .set("FeatureScal", 10.0)
+            .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "member name not found (expected one of 'Feature Scale', 'Seed Offset', \
+             'Output Min', 'Output Max', found 'FeatureScal')"
+        );
+    }
+
+    #[test]
+    fn test_enum_value_not_found_lists_display_names_in_order() {
+        let error = Node::from_name("CellularValue")
+            .unwrap()
+            .set("DistanceFunction", "Euclidian")
+            .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "enum value not found (expected one of 'Euclidean', 'Euclidean Squared', \
+             'Manhattan', 'Hybrid', 'Max Axis', 'Minkowski', found 'Euclidian')"
+        );
+    }
+
+    #[test]
+    fn test_dimension_member_names() {
+        let mut node = Node::from_name("Gradient").unwrap();
+        assert!(node.set("Multiplier X", 1.0).is_ok());
+        assert!(node.set("offsetw", 1.0).is_ok());
     }
 }
