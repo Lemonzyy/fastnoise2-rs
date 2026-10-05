@@ -619,7 +619,6 @@ pub struct CellularLookup {
 }
 
 impl CellularLookup {
-    #[allow(dead_code)]
     pub(crate) fn new(lookup: Node) -> Self {
         Self {
             feature_scale: 100.0,

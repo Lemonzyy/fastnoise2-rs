@@ -12,7 +12,6 @@ pub struct Min {
 }
 
 impl Min {
-    #[allow(dead_code)]
     pub(crate) fn new(lhs: Node) -> Self {
         Self {
             lhs,
@@ -45,7 +44,6 @@ pub struct Max {
 }
 
 impl Max {
-    #[allow(dead_code)]
     pub(crate) fn new(lhs: Node) -> Self {
         Self {
             lhs,
@@ -82,7 +80,6 @@ pub struct MinSmooth {
 }
 
 impl MinSmooth {
-    #[allow(dead_code)]
     pub(crate) fn new(lhs: Node) -> Self {
         Self {
             lhs,
@@ -127,7 +124,6 @@ pub struct MaxSmooth {
 }
 
 impl MaxSmooth {
-    #[allow(dead_code)]
     pub(crate) fn new(lhs: Node) -> Self {
         Self {
             lhs,
@@ -213,7 +209,6 @@ pub struct PowInt {
 }
 
 impl PowInt {
-    #[allow(dead_code)]
     pub(crate) fn new(value: Node) -> Self {
         Self { pow: 2, value }
     }
@@ -249,7 +244,6 @@ pub struct Fade {
 }
 
 impl Fade {
-    #[allow(dead_code)]
     pub(crate) fn new(a: Node, b: Node) -> Self {
         Self {
             interpolation: Interpolation::Linear,

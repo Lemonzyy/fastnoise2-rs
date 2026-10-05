@@ -22,7 +22,6 @@ pub struct DomainWarpSimplex {
 }
 
 impl DomainWarpSimplex {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             feature_scale: 100.0,
@@ -144,7 +143,6 @@ pub struct DomainWarpSuperSimplex {
 }
 
 impl DomainWarpSuperSimplex {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             feature_scale: 100.0,
@@ -264,7 +262,6 @@ pub struct DomainWarpGradient {
 }
 
 impl DomainWarpGradient {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             feature_scale: 100.0,
@@ -367,7 +364,6 @@ pub struct DomainWarpFractalProgressive {
 }
 
 impl DomainWarpFractalProgressive {
-    #[allow(dead_code)]
     pub(crate) fn new(domain_warp_source: Node) -> Self {
         Self {
             octaves: 3,
@@ -453,7 +449,6 @@ pub struct DomainWarpFractalIndependent {
 }
 
 impl DomainWarpFractalIndependent {
-    #[allow(dead_code)]
     pub(crate) fn new(domain_warp_source: Node) -> Self {
         Self {
             octaves: 3,

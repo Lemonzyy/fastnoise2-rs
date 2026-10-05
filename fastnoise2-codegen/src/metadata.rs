@@ -1,5 +1,5 @@
 //! Loads FastNoise2 metadata through the C API.
-use std::ffi::{c_char, CStr};
+use std::ffi::{c_char, c_void, CStr};
 
 use fastnoise2_sys::*;
 
@@ -11,10 +11,11 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn inputs(&self) -> impl Iterator<Item = &Member> {
-        self.members
-            .iter()
-            .filter(|member| matches!(member.kind, MemberKind::Input))
+    pub fn inputs(&self) -> impl Iterator<Item = (&Member, &Input)> {
+        self.members.iter().filter_map(|member| match &member.kind {
+            MemberKind::Input(input) => Some((member, input)),
+            _ => None,
+        })
     }
 }
 
@@ -29,8 +30,13 @@ pub enum MemberKind {
     Float { default: f32 },
     Int { default: i32 },
     Enum { values: Vec<String>, default: usize },
-    Input,
+    Input(Input),
     Hybrid { default: f32 },
+}
+
+pub struct Input {
+    /// Node names accepted by this input, `None` if it accepts every node.
+    pub accepted: Option<Vec<String>>,
 }
 
 pub fn load() -> Vec<Node> {
@@ -39,10 +45,23 @@ pub fn load() -> Vec<Node> {
         .map(|id| to_string(unsafe { fnGetMetadataName(id) }))
         .collect::<Vec<_>>();
 
-    (0..count).map(|id| load_node(id, &names)).collect()
+    // Unconfigured instances of every node, only used to probe which nodes an input accepts
+    let instances = (0..count)
+        .map(|id| unsafe { fnNewFromMetadata(id, u32::MAX) })
+        .collect::<Vec<_>>();
+
+    let nodes = (0..count)
+        .map(|id| load_node(id, &names, &instances))
+        .collect();
+
+    for instance in instances {
+        unsafe { fnDeleteNodeRef(instance) };
+    }
+
+    nodes
 }
 
-fn load_node(id: i32, names: &[String]) -> Node {
+fn load_node(id: i32, names: &[String], instances: &[*mut c_void]) -> Node {
     let mut members = Vec::new();
 
     for index in 0..unsafe { fnGetMetadataVariableCount(id) } {
@@ -73,13 +92,25 @@ fn load_node(id: i32, names: &[String]) -> Node {
     }
 
     for index in 0..unsafe { fnGetMetadataNodeLookupCount(id) } {
+        let accepted = (0..names.len())
+            .filter(|&candidate| unsafe {
+                let node = fnNewFromMetadata(id, u32::MAX);
+                let is_accepted = fnSetNodeLookup(node, index, instances[candidate]);
+                fnDeleteNodeRef(node);
+                is_accepted
+            })
+            .map(|candidate| names[candidate].clone())
+            .collect::<Vec<_>>();
+
         members.push(Member {
             name: dimension_name(
                 to_string(unsafe { fnGetMetadataNodeLookupName(id, index) }),
                 unsafe { fnGetMetadataNodeLookupDimensionIdx(id, index) },
             ),
             description: to_string(unsafe { fnGetMetadataNodeLookupDescription(id, index) }),
-            kind: MemberKind::Input,
+            kind: MemberKind::Input(Input {
+                accepted: (accepted.len() != names.len()).then_some(accepted),
+            }),
         });
     }
 

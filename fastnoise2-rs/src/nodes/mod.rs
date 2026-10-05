@@ -3,6 +3,8 @@
 
 pub mod enums;
 
+pub mod ext;
+
 pub mod basic_generators;
 
 pub mod blends;
@@ -20,6 +22,8 @@ pub mod modifiers;
 pub mod operators;
 
 pub use enums::*;
+
+pub use ext::*;
 
 pub use basic_generators::*;
 

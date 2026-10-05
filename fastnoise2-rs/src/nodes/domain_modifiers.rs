@@ -12,7 +12,6 @@ pub struct DomainScale {
 }
 
 impl DomainScale {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self { scaling: 1.0, source }
     }
@@ -46,7 +45,6 @@ pub struct DomainOffset {
 }
 
 impl DomainOffset {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             source,
@@ -108,7 +106,6 @@ pub struct DomainRotate {
 }
 
 impl DomainRotate {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             yaw: 0.0,
@@ -160,7 +157,6 @@ pub struct DomainAxisScale {
 }
 
 impl DomainAxisScale {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             scaling_x: 1.0,
@@ -218,7 +214,6 @@ pub struct AddDimension {
 }
 
 impl AddDimension {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             source,
@@ -258,7 +253,6 @@ pub struct RemoveDimension {
 }
 
 impl RemoveDimension {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             remove_dimension: RemoveDimensionType::Y,
@@ -299,7 +293,6 @@ pub struct DomainRotatePlane {
 }
 
 impl DomainRotatePlane {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             rotation_type: RotationType::ImproveXyPlanes,

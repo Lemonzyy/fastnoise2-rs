@@ -14,7 +14,6 @@ pub struct PingPong {
 }
 
 impl PingPong {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             source,
@@ -54,7 +53,6 @@ pub struct Abs {
 }
 
 impl Abs {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self { source }
     }
@@ -77,7 +75,6 @@ pub struct SignedSquareRoot {
 }
 
 impl SignedSquareRoot {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self { source }
     }
@@ -100,7 +97,6 @@ pub struct SeedOffset {
 }
 
 impl SeedOffset {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self { seed_offset: 1, source }
     }
@@ -133,7 +129,6 @@ pub struct ConvertRGBA8 {
 }
 
 impl ConvertRGBA8 {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             min: -1.0,
@@ -174,7 +169,6 @@ pub struct GeneratorCache {
 }
 
 impl GeneratorCache {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self { source }
     }
@@ -202,7 +196,6 @@ pub struct Remap {
 }
 
 impl Remap {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             clamp_output: false,
@@ -276,7 +269,6 @@ pub struct Terrace {
 }
 
 impl Terrace {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             step_count: 1.0,

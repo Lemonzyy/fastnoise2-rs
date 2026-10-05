@@ -11,7 +11,6 @@ pub struct Add {
 }
 
 impl Add {
-    #[allow(dead_code)]
     pub(crate) fn new(lhs: Node) -> Self {
         Self {
             lhs,
@@ -89,7 +88,6 @@ pub struct Multiply {
 }
 
 impl Multiply {
-    #[allow(dead_code)]
     pub(crate) fn new(lhs: Node) -> Self {
         Self {
             lhs,

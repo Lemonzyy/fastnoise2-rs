@@ -17,7 +17,6 @@ pub struct FractalFBm {
 }
 
 impl FractalFBm {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             octaves: 3,
@@ -101,7 +100,6 @@ pub struct FractalRidged {
 }
 
 impl FractalRidged {
-    #[allow(dead_code)]
     pub(crate) fn new(source: Node) -> Self {
         Self {
             octaves: 3,
