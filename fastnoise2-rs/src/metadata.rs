@@ -176,12 +176,20 @@ pub trait MemberValue {
 
     fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError>;
 
-    fn invalid_member_type_error(member: &Member) -> FastNoiseError {
+    fn invalid_member_type_error(node: &Node, member: &Member) -> FastNoiseError {
         FastNoiseError::InvalidMemberType {
-            member_name: member.name.clone(),
+            node: node.metadata().name.clone(),
+            member: member.name.clone(),
             expected: member.member_type,
             found: Self::TYPE,
         }
+    }
+}
+
+fn set_member_failed(node: &Node, member: &Member) -> FastNoiseError {
+    FastNoiseError::SetMemberFailed {
+        node: node.metadata().name.clone(),
+        member: member.name.clone(),
     }
 }
 
@@ -192,15 +200,15 @@ impl MemberValue for f32 {
         match member.member_type {
             MemberType::Float => {
                 if !unsafe { fnSetVariableFloat(node.handle, member.index, *self) } {
-                    return Err(FastNoiseError::SetFloatFailed);
+                    return Err(set_member_failed(node, member));
                 }
             }
             MemberType::Hybrid => {
                 if !unsafe { fnSetHybridFloat(node.handle, member.index, *self) } {
-                    return Err(FastNoiseError::SetHybridFloatFailed);
+                    return Err(set_member_failed(node, member));
                 }
             }
-            _ => return Err(Self::invalid_member_type_error(member)),
+            _ => return Err(Self::invalid_member_type_error(node, member)),
         }
         Ok(())
     }
@@ -213,10 +221,10 @@ impl MemberValue for i32 {
         match member.member_type {
             MemberType::Int => {
                 if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *self) } {
-                    return Err(FastNoiseError::SetIntFailed);
+                    return Err(set_member_failed(node, member));
                 }
             }
-            _ => return Err(Self::invalid_member_type_error(member)),
+            _ => return Err(Self::invalid_member_type_error(node, member)),
         }
         Ok(())
     }
@@ -232,14 +240,16 @@ impl MemberValue for &str {
                     member
                         .enum_index(self)
                         .ok_or_else(|| FastNoiseError::EnumValueNotFound {
+                            node: node.metadata().name.clone(),
+                            member: member.name.clone(),
                             expected: member.enum_values.clone(),
                             found: self.to_string(),
                         })?;
                 if !unsafe { fnSetVariableIntEnum(node.handle, member.index, enum_idx) } {
-                    return Err(FastNoiseError::SetEnumFailed);
+                    return Err(set_member_failed(node, member));
                 }
             }
-            _ => return Err(Self::invalid_member_type_error(member)),
+            _ => return Err(Self::invalid_member_type_error(node, member)),
         }
         Ok(())
     }
@@ -252,15 +262,15 @@ impl MemberValue for &Node {
         match member.member_type {
             MemberType::NodeLookup => {
                 if !unsafe { fnSetNodeLookup(node.handle, member.index, self.handle) } {
-                    return Err(FastNoiseError::SetNodeLookupFailed);
+                    return Err(set_member_failed(node, member));
                 }
             }
             MemberType::Hybrid => {
                 if !unsafe { fnSetHybridNodeLookup(node.handle, member.index, self.handle) } {
-                    return Err(FastNoiseError::SetHybridNodeLookupFailed);
+                    return Err(set_member_failed(node, member));
                 }
             }
-            _ => return Err(Self::invalid_member_type_error(member)),
+            _ => return Err(Self::invalid_member_type_error(node, member)),
         }
         Ok(())
     }
@@ -278,8 +288,8 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             error.to_string(),
-            "member name not found (expected one of 'Feature Scale', 'Seed Offset', \
-             'Output Min', 'Output Max', found 'FeatureScal')"
+            "unknown member 'FeatureScal' on node 'Perlin' (expected one of \
+             'Feature Scale', 'Seed Offset', 'Output Min', 'Output Max')"
         );
     }
 
@@ -291,9 +301,30 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             error.to_string(),
-            "enum value not found (expected one of 'Euclidean', 'Euclidean Squared', \
-             'Manhattan', 'Hybrid', 'Max Axis', 'Minkowski', found 'Euclidian')"
+            "unknown value 'Euclidian' for member 'Distance Function' of node \
+             'CellularValue' (expected one of 'Euclidean', 'Euclidean Squared', 'Manhattan', \
+             'Hybrid', 'Max Axis', 'Minkowski')"
         );
+    }
+
+    #[test]
+    fn test_invalid_member_type_names_node_and_member() {
+        let error = Node::from_name("Perlin")
+            .unwrap()
+            .set("SeedOffset", 1.5)
+            .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "invalid type for member 'Seed Offset' of node 'Perlin' (expected i32, found f32)"
+        );
+    }
+
+    #[test]
+    fn test_metadata_name_not_found_keeps_input() {
+        let error = Node::from_name("Perln").unwrap_err();
+        assert!(error
+            .to_string()
+            .starts_with("unknown node 'Perln' (expected one of 'Constant', "));
     }
 
     #[test]

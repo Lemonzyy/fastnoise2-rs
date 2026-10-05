@@ -74,7 +74,7 @@ mod safe;
 
 pub use error::FastNoiseError;
 pub use metadata::MemberType;
-use metadata::{format_lookup, MemberValue, METADATA_NAME_LOOKUP, NODE_METADATA};
+use metadata::{format_lookup, MemberValue, Metadata, METADATA_NAME_LOOKUP, NODE_METADATA};
 pub use safe::SafeNode;
 
 use fastnoise2_sys::*;
@@ -144,6 +144,10 @@ impl Node {
         }
     }
 
+    pub(crate) fn metadata(&self) -> &'static Metadata {
+        &NODE_METADATA[self.metadata_id as usize]
+    }
+
     pub fn get_active_feature_set(&self) -> u32 {
         unsafe { fnGetActiveFeatureSet(self.handle) }
     }
@@ -162,11 +166,12 @@ impl Node {
     where
         V: MemberValue + Debug,
     {
-        let metadata = &NODE_METADATA[self.metadata_id as usize];
+        let metadata = self.metadata();
         let member =
             metadata
                 .member(member_name)
                 .ok_or_else(|| FastNoiseError::MemberNameNotFound {
+                    node: metadata.name.clone(),
                     expected: metadata.members.iter().map(|m| m.name.clone()).collect(),
                     found: member_name.to_string(),
                 })?;
