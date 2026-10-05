@@ -5,6 +5,47 @@ All notable changes to fastnoise2-rs will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
+- C API: `fnGetSIMDLevel` renamed to `fnGetActiveFeatureSet`
+- C API: new metadata introspection functions (descriptions, defaults, min/max, groups)
+- C API: fixed `fnSetNodeLookup` and `fnSetHybridNodeLookup`, which now take the node pointer directly
+- No new nodes, members or default values
+
+### Added
+
+- `CellularValue`, `CellularDistance`: `feature_scale`, `seed_offset`, `output_min`, `output_max` fields
+  - Builder methods: `.with_feature_scale()`, `.with_seed_offset()`, `.with_output_range()`
+- `CellularLookup`: `feature_scale`, `seed_offset` fields
+  - Builder methods: `.with_feature_scale()`, `.with_seed_offset()`
+- `DomainWarpGradient`, `DomainWarpSimplex`, `DomainWarpSuperSimplex`: `seed_offset`, `amplitude_scaling` fields
+  - Builder methods: `.with_seed_offset()`, `.with_amplitude_scaling()`
+- `rust-version = "1.80"`
+- Documentation of `.cache()` explains how to share a source node so that the FastNoise2 cache is used
+- fastnoise2-sys: FastSIMD is bundled as a Git submodule, building no longer needs network access
+- fastnoise2-sys: a precompiled library in `FASTNOISE2_LIB_DIR` is rejected if it misses functions of the C header
+
+### Changed
+
+- **Breaking**: `Remap` bounds and `Gradient` offsets are hybrid (f32 or Generator), adding type parameters to `Remap<S, FMin, FMax, TMin, TMax>` and `Gradient<X, Y, Z, W>`
+- **Breaking**: `Node::get_simd_level` and `SafeNode::get_simd_level` renamed to `get_active_feature_set`
+- `SafeNode` generation functions panic on non-positive counts, grid sizes overflowing an `i32` and empty position arrays
+- `DistanceToPoint` builder methods are available whatever the coordinate and `minkowski_p` types
+- fastnoise2-sys: cached bindings in `FASTNOISE2_BINDINGS_DIR` are stored per crate version and only reused with an identical C header
+- fastnoise2-sys: WASM builds only need Emscripten in `PATH`, `EMSDK` is no longer required
+- fastnoise2-sys: `FASTNOISE2_SOURCE_DIR` is used to generate bindings when `FASTNOISE2_LIB_DIR` is set
+- Example images are no longer included in the package
+
+### Fixed
+
+- Node lookup and hybrid node lookup members are set with the node handle, matching the fixed C API
+- `SafeNode::gen_position_array_4d` did not check `w_pos_array` length (out-of-bounds read)
+- `SafeNode` generation functions crashed or hung on zero counts or empty arrays
+- fastnoise2-sys: build script is rerun when FastNoise2 sources or the precompiled library change
+- fastnoise2-sys: C++ standard library is linked on Emscripten, Android, iOS, tvOS, watchOS, visionOS, OpenBSD, NetBSD and windows-gnullvm
+- Examples use feature scales and step sizes suited to the feature scale API
+
 ## [0.4.0] - 2026-01-21
 
 Updated FastNoise2 C++ submodule from `f8facba` to `3728fde`:
@@ -259,4 +300,4 @@ The same applies to `gen_uniform_grid_3d` and `gen_uniform_grid_4d`.
 
 ## Upstream Reference
 
-FastNoise2 C++ version: `3728fde069704509fcf2973825b2d385348bf336`
+FastNoise2 C++ version: `8176c3f9d8b631e6c998ed98a40bfbb1d0338a73`
