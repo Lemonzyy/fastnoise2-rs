@@ -8,7 +8,7 @@ use std::{
 
 use fastnoise2_sys::*;
 
-use crate::{FastNoiseError, Node};
+use crate::node::Node;
 
 #[derive(Debug)]
 pub(crate) struct Metadata {
@@ -180,122 +180,17 @@ fn dimension_member_name(name: String, dim_idx: i32) -> String {
     }
 }
 
-pub trait MemberValue {
-    const TYPE: MemberType;
-
-    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError>;
-
-    fn invalid_member_type_error(node: &Node, member: &Member) -> FastNoiseError {
-        FastNoiseError::InvalidMemberType {
-            node: node.metadata().name.clone(),
-            member: member.name.clone(),
-            description: member.description.clone(),
-            expected: member.member_type,
-            found: Self::TYPE,
-        }
-    }
-}
-
-fn set_member_failed(node: &Node, member: &Member) -> FastNoiseError {
-    FastNoiseError::SetMemberFailed {
-        node: node.metadata().name.clone(),
-        member: member.name.clone(),
-    }
-}
-
-impl MemberValue for f32 {
-    const TYPE: MemberType = MemberType::Float;
-
-    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::Float => {
-                if !unsafe { fnSetVariableFloat(node.handle, member.index, *self) } {
-                    return Err(set_member_failed(node, member));
-                }
-            }
-            MemberType::Hybrid => {
-                if !unsafe { fnSetHybridFloat(node.handle, member.index, *self) } {
-                    return Err(set_member_failed(node, member));
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(node, member)),
-        }
-        Ok(())
-    }
-}
-
-impl MemberValue for i32 {
-    const TYPE: MemberType = MemberType::Int;
-
-    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::Int => {
-                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, *self) } {
-                    return Err(set_member_failed(node, member));
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(node, member)),
-        }
-        Ok(())
-    }
-}
-
-impl MemberValue for &str {
-    const TYPE: MemberType = MemberType::Enum;
-
-    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::Enum => {
-                let enum_idx =
-                    member
-                        .enum_index(self)
-                        .ok_or_else(|| FastNoiseError::EnumValueNotFound {
-                            node: node.metadata().name.clone(),
-                            member: member.name.clone(),
-                            expected: member.enum_values.clone(),
-                            found: self.to_string(),
-                        })?;
-                if !unsafe { fnSetVariableIntEnum(node.handle, member.index, enum_idx) } {
-                    return Err(set_member_failed(node, member));
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(node, member)),
-        }
-        Ok(())
-    }
-}
-
-impl MemberValue for &Node {
-    const TYPE: MemberType = MemberType::NodeLookup;
-
-    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
-        match member.member_type {
-            MemberType::NodeLookup => {
-                if !unsafe { fnSetNodeLookup(node.handle, member.index, self.handle) } {
-                    return Err(set_member_failed(node, member));
-                }
-            }
-            MemberType::Hybrid => {
-                if !unsafe { fnSetHybridNodeLookup(node.handle, member.index, self.handle) } {
-                    return Err(set_member_failed(node, member));
-                }
-            }
-            _ => return Err(Self::invalid_member_type_error(node, member)),
-        }
-        Ok(())
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::{FastNoiseError, Node};
+    use crate::{node::NodeBuilder, FastNoiseError};
 
     #[test]
     fn test_member_name_not_found_lists_display_names_in_order() {
-        let error = Node::from_name("Perlin")
+        let error = NodeBuilder::new("Perlin")
             .unwrap()
             .set("FeatureScal", 10.0)
-            .unwrap_err();
+            .err()
+            .unwrap();
         assert_eq!(
             error.to_string(),
             "unknown member 'FeatureScal' on node 'Perlin' (expected one of \
@@ -305,10 +200,11 @@ mod tests {
 
     #[test]
     fn test_enum_value_not_found_lists_display_names_in_order() {
-        let error = Node::from_name("CellularValue")
+        let error = NodeBuilder::new("CellularValue")
             .unwrap()
             .set("DistanceFunction", "Euclidian")
-            .unwrap_err();
+            .err()
+            .unwrap();
         assert_eq!(
             error.to_string(),
             "unknown value 'Euclidian' for member 'Distance Function' of node \
@@ -319,10 +215,11 @@ mod tests {
 
     #[test]
     fn test_invalid_member_type_names_node_and_member() {
-        let error = Node::from_name("Perlin")
+        let error = NodeBuilder::new("Perlin")
             .unwrap()
             .set("SeedOffset", 1.5)
-            .unwrap_err();
+            .err()
+            .unwrap();
         assert_eq!(
             error.to_string(),
             "invalid type for member 'Seed Offset' of node 'Perlin' (expected i32, found f32)\n\
@@ -334,10 +231,11 @@ mod tests {
 
     #[test]
     fn test_invalid_member_type_without_description() {
-        let error = Node::from_name("DistanceToPoint")
+        let error = NodeBuilder::new("DistanceToPoint")
             .unwrap()
             .set("DistanceFunction", 1.0)
-            .unwrap_err();
+            .err()
+            .unwrap();
         assert_eq!(
             error.to_string(),
             "invalid type for member 'Distance Function' of node 'DistanceToPoint' \
@@ -348,7 +246,7 @@ mod tests {
     #[test]
     fn test_metadata_name_not_found_keeps_input_and_display_names() {
         let Err(FastNoiseError::MetadataNameNotFound { expected, found }) =
-            Node::from_name("Perln")
+            NodeBuilder::new("Perln")
         else {
             panic!("expected MetadataNameNotFound");
         };
@@ -358,8 +256,8 @@ mod tests {
 
     #[test]
     fn test_dimension_member_names() {
-        let mut node = Node::from_name("Gradient").unwrap();
-        assert!(node.set("Multiplier X", 1.0).is_ok());
+        let node = NodeBuilder::new("Gradient").unwrap();
+        let node = node.set("Multiplier X", 1.0).unwrap();
         assert!(node.set("offsetw", 1.0).is_ok());
     }
 }

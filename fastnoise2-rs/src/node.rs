@@ -15,7 +15,6 @@ use fastnoise2_sys::*;
 
 use crate::{
     metadata::{format_lookup, Member, Metadata, METADATA_NAME_LOOKUP, NODE_METADATA},
-    safe::{check_position_arrays, grid_len},
     FastNoiseError, MemberType, OutputMinMax,
 };
 
@@ -626,6 +625,30 @@ impl NodeBuilder {
     }
 }
 
+/// Returns the number of values in a grid, as computed by FastNoise2 (an `i32` product).
+#[inline]
+pub(crate) fn grid_len(counts: &[i32]) -> usize {
+    assert!(
+        counts.iter().all(|&count| count > 0),
+        "grid counts must be positive"
+    );
+    counts
+        .iter()
+        .try_fold(1i32, |len, &count| len.checked_mul(count))
+        .expect("grid size must fit in an i32") as usize
+}
+
+#[inline]
+pub(crate) fn check_position_arrays(noise_out: &[f32], pos_arrays: &[&[f32]]) {
+    let len = noise_out.len();
+    assert!(len > 0, "position arrays must not be empty");
+    assert!(len <= i32::MAX as usize, "position arrays are too long");
+    assert!(
+        pos_arrays.iter().all(|pos_array| pos_array.len() == len),
+        "noise_out and position arrays must have the same length"
+    );
+}
+
 #[cold]
 fn input_not_accepted(metadata: &Metadata, member: &Member, input: &Node) -> FastNoiseError {
     FastNoiseError::InputNotAccepted {
@@ -723,6 +746,49 @@ mod tests {
             .build()
             .unwrap();
         assert_ne!(grid(&constant), grid(&node));
+    }
+
+    #[test]
+    #[should_panic(expected = "grid counts must be positive")]
+    fn test_gen_uniform_grid_2d_zero_count() {
+        perlin().gen_uniform_grid_2d(&mut [], 0.0, 0.0, 0, 4, 1.0, 1.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "grid counts must be positive")]
+    fn test_gen_tileable_2d_zero_size() {
+        perlin().gen_tileable_2d(&mut [], 0, 0, 1.0, 1.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "grid size must fit in an i32")]
+    fn test_gen_uniform_grid_2d_overflow() {
+        let mut output = vec![0.0; 65536];
+        perlin().gen_uniform_grid_2d(&mut output, 0.0, 0.0, 65536, 65537, 1.0, 1.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "position arrays must not be empty")]
+    fn test_gen_position_array_2d_empty() {
+        perlin().gen_position_array_2d(&mut [], &[], &[], 0.0, 0.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "noise_out and position arrays must have the same length")]
+    fn test_gen_position_array_4d_short_w() {
+        let positions = [0.0; 4];
+        perlin().gen_position_array_4d(
+            &mut [0.0; 4],
+            &positions,
+            &positions,
+            &positions,
+            &positions[..1],
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1337,
+        );
     }
 
     #[test]
