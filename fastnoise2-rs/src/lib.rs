@@ -71,6 +71,7 @@ mod error;
 pub mod generator;
 mod metadata;
 pub mod node;
+#[rustfmt::skip]
 pub mod nodes;
 mod safe;
 
