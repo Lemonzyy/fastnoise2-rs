@@ -64,6 +64,30 @@ pub enum FastNoiseError {
         found: MemberType,
     },
 
+    /// Indicates that an input (node lookup member) of a node is not set.
+    ///
+    /// Generating noise with a missing input would crash FastNoise2.
+    #[error("missing input '{member}' of node '{node}'")]
+    MissingInput {
+        /// The name of the node.
+        node: String,
+        /// The name of the input member.
+        member: String,
+    },
+
+    /// Indicates that an input of a node doesn't accept the given node type.
+    ///
+    /// For example, a "Domain Warp Source" input only accepts domain warp nodes.
+    #[error("node '{input}' is not accepted by input '{member}' of node '{node}'")]
+    InputNotAccepted {
+        /// The name of the node.
+        node: String,
+        /// The name of the input member.
+        member: String,
+        /// The name of the rejected node.
+        input: String,
+    },
+
     /// Indicates that FastNoise2 failed to set the value of a member.
     #[error("failed to set member '{member}' of node '{node}'")]
     SetMemberFailed {
