@@ -71,6 +71,7 @@ mod error;
 pub mod generator;
 mod metadata;
 pub mod node;
+pub mod nodes;
 mod safe;
 
 pub use error::FastNoiseError;

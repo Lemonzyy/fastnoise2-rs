@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["fastnoise2-rs", "fastnoise2-sys"]
+members = ["fastnoise2-codegen", "fastnoise2-rs", "fastnoise2-sys"]
 
 [workspace.package]
 readme = "README.md"

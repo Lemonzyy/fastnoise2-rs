@@ -1,0 +1,17 @@
+[package]
+name = "fastnoise2-codegen"
+version = "0.0.0"
+edition = "2021"
+description = "Generates the typed node API of fastnoise2 from FastNoise2 metadata."
+publish = false
+repository.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[dependencies]
+fastnoise2-sys = { path = "../fastnoise2-sys" }
+heck = "0.5"
+prettyplease = "0.3"
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "3", default-features = false, features = ["full", "parsing", "printing"] }
