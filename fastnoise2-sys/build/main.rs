@@ -21,7 +21,6 @@ fn main() {
     println!("cargo:rerun-if-env-changed={SOURCE_DIR_KEY}");
     println!("cargo:rerun-if-env-changed={LIB_DIR_KEY}");
     println!("cargo:rerun-if-env-changed={BINDINGS_CACHE_KEY}");
-    println!("cargo:rerun-if-env-changed=EMSDK");
 
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
 
@@ -65,30 +64,16 @@ fn build_wasm() {
 
     println!("cargo:warning=Building FastNoise2 for WASM with SIMD128 support");
 
-    // Log the EMSDK path if set (for debugging)
-    if let Ok(emsdk) = env::var("EMSDK") {
-        println!("cargo:warning=EMSDK path: {}", emsdk);
-    }
     // Watch the whole source tree, not only headers, so C++ and CMake changes rebuild the library
     println!("cargo:rerun-if-changed={}", source_path.display());
 
-    // Get Emscripten SDK path from environment
-    let emsdk_path = env::var("EMSDK").expect(
-        "EMSDK environment variable required for WASM builds. Install from https://emscripten.org",
-    );
-
-    // Use Emscripten's CMake toolchain file - this properly configures compilers and sysroot
-    let toolchain_file = format!(
-        "{}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
-        emsdk_path
-    );
-
-    // Build FastNoise2 for WASM as a pure static library using Emscripten toolchain
+    // Build FastNoise2 for WASM as a pure static library. cmake-rs runs CMake through
+    // emcmake for Emscripten targets, which sets up the Emscripten toolchain, so only
+    // Emscripten in PATH is needed (e.g. from emsdk_env.sh or a Nix shell)
     // FastSIMD has native WASM SIMD128 support - we just need to enable it
     let mut config = new_cmake_config(&source_path);
     config
         .profile("Release")
-        .define("CMAKE_TOOLCHAIN_FILE", &toolchain_file)
         .define("FASTNOISE2_TOOLS", "OFF")
         .define("FASTNOISE2_TESTS", "OFF")
         .define("FASTNOISE2_UTILITY", "OFF") // Disable utility to avoid Corrade dependency
