@@ -12,9 +12,16 @@
 //! ## See Also
 //! - [safe example](https://github.com/Lemonzyy/fastnoise2-rs/blob/main/fastnoise2-rs/examples/safe.rs)
 //! - [safe_simple_terrain example](https://github.com/Lemonzyy/fastnoise2-rs/blob/main/fastnoise2-rs/examples/safe_simple_terrain.rs)
-use std::fmt::{Debug, Display};
+use std::{
+    fmt::{self, Debug, Display},
+    ops::Deref,
+};
 
-use crate::{metadata::MemberValue, safe::SafeNode, MemberType, Node};
+use crate::{
+    metadata::{Member, MemberValue},
+    safe::SafeNode,
+    FastNoiseError, MemberType, Node,
+};
 
 pub mod basic;
 pub mod blend;
@@ -66,11 +73,7 @@ impl<T: Generator> Hybrid for T {}
 impl<T: Generator> MemberValue for T {
     const TYPE: MemberType = MemberType::NodeLookup;
 
-    fn apply(
-        &self,
-        node: &mut Node,
-        member: &crate::metadata::Member,
-    ) -> Result<(), crate::FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         node.set(&member.name, self.build().0 .0.as_ref())
     }
 }
@@ -84,7 +87,7 @@ impl<T: Hybrid> From<T> for GeneratorWrapper<T> {
     }
 }
 
-impl<T> std::ops::Deref for GeneratorWrapper<T> {
+impl<T> Deref for GeneratorWrapper<T> {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
@@ -104,11 +107,7 @@ impl Hybrid for GeneratorWrapper<f32> {}
 impl MemberValue for GeneratorWrapper<f32> {
     const TYPE: MemberType = MemberType::Float;
 
-    fn apply(
-        &self,
-        node: &mut Node,
-        member: &crate::metadata::Member,
-    ) -> Result<(), crate::FastNoiseError> {
+    fn apply(&self, node: &mut Node, member: &Member) -> Result<(), FastNoiseError> {
         self.0.apply(node, member)
     }
 }
@@ -125,7 +124,7 @@ pub enum DistanceFunction {
 }
 
 impl Display for DistanceFunction {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             DistanceFunction::Euclidean => f.write_str("Euclidean"),
             DistanceFunction::EuclideanSquared => f.write_str("Euclidean Squared"),
@@ -147,7 +146,7 @@ pub enum FadeInterpolation {
 }
 
 impl Display for FadeInterpolation {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             FadeInterpolation::Linear => f.write_str("Linear"),
             FadeInterpolation::Hermite => f.write_str("Hermite"),
@@ -165,7 +164,7 @@ pub enum Dimension {
 }
 
 impl Display for Dimension {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Dimension::X => f.write_str("X"),
             Dimension::Y => f.write_str("Y"),

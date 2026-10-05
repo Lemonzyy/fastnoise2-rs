@@ -1,5 +1,5 @@
 // This example illustrates the use of the metadata-based API to build trees.
-use std::time::Instant;
+use std::{env, fs, path::PathBuf, time::Instant};
 
 use fastnoise2::{FastNoiseError, Node};
 use image::{GrayImage, Luma};
@@ -83,9 +83,8 @@ fn main() {
 
 fn save(img: GrayImage, filename: &str) {
     let output_dir =
-        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default())
-            .join("examples_output");
-    std::fs::create_dir_all(&output_dir).expect("Failed to create directories");
+        PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_default()).join("examples_output");
+    fs::create_dir_all(&output_dir).expect("Failed to create directories");
     let output_path = output_dir.join(filename);
     img.save(&output_path).expect("Failed to save image");
     println!("Image successfully saved as {}", output_path.display());

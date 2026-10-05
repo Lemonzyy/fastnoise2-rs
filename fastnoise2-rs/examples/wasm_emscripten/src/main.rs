@@ -1,5 +1,7 @@
 //! FastNoise2 WASM Demo - Simple noise visualization
 
+use std::slice;
+
 use fastnoise2::generator::prelude::*;
 use fastnoise2::SafeNode;
 
@@ -18,7 +20,7 @@ pub extern "C" fn generate_noise(output: *mut u8, width: i32, height: i32) {
         1337,
     );
 
-    let output_slice = unsafe { std::slice::from_raw_parts_mut(output, size) };
+    let output_slice = unsafe { slice::from_raw_parts_mut(output, size) };
     for (i, &v) in float_output.iter().enumerate() {
         output_slice[i] = ((v + 1.0) * 0.5 * 255.0).clamp(0.0, 255.0) as u8;
     }

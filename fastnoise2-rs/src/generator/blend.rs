@@ -1,3 +1,5 @@
+use std::ops;
+
 use super::{FadeInterpolation, Generator, GeneratorWrapper, Hybrid};
 use crate::{safe::SafeNode, Node};
 
@@ -310,7 +312,7 @@ where
     }
 }
 
-impl<Lhs, Rhs> std::ops::Add<Rhs> for GeneratorWrapper<Lhs>
+impl<Lhs, Rhs> ops::Add<Rhs> for GeneratorWrapper<Lhs>
 where
     Lhs: Generator,
     Rhs: Hybrid,
@@ -322,7 +324,7 @@ where
     }
 }
 
-impl<Lhs, Rhs> std::ops::Sub<Rhs> for GeneratorWrapper<Lhs>
+impl<Lhs, Rhs> ops::Sub<Rhs> for GeneratorWrapper<Lhs>
 where
     Lhs: Hybrid,
     Rhs: Hybrid,
@@ -334,7 +336,7 @@ where
     }
 }
 
-impl<Lhs, Rhs> std::ops::Mul<Rhs> for GeneratorWrapper<Lhs>
+impl<Lhs, Rhs> ops::Mul<Rhs> for GeneratorWrapper<Lhs>
 where
     Lhs: Generator,
     Rhs: Hybrid,
@@ -346,7 +348,7 @@ where
     }
 }
 
-impl<Lhs> std::ops::Neg for GeneratorWrapper<Lhs>
+impl<Lhs> ops::Neg for GeneratorWrapper<Lhs>
 where
     Lhs: Generator,
 {
@@ -357,7 +359,7 @@ where
     }
 }
 
-impl<Lhs, Rhs> std::ops::Div<Rhs> for GeneratorWrapper<Lhs>
+impl<Lhs, Rhs> ops::Div<Rhs> for GeneratorWrapper<Lhs>
 where
     Lhs: Hybrid,
     Rhs: Hybrid,
@@ -369,7 +371,7 @@ where
     }
 }
 
-impl<Lhs, Rhs> std::ops::Rem<Rhs> for GeneratorWrapper<Lhs>
+impl<Lhs, Rhs> ops::Rem<Rhs> for GeneratorWrapper<Lhs>
 where
     Lhs: Hybrid,
     Rhs: Hybrid,

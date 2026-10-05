@@ -1,3 +1,5 @@
+use std::fmt::{self, Display};
+
 use super::{DistanceFunction, Generator, GeneratorWrapper, Hybrid};
 use crate::{safe::SafeNode, Node};
 
@@ -374,8 +376,8 @@ pub enum CellularDistanceReturnType {
     Index0Div1,
 }
 
-impl std::fmt::Display for CellularDistanceReturnType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl Display for CellularDistanceReturnType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             CellularDistanceReturnType::Index0 => f.write_str("Index0"),
             CellularDistanceReturnType::Index0Add1 => f.write_str("Index0Add1"),

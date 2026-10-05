@@ -1,4 +1,4 @@
-use std::{any::type_name, collections::HashMap, ffi::CStr, sync::LazyLock};
+use std::{any::type_name, collections::HashMap, ffi::CStr, fmt, sync::LazyLock};
 
 use fastnoise2_sys::*;
 
@@ -36,8 +36,8 @@ pub enum MemberType {
     Hybrid,
 }
 
-impl std::fmt::Display for MemberType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl fmt::Display for MemberType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Float => f.write_str(type_name::<f32>()),
             Self::Int => f.write_str(type_name::<i32>()),

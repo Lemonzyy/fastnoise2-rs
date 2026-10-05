@@ -1,3 +1,5 @@
+use std::ffi::NulError;
+
 use thiserror::Error;
 
 use crate::metadata::MemberType;
@@ -23,7 +25,7 @@ pub enum FastNoiseError {
 
     /// Indicates a failure to create a [`CString`][`std::ffi::CString`] from the provided encoded node tree string.
     #[error("failed to create CString from encoded node tree")]
-    CStringCreationFailed(#[from] std::ffi::NulError),
+    CStringCreationFailed(#[from] NulError),
 
     /// Indicates a failure to create a node from the encoded node tree.
     #[error("failed to create noise node from the encoded node tree")]

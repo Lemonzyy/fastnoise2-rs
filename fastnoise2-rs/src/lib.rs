@@ -78,7 +78,10 @@ use metadata::{format_lookup, MemberValue, METADATA_NAME_LOOKUP, NODE_METADATA};
 pub use safe::SafeNode;
 
 use fastnoise2_sys::*;
-use std::{ffi::CString, fmt::Debug};
+use std::{
+    ffi::{c_void, CString},
+    fmt::Debug,
+};
 
 /// Represents a node in the FastNoise2 C++ library.
 ///
@@ -96,7 +99,7 @@ use std::{ffi::CString, fmt::Debug};
 /// You can use [`SafeNode`] to get rid of `unsafe` blocks in exchange for easy node updating.
 #[derive(Debug)]
 pub struct Node {
-    handle: *mut core::ffi::c_void,
+    handle: *mut c_void,
     metadata_id: i32,
 }
 

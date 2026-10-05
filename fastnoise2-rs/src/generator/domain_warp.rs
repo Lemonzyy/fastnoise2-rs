@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{self, Display};
 
 use super::{Generator, GeneratorWrapper, Hybrid};
 use crate::{safe::SafeNode, Node};
@@ -14,7 +14,7 @@ pub enum VectorizationScheme {
 }
 
 impl Display for VectorizationScheme {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             VectorizationScheme::OrthogonalGradientMatrix => {
                 f.write_str("Orthogonal Gradient Matrix")

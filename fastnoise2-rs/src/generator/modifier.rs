@@ -1,4 +1,4 @@
-use std::fmt::Display;
+use std::fmt::{self, Display};
 
 use super::{Dimension, Generator, GeneratorWrapper, Hybrid};
 use crate::{safe::SafeNode, Node};
@@ -12,7 +12,7 @@ pub enum PlaneRotationType {
 }
 
 impl Display for PlaneRotationType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PlaneRotationType::ImproveXYPlanes => f.write_str("Improve XY Planes"),
             PlaneRotationType::ImproveXZPlanes => f.write_str("Improve XZ Planes"),

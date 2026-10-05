@@ -1,4 +1,4 @@
-use std::{env, path::PathBuf};
+use std::{env, fs, path::PathBuf};
 
 const SOURCE_DIR_KEY: &str = "FASTNOISE2_SOURCE_DIR";
 const LIB_DIR_KEY: &str = "FASTNOISE2_LIB_DIR";
@@ -121,7 +121,7 @@ fn build_from_source() {
     // FastNoise2's CMakeLists.txt tries to install PDB files that may not exist in Release builds
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let pdb_dir = out_dir.join("build").join("pdb-files").join("Release");
-    std::fs::create_dir_all(&pdb_dir).ok();
+    fs::create_dir_all(&pdb_dir).ok();
 
     let mut config = cmake::Config::new(&source_path);
     config
@@ -178,7 +178,7 @@ fn generate_bindings(source_path: PathBuf) {
     let include_path = source_path.join("include").join("FastNoise");
     let header_path = include_path.join(HEADER_NAME);
 
-    let header = std::fs::read(&header_path).expect("Failed to read FastNoise C header");
+    let header = fs::read(&header_path).expect("Failed to read FastNoise C header");
 
     // Cached bindings are stored per crate version along with the header they were
     // generated from, and only reused if that header is identical to the current one
@@ -189,14 +189,13 @@ fn generate_bindings(source_path: PathBuf) {
     // Check for cached bindings first
     if let Some(cache_path) = &cache_path {
         let cached_bindings = cache_path.join("bindings.rs");
-        let cached_header = std::fs::read(cache_path.join(HEADER_NAME)).ok();
+        let cached_header = fs::read(cache_path.join(HEADER_NAME)).ok();
         if cached_bindings.exists() && cached_header.as_ref() == Some(&header) {
             println!(
                 "cargo:warning=using cached bindings from '{}'",
                 cached_bindings.display()
             );
-            std::fs::copy(&cached_bindings, &bindings_path)
-                .expect("Failed to copy cached bindings");
+            fs::copy(&cached_bindings, &bindings_path).expect("Failed to copy cached bindings");
             return;
         }
     }
@@ -244,10 +243,10 @@ fn generate_bindings(source_path: PathBuf) {
 
     // Save to cache if dir is set
     if let Some(cache_path) = &cache_path {
-        std::fs::create_dir_all(cache_path).ok();
+        fs::create_dir_all(cache_path).ok();
         let cached_bindings = cache_path.join("bindings.rs");
-        std::fs::copy(&bindings_path, &cached_bindings).ok();
-        std::fs::write(cache_path.join(HEADER_NAME), &header).ok();
+        fs::copy(&bindings_path, &cached_bindings).ok();
+        fs::write(cache_path.join(HEADER_NAME), &header).ok();
         println!(
             "cargo:warning=bindings cached to '{}'",
             cached_bindings.display()
