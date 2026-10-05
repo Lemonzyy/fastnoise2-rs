@@ -581,51 +581,18 @@ mod tests {
     }
 
     #[test]
-    fn test_checkerboard_default_feature_scale() {
-        // Test that checkerboard now has the correct default feature scale of 100.0
-        let checkerboard_node = checkerboard(100.0).build();
-
-        // Create a checkerboard node with explicit feature scale of 100.0 for comparison
-        let checkerboard_100 = checkerboard(100.0).with_feature_scale(100.0).build();
-
-        // These should produce the same output since 100.0 is now the default
-        let output1 = generate_output(&checkerboard_node.0);
-        let output2 = generate_output(&checkerboard_100.0);
-        // If they're the same, the difference should be very small (just floating point precision)
-        let diff: f32 = output1
-            .iter()
-            .zip(output2.iter())
-            .map(|(a, b)| (a - b).abs())
-            .sum();
-        assert!(
-            diff < 0.01,
-            "Checkerboard default feature scale test failed: outputs differ by {}",
-            diff
-        );
+    fn test_checkerboard_default_matches_cpp() {
+        assert_matches_cpp_default(GeneratorWrapper(Checkerboard::default()), "Checkerboard");
     }
 
     #[test]
-    fn test_sinewave_default_feature_scale() {
-        // Test that sinewave now has the correct default feature scale of 100.0
-        let sinewave_node = sinewave(100.0).build();
+    fn test_distance_to_point_default_matches_cpp() {
+        assert_matches_cpp_default(distance_to_point(), "DistanceToPoint");
+    }
 
-        // Create a sinewave node with explicit feature scale of 100.0 for comparison
-        let sinewave_100 = sinewave(100.0).with_feature_scale(100.0).build();
-
-        // These should produce the same output since 100.0 is now the default
-        let output1 = generate_output(&sinewave_node.0);
-        let output2 = generate_output(&sinewave_100.0);
-        // If they're the same, the difference should be very small (just floating point precision)
-        let diff: f32 = output1
-            .iter()
-            .zip(output2.iter())
-            .map(|(a, b)| (a - b).abs())
-            .sum();
-        assert!(
-            diff < 0.01,
-            "SineWave default feature scale test failed: outputs differ by {}",
-            diff
-        );
+    #[test]
+    fn test_sinewave_default_matches_cpp() {
+        assert_matches_cpp_default(GeneratorWrapper(SineWave::default()), "SineWave");
     }
 
     #[test]

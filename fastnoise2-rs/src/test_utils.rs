@@ -1,4 +1,4 @@
-use crate::safe::SafeNode;
+use crate::{generator::Generator, safe::SafeNode, Node};
 
 /// Helper to test a generator produces valid noise output
 pub fn test_generator_produces_output(node: SafeNode) {
@@ -33,5 +33,15 @@ pub fn assert_outputs_differ(output1: &[f32], output2: &[f32], param_name: &str)
         differs,
         "Parameter '{}' did not affect output - check test conditions",
         param_name
+    );
+}
+
+/// Asserts that a generator produces the same output as the C++ node with its default values.
+pub fn assert_matches_cpp_default(generator: impl Generator, metadata_name: &str) {
+    let cpp_default = SafeNode(Node::from_name(metadata_name).unwrap().into());
+    assert_eq!(
+        generate_output(&generator.build()),
+        generate_output(&cpp_default),
+        "{metadata_name} default values differ from C++"
     );
 }
