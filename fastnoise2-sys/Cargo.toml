@@ -7,6 +7,7 @@ keywords = ["noise", "simd", "procedural", "perlin", "bindings"]
 build = "build/main.rs"
 repository.workspace = true
 license.workspace = true
+rust-version.workspace = true
 readme.workspace = true
 
 [build-dependencies]

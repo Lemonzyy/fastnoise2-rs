@@ -6,6 +6,7 @@ description = "A safe Rust wrapper for FastNoise2, a node-based noise generation
 keywords = ["noise", "simd", "procedural", "perlin", "simplex"]
 repository.workspace = true
 license.workspace = true
+rust-version.workspace = true
 readme.workspace = true
 
 [dependencies]
