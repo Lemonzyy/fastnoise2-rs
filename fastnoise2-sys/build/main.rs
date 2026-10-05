@@ -38,8 +38,14 @@ fn main() {
         println!("cargo:warning=using precompiled library located in '{lib_dir}'");
         println!("cargo:rustc-link-search=native={lib_dir}");
         println!("cargo:rustc-link-lib=static={LIB_NAME}");
+        println!("cargo:rerun-if-changed={lib_dir}");
 
-        generate_bindings(default_source_path());
+        let source_path = source_path();
+        println!(
+            "cargo:rerun-if-changed={}",
+            source_path.join("include").join("FastNoise").display()
+        );
+        generate_bindings(source_path);
     } else {
         println!("cargo:warning={LIB_DIR_KEY} is not set; falling back to building from source");
         build_from_source();
@@ -49,9 +55,7 @@ fn main() {
 }
 
 fn build_wasm() {
-    let source_path = env::var(SOURCE_DIR_KEY)
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| default_source_path());
+    let source_path = source_path();
 
     println!("cargo:warning=Building FastNoise2 for WASM with SIMD128 support");
 
@@ -59,10 +63,8 @@ fn build_wasm() {
     if let Ok(emsdk) = env::var("EMSDK") {
         println!("cargo:warning=EMSDK path: {}", emsdk);
     }
-    println!(
-        "cargo:rerun-if-changed={}",
-        source_path.join("include").join("FastNoise").display()
-    );
+    // Watch the whole source tree, not only headers, so C++ and CMake changes rebuild the library
+    println!("cargo:rerun-if-changed={}", source_path.display());
 
     // Get Emscripten SDK path from environment
     let emsdk_path = env::var("EMSDK").expect(
@@ -105,18 +107,14 @@ fn build_wasm() {
 }
 
 fn build_from_source() {
-    let source_path = env::var(SOURCE_DIR_KEY)
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| default_source_path());
+    let source_path = source_path();
 
     println!(
         "cargo:warning=building from source files located in '{}'",
         source_path.display()
     );
-    println!(
-        "cargo:rerun-if-changed={}",
-        source_path.join("include").join("FastNoise").display()
-    );
+    // Watch the whole source tree, not only headers, so C++ and CMake changes rebuild the library
+    println!("cargo:rerun-if-changed={}", source_path.display());
 
     // Pre-create pdb-files directory structure to prevent CMake install failure on Windows
     // FastNoise2's CMakeLists.txt tries to install PDB files that may not exist in Release builds
@@ -254,6 +252,12 @@ fn generate_bindings(source_path: PathBuf) {
             cached_bindings.display()
         );
     }
+}
+
+fn source_path() -> PathBuf {
+    env::var(SOURCE_DIR_KEY)
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| default_source_path())
 }
 
 fn default_source_path() -> PathBuf {
