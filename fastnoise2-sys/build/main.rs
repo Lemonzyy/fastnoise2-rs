@@ -1,4 +1,9 @@
-use std::{env, fs, path::PathBuf};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
+
+use cmake::Config;
 
 const SOURCE_DIR_KEY: &str = "FASTNOISE2_SOURCE_DIR";
 const LIB_DIR_KEY: &str = "FASTNOISE2_LIB_DIR";
@@ -80,7 +85,7 @@ fn build_wasm() {
 
     // Build FastNoise2 for WASM as a pure static library using Emscripten toolchain
     // FastSIMD has native WASM SIMD128 support - we just need to enable it
-    let mut config = cmake::Config::new(&source_path);
+    let mut config = new_cmake_config(&source_path);
     config
         .profile("Release")
         .define("CMAKE_TOOLCHAIN_FILE", &toolchain_file)
@@ -123,7 +128,7 @@ fn build_from_source() {
     let pdb_dir = out_dir.join("build").join("pdb-files").join("Release");
     fs::create_dir_all(&pdb_dir).ok();
 
-    let mut config = cmake::Config::new(&source_path);
+    let mut config = new_cmake_config(&source_path);
     config
         .profile("Release")
         .define("FASTNOISE2_TOOLS", "OFF")
@@ -254,6 +259,18 @@ fn generate_bindings(source_path: PathBuf) {
     }
 }
 
+/// Creates the CMake config, using the bundled FastSIMD with the bundled FastNoise2 so the
+/// build doesn't download it
+fn new_cmake_config(source_path: &Path) -> Config {
+    let mut config = Config::new(source_path);
+    if env::var(SOURCE_DIR_KEY).is_err() {
+        let fastsimd_path = default_fastsimd_path();
+        println!("cargo:rerun-if-changed={}", fastsimd_path.display());
+        config.define("CPM_FastSIMD_SOURCE", &fastsimd_path);
+    }
+    config
+}
+
 fn source_path() -> PathBuf {
     env::var(SOURCE_DIR_KEY)
         .map(PathBuf::from)
@@ -264,6 +281,13 @@ fn default_source_path() -> PathBuf {
     let mut path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
     path.push("build");
     path.push("FastNoise2");
+    path
+}
+
+fn default_fastsimd_path() -> PathBuf {
+    let mut path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    path.push("build");
+    path.push("FastSIMD");
     path
 }
 
