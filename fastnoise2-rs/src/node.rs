@@ -39,6 +39,7 @@ impl NodeHandle {
         Some(Self { ptr, metadata_id })
     }
 
+    #[inline]
     fn metadata(&self) -> &'static Metadata {
         &NODE_METADATA[self.metadata_id as usize]
     }
@@ -337,14 +338,17 @@ impl Node {
         OutputMinMax::new(min_max)
     }
 
+    #[inline]
     pub fn gen_single_2d(&self, x: f32, y: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle2D(self.as_ptr(), x, y, seed) }
     }
 
+    #[inline]
     pub fn gen_single_3d(&self, x: f32, y: f32, z: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle3D(self.as_ptr(), x, y, z, seed) }
     }
 
+    #[inline]
     pub fn gen_single_4d(&self, x: f32, y: f32, z: f32, w: f32, seed: i32) -> f32 {
         unsafe { fnGenSingle4D(self.as_ptr(), x, y, z, w, seed) }
     }
@@ -589,6 +593,7 @@ impl NodeBuilder {
     }
 }
 
+#[cold]
 fn input_not_accepted(metadata: &Metadata, member: &Member, input: &Node) -> FastNoiseError {
     FastNoiseError::InputNotAccepted {
         node: metadata.name.clone(),
@@ -597,6 +602,7 @@ fn input_not_accepted(metadata: &Metadata, member: &Member, input: &Node) -> Fas
     }
 }
 
+#[cold]
 fn invalid_member_type(
     metadata: &Metadata,
     member: &Member,

@@ -263,6 +263,7 @@ impl SafeNode {
 }
 
 /// Returns the number of values in a grid, as computed by FastNoise2 (an `i32` product).
+#[inline]
 pub(crate) fn grid_len(counts: &[i32]) -> usize {
     assert!(
         counts.iter().all(|&count| count > 0),
@@ -274,6 +275,7 @@ pub(crate) fn grid_len(counts: &[i32]) -> usize {
         .expect("grid size must fit in an i32") as usize
 }
 
+#[inline]
 pub(crate) fn check_position_arrays(noise_out: &[f32], pos_arrays: &[&[f32]]) {
     let len = noise_out.len();
     assert!(len > 0, "position arrays must not be empty");
