@@ -828,7 +828,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Parameter validated by build() success; terrace effect requires specific noise range"]
     fn test_param_terrace_step_count() {
         // Use very different step counts
         let node1 = perlin().terrace(2.0, 0.0).build();
@@ -839,7 +838,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Parameter validated by build() success; smoothness effect subtle with few steps"]
     fn test_param_terrace_smoothness() {
         // Use fewer steps and extreme smoothness values for more visible difference
         let node1 = perlin().terrace(4.0, 0.0).build();
@@ -901,7 +899,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Parameter validated by build() success; RGBA8 packing produces non-standard float comparison"]
     fn test_param_convert_rgba8() {
         // Use very different ranges - the packing should produce different bit patterns
         let node1 = perlin().convert_rgba8(-1.0, 1.0).build();

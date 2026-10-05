@@ -359,7 +359,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Parameter validated by build() success; output difference requires larger grid"]
     fn test_param_cellular_distance_function() {
         // Use MaxAxis vs Euclidean for more visible difference
         let node1 = cellular_value(1.0, DistanceFunction::Euclidean, 0).build();
@@ -379,7 +378,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Parameter validated by build() success; Minkowski P difference subtle at test grid scale"]
     fn test_param_cellular_minkowski_p() {
         // Use more extreme P values for visible difference (P=1 is Manhattan, P=2 is Euclidean)
         let node1 = cellular_value_full(1.0, DistanceFunction::Minkowski, 0, 0.5, 0.0).build();
@@ -390,7 +388,6 @@ mod tests {
     }
 
     #[test]
-    #[ignore = "Parameter validated by build() success; size jitter effect subtle at test grid scale"]
     fn test_param_cellular_size_jitter() {
         // Size jitter affects cell sizes - use extreme values
         let node1 = cellular_value_full(1.0, DistanceFunction::Euclidean, 0, 2.0, 0.0).build();

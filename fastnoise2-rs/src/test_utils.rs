@@ -3,7 +3,7 @@ use crate::safe::SafeNode;
 /// Helper to test a generator produces valid noise output
 pub fn test_generator_produces_output(node: SafeNode) {
     let mut output = [0.0f32; 16];
-    let min_max = node.gen_uniform_grid_2d(&mut output, 0.0, 0.0, 4, 4, 0.1, 0.1, 1337);
+    let min_max = node.gen_uniform_grid_2d(&mut output, 0.0, 0.0, 4, 4, 10.0, 10.0, 1337);
     // Check that we got valid output
     assert!(min_max.min.is_finite());
     assert!(min_max.max.is_finite());
@@ -12,14 +12,14 @@ pub fn test_generator_produces_output(node: SafeNode) {
 /// Helper to generate output at a fixed position for comparison
 pub fn generate_output(node: &SafeNode) -> [f32; 64] {
     let mut output = [0.0f32; 64];
-    node.gen_uniform_grid_2d(&mut output, 0.0, 0.0, 8, 8, 0.05, 0.05, 1337);
+    node.gen_uniform_grid_2d(&mut output, 0.0, 0.0, 8, 8, 10.0, 10.0, 1337);
     output
 }
 
 /// Helper to generate 3D output for parameters that only affect 3D
 pub fn generate_output_3d(node: &SafeNode) -> [f32; 64] {
     let mut output = [0.0f32; 64];
-    node.gen_uniform_grid_3d(&mut output, 0.0, 0.0, 0.0, 4, 4, 4, 0.1, 0.1, 0.1, 1337);
+    node.gen_uniform_grid_3d(&mut output, 0.0, 0.0, 0.0, 4, 4, 4, 10.0, 10.0, 10.0, 1337);
     output
 }
 
