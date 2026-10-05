@@ -13,6 +13,14 @@ where
     pub value_index: i32,
     pub minkowski_p: M,
     pub size_jitter: S,
+    /// Feature Scale (effectively 1/frequency). Default: 100.0
+    pub feature_scale: f32,
+    /// Offset applied to the seed. Default: 0
+    pub seed_offset: i32,
+    /// Minimum output value. Default: -1.0
+    pub output_min: f32,
+    /// Maximum output value. Default: 1.0
+    pub output_max: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -29,6 +37,14 @@ where
     pub return_type: CellularDistanceReturnType,
     pub minkowski_p: M,
     pub size_jitter: S,
+    /// Feature Scale (effectively 1/frequency). Default: 100.0
+    pub feature_scale: f32,
+    /// Offset applied to the seed. Default: 0
+    pub seed_offset: i32,
+    /// Minimum output value. Default: -1.0
+    pub output_min: f32,
+    /// Maximum output value. Default: 1.0
+    pub output_max: f32,
 }
 
 #[derive(Clone, Debug)]
@@ -44,6 +60,10 @@ where
     pub distance_function: DistanceFunction,
     pub minkowski_p: M,
     pub size_jitter: S,
+    /// Feature Scale (effectively 1/frequency). Default: 100.0
+    pub feature_scale: f32,
+    /// Offset applied to the seed. Default: 0
+    pub seed_offset: i32,
 }
 
 impl<J, M, S> Generator for CellularValue<J, M, S>
@@ -61,6 +81,10 @@ where
         node.set("ValueIndex", self.value_index).unwrap();
         node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
         node.set("SizeJitter", self.size_jitter.clone()).unwrap();
+        node.set("FeatureScale", self.feature_scale).unwrap();
+        node.set("SeedOffset", self.seed_offset).unwrap();
+        node.set("OutputMin", self.output_min).unwrap();
+        node.set("OutputMax", self.output_max).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -83,6 +107,10 @@ where
             .unwrap();
         node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
         node.set("SizeJitter", self.size_jitter.clone()).unwrap();
+        node.set("FeatureScale", self.feature_scale).unwrap();
+        node.set("SeedOffset", self.seed_offset).unwrap();
+        node.set("OutputMin", self.output_min).unwrap();
+        node.set("OutputMax", self.output_max).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -103,6 +131,8 @@ where
             .unwrap();
         node.set("MinkowskiP", self.minkowski_p.clone()).unwrap();
         node.set("SizeJitter", self.size_jitter.clone()).unwrap();
+        node.set("FeatureScale", self.feature_scale).unwrap();
+        node.set("SeedOffset", self.seed_offset).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -122,6 +152,10 @@ where
         value_index,
         minkowski_p: 1.5,
         size_jitter: 0.0,
+        feature_scale: 100.0,
+        seed_offset: 0,
+        output_min: -1.0,
+        output_max: 1.0,
     }
     .into()
 }
@@ -145,6 +179,10 @@ where
         value_index,
         minkowski_p,
         size_jitter,
+        feature_scale: 100.0,
+        seed_offset: 0,
+        output_min: -1.0,
+        output_max: 1.0,
     }
     .into()
 }
@@ -168,6 +206,10 @@ where
         return_type,
         minkowski_p: 1.5,
         size_jitter: 0.0,
+        feature_scale: 100.0,
+        seed_offset: 0,
+        output_min: -1.0,
+        output_max: 1.0,
     }
     .into()
 }
@@ -195,6 +237,10 @@ where
         return_type,
         minkowski_p,
         size_jitter,
+        feature_scale: 100.0,
+        seed_offset: 0,
+        output_min: -1.0,
+        output_max: 1.0,
     }
     .into()
 }
@@ -215,6 +261,8 @@ where
         distance_function,
         minkowski_p: 1.5,
         size_jitter: 0.0,
+        feature_scale: 100.0,
+        seed_offset: 0,
     }
     .into()
 }
@@ -239,8 +287,82 @@ where
         distance_function,
         minkowski_p,
         size_jitter,
+        feature_scale: 100.0,
+        seed_offset: 0,
     }
     .into()
+}
+
+impl<J, M, S> GeneratorWrapper<CellularValue<J, M, S>>
+where
+    J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
+{
+    /// Sets the feature scale (effectively 1/frequency).
+    pub fn with_feature_scale(mut self, scale: f32) -> Self {
+        self.0.feature_scale = scale;
+        self
+    }
+
+    /// Sets the seed offset for variation.
+    pub fn with_seed_offset(mut self, offset: i32) -> Self {
+        self.0.seed_offset = offset;
+        self
+    }
+
+    /// Sets the output range.
+    pub fn with_output_range(mut self, min: f32, max: f32) -> Self {
+        self.0.output_min = min;
+        self.0.output_max = max;
+        self
+    }
+}
+
+impl<J, M, S> GeneratorWrapper<CellularDistance<J, M, S>>
+where
+    J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
+{
+    /// Sets the feature scale (effectively 1/frequency).
+    pub fn with_feature_scale(mut self, scale: f32) -> Self {
+        self.0.feature_scale = scale;
+        self
+    }
+
+    /// Sets the seed offset for variation.
+    pub fn with_seed_offset(mut self, offset: i32) -> Self {
+        self.0.seed_offset = offset;
+        self
+    }
+
+    /// Sets the output range.
+    pub fn with_output_range(mut self, min: f32, max: f32) -> Self {
+        self.0.output_min = min;
+        self.0.output_max = max;
+        self
+    }
+}
+
+impl<L, J, M, S> GeneratorWrapper<CellularLookup<L, J, M, S>>
+where
+    L: Generator,
+    J: Hybrid,
+    M: Hybrid,
+    S: Hybrid,
+{
+    /// Sets the feature scale (effectively 1/frequency).
+    pub fn with_feature_scale(mut self, scale: f32) -> Self {
+        self.0.feature_scale = scale;
+        self
+    }
+
+    /// Sets the seed offset for variation.
+    pub fn with_seed_offset(mut self, offset: i32) -> Self {
+        self.0.seed_offset = offset;
+        self
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -271,6 +393,59 @@ mod tests {
         generator::{perlin::perlin, simplex::simplex},
         test_utils::*,
     };
+
+    #[test]
+    fn test_cellular_value_default_matches_cpp() {
+        assert_matches_cpp_default(
+            cellular_value(1.0, DistanceFunction::EuclideanSquared, 0),
+            "CellularValue",
+        );
+    }
+
+    #[test]
+    fn test_cellular_distance_default_matches_cpp() {
+        assert_matches_cpp_default(
+            cellular_distance(
+                1.0,
+                DistanceFunction::EuclideanSquared,
+                0,
+                1,
+                CellularDistanceReturnType::Index0,
+            ),
+            "CellularDistance",
+        );
+    }
+
+    #[test]
+    fn test_param_cellular_feature_scale_seed_offset_output_range() {
+        let base = cellular_value(1.0, DistanceFunction::EuclideanSquared, 0);
+        let output = generate_output(&base.clone().build());
+        for (name, node) in [
+            (
+                "feature_scale",
+                base.clone().with_feature_scale(10.0).build(),
+            ),
+            ("seed_offset", base.clone().with_seed_offset(1).build()),
+            (
+                "output_range",
+                base.clone().with_output_range(0.0, 1.0).build(),
+            ),
+        ] {
+            assert_outputs_differ(&output, &generate_output(&node), name);
+        }
+
+        let lookup = cellular_lookup(perlin(), 1.0, DistanceFunction::EuclideanSquared);
+        let output = generate_output(&lookup.clone().build());
+        for (name, node) in [
+            (
+                "feature_scale",
+                lookup.clone().with_feature_scale(10.0).build(),
+            ),
+            ("seed_offset", lookup.clone().with_seed_offset(1).build()),
+        ] {
+            assert_outputs_differ(&output, &generate_output(&node), name);
+        }
+    }
 
     #[test]
     fn test_cellular_value() {
