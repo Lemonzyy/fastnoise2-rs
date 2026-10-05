@@ -15,38 +15,66 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 
 ### Added
 
-- `CellularValue`, `CellularDistance`: `feature_scale`, `seed_offset`, `output_min`, `output_max` fields
-  - Builder methods: `.with_feature_scale()`, `.with_seed_offset()`, `.with_output_range()`
-- `CellularLookup`: `feature_scale`, `seed_offset` fields
-  - Builder methods: `.with_feature_scale()`, `.with_seed_offset()`
-- `DomainWarpGradient`, `DomainWarpSimplex`, `DomainWarpSuperSimplex`: `seed_offset`, `amplitude_scaling` fields
-  - Builder methods: `.with_seed_offset()`, `.with_amplitude_scaling()`
+- Typed node API generated from FastNoise2 metadata, in `fastnoise2::nodes` and `fastnoise2::prelude`:
+  - A type per FastNoise2 node, with documented `with_*` builder methods and FastNoise2 default values
+  - Nodes without inputs are created by functions (`perlin()`), nodes with inputs are chained from their first input (`perlin().fractal_f_bm()`, `GeneratorExt`)
+  - Inputs only accepting domain warp nodes are checked at compile time (`DomainWarpSource`)
+  - Operators `+`, `-`, `*`, `/`, `%` and negation, with constants on either side (`0.5 - &node`)
+  - Every FastNoise2 member is available, including the ones missing before (e.g. cellular feature scale, domain warp seed offset and amplitude scaling), and hybrid members accept nodes (e.g. `Remap` bounds, `Gradient` offsets)
+- `Node`: a built node, `Send + Sync`, cloning shares the same FastNoise2 node
+- `Generator` trait, implemented by `Node`, typed nodes and references to them
+- `Hybrid` and `MemberValue` value types
+- `NodeBuilder`: nodes by FastNoise2 name, rejecting a missing input (`FastNoiseError::MissingInput`) or an input not accepting a node (`FastNoiseError::InputNotAccepted`)
+- `fastnoise2-codegen` crate (not published), generating `fastnoise2-rs/src/nodes`, with `--check` to verify it is up to date
+- `nodes` and `node_builder` examples
 - `rust-version = "1.80"`
-- Documentation of `.cache()` explains how to share a source node so that the FastNoise2 cache is used
 - fastnoise2-sys: FastSIMD is bundled as a Git submodule, building no longer needs network access
 - fastnoise2-sys: a precompiled library in `FASTNOISE2_LIB_DIR` is rejected if it misses functions of the C header
 
 ### Changed
 
-- **Breaking**: `Remap` bounds and `Gradient` offsets are hybrid (f32 or Generator), adding type parameters to `Remap<S, FMin, FMax, TMin, TMax>` and `Gradient<X, Y, Z, W>`
+- **Breaking**: `Node` is now the safe, built node. Nodes by name use `NodeBuilder` instead of `Node::from_name` and `Node::set`
+- **Breaking**: names are generated from FastNoise2 names (e.g. `fbm()` is `fractal_f_bm()`, `supersimplex()` is `super_simplex()`), and constructors with positional arguments are replaced by builder methods
+- **Breaking**: default values come from FastNoise2 metadata, `DistanceToPoint` distance function defaults to `Euclidean` like in the Node Editor
+- **Breaking**: `get_simd_level` renamed to `get_active_feature_set`
 - **Breaking**: `FastNoiseError` member errors name the node and member, `Set*Failed` variants are merged into `SetMemberFailed`
 - Errors use FastNoise2 display names in metadata order (e.g. `'Feature Scale'` instead of `'featurescale'`), and invalid type errors include the member description from FastNoise2
-- **Breaking**: `Node::get_simd_level` and `SafeNode::get_simd_level` renamed to `get_active_feature_set`
-- `SafeNode` generation functions panic on non-positive counts, grid sizes overflowing an `i32` and empty position arrays
-- `DistanceToPoint` builder methods are available whatever the coordinate and `minkowski_p` types
+- Generation functions panic on non-positive counts, grid sizes overflowing an `i32` and empty position arrays
+- `safe_simple_terrain` example renamed `simple_terrain`
 - fastnoise2-sys: cached bindings in `FASTNOISE2_BINDINGS_DIR` are stored per crate version and only reused with an identical C header
 - fastnoise2-sys: WASM builds only need Emscripten in `PATH`, `EMSDK` is no longer required
 - fastnoise2-sys: `FASTNOISE2_SOURCE_DIR` is used to generate bindings when `FASTNOISE2_LIB_DIR` is set
+- fastnoise2-sys: bindgen 0.73
 - Example images are no longer included in the package
+
+### Removed
+
+- **Breaking**: `SafeNode`, `GeneratorWrapper`, the `generator` module and its types, replaced by `Node` and the generated `nodes` types
+- `safe` and `manual` examples, replaced by `nodes` and `node_builder`
 
 ### Fixed
 
 - Node lookup and hybrid node lookup members are set with the node handle, matching the fixed C API
-- `SafeNode::gen_position_array_4d` did not check `w_pos_array` length (out-of-bounds read)
-- `SafeNode` generation functions crashed or hung on zero counts or empty arrays
+- `gen_position_array_4d` did not check the `w_pos_array` length (out-of-bounds read)
+- Generation functions crashed or hung on zero counts or empty arrays
 - fastnoise2-sys: build script is rerun when FastNoise2 sources or the precompiled library change
 - fastnoise2-sys: C++ standard library is linked on Emscripten, Android, iOS, tvOS, watchOS, visionOS, OpenBSD, NetBSD and windows-gnullvm
 - Examples use feature scales and step sizes suited to the feature scale API
+
+### Migration
+
+```rust
+// Old
+let node: GeneratorWrapper<SafeNode> = perlin().fbm(0.5, 0.0, 3, 2.0).domain_scale(0.66).build();
+let node = SafeNode::from_encoded_node_tree(encoded)?;
+let mut node = Node::from_name("Perlin")?;
+node.set("FeatureScale", 50.0)?;
+
+// New
+let node: Node = perlin().fractal_f_bm().with_octaves(3).domain_scale().with_scaling(0.66).build();
+let node = Node::from_encoded_node_tree(encoded)?;
+let node = NodeBuilder::new("Perlin")?.set("Feature Scale", 50.0)?.build()?;
+```
 
 ## [0.4.0] - 2026-01-21
 
