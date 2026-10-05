@@ -30,7 +30,7 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out.len() < x_count * y_count`.
+    /// Panics if a count is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_count * y_count`.
     pub fn gen_uniform_grid_2d(
         &self,
         noise_out: &mut [f32],
@@ -42,7 +42,7 @@ impl SafeNode {
         y_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() >= (x_count * y_count) as usize);
+        assert!(noise_out.len() >= grid_len(&[x_count, y_count]));
 
         unsafe {
             self.0.gen_uniform_grid_2d_unchecked(
@@ -59,7 +59,7 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out.len() < x_count * y_count * z_count`.
+    /// Panics if a count is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_count * y_count * z_count`.
     pub fn gen_uniform_grid_3d(
         &self,
         noise_out: &mut [f32],
@@ -74,7 +74,7 @@ impl SafeNode {
         z_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() >= (x_count * y_count * z_count) as usize);
+        assert!(noise_out.len() >= grid_len(&[x_count, y_count, z_count]));
 
         unsafe {
             self.0.gen_uniform_grid_3d_unchecked(
@@ -94,7 +94,7 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out.len() < x_count * y_count * z_count * w_count`.
+    /// Panics if a count is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_count * y_count * z_count * w_count`.
     pub fn gen_uniform_grid_4d(
         &self,
         noise_out: &mut [f32],
@@ -112,7 +112,7 @@ impl SafeNode {
         w_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() >= (x_count * y_count * z_count * w_count) as usize);
+        assert!(noise_out.len() >= grid_len(&[x_count, y_count, z_count, w_count]));
 
         unsafe {
             self.0.gen_uniform_grid_4d_unchecked(
@@ -135,7 +135,7 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out`, `x_pos_array`, and `y_pos_array` do not have the same length.
+    /// Panics if `noise_out`, `x_pos_array`, and `y_pos_array` are empty or do not have the same length.
     pub fn gen_position_array_2d(
         &self,
         noise_out: &mut [f32],
@@ -145,7 +145,7 @@ impl SafeNode {
         y_offset: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() == x_pos_array.len() && x_pos_array.len() == y_pos_array.len());
+        check_position_arrays(noise_out, &[x_pos_array, y_pos_array]);
 
         unsafe {
             self.0.gen_position_array_2d_unchecked(
@@ -160,7 +160,7 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out`, `x_pos_array`, `y_pos_array`, and `z_pos_array` do not have the same length.
+    /// Panics if `noise_out`, `x_pos_array`, `y_pos_array`, and `z_pos_array` are empty or do not have the same length.
     pub fn gen_position_array_3d(
         &self,
         noise_out: &mut [f32],
@@ -172,11 +172,7 @@ impl SafeNode {
         z_offset: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(
-            noise_out.len() == x_pos_array.len()
-                && x_pos_array.len() == y_pos_array.len()
-                && y_pos_array.len() == z_pos_array.len()
-        );
+        check_position_arrays(noise_out, &[x_pos_array, y_pos_array, z_pos_array]);
 
         unsafe {
             self.0.gen_position_array_3d_unchecked(
@@ -193,7 +189,7 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out`, `x_pos_array`, `y_pos_array`, `z_pos_array` and `w_pos_array` do not have the same length.
+    /// Panics if `noise_out`, `x_pos_array`, `y_pos_array`, `z_pos_array` and `w_pos_array` are empty or do not have the same length.
     pub fn gen_position_array_4d(
         &self,
         noise_out: &mut [f32],
@@ -207,10 +203,9 @@ impl SafeNode {
         w_offset: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(
-            noise_out.len() == x_pos_array.len()
-                && x_pos_array.len() == y_pos_array.len()
-                && y_pos_array.len() == z_pos_array.len()
+        check_position_arrays(
+            noise_out,
+            &[x_pos_array, y_pos_array, z_pos_array, w_pos_array],
         );
 
         unsafe {
@@ -230,7 +225,7 @@ impl SafeNode {
     }
 
     /// # Panics
-    /// Panics if `noise_out.len() < x_size * y_size`.
+    /// Panics if a size is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_size * y_size`.
     pub fn gen_tileable_2d(
         &self,
         noise_out: &mut [f32],
@@ -240,7 +235,7 @@ impl SafeNode {
         y_step_size: f32,
         seed: i32,
     ) -> OutputMinMax {
-        assert!(noise_out.len() >= (x_size * y_size) as usize);
+        assert!(noise_out.len() >= grid_len(&[x_size, y_size]));
 
         unsafe {
             self.0.gen_tileable_2d_unchecked(
@@ -265,6 +260,28 @@ impl SafeNode {
     pub fn gen_single_4d(&self, x: f32, y: f32, z: f32, w: f32, seed: i32) -> f32 {
         unsafe { self.0.gen_single_4d_unchecked(x, y, z, w, seed) }
     }
+}
+
+/// Returns the number of values in a grid, as computed by FastNoise2 (an `i32` product).
+fn grid_len(counts: &[i32]) -> usize {
+    assert!(
+        counts.iter().all(|&count| count > 0),
+        "grid counts must be positive"
+    );
+    counts
+        .iter()
+        .try_fold(1i32, |len, &count| len.checked_mul(count))
+        .expect("grid size must fit in an i32") as usize
+}
+
+fn check_position_arrays(noise_out: &[f32], pos_arrays: &[&[f32]]) {
+    let len = noise_out.len();
+    assert!(len > 0, "position arrays must not be empty");
+    assert!(len <= i32::MAX as usize, "position arrays are too long");
+    assert!(
+        pos_arrays.iter().all(|pos_array| pos_array.len() == len),
+        "noise_out and position arrays must have the same length"
+    );
 }
 
 #[cfg(test)]
@@ -417,5 +434,56 @@ mod tests {
         //              7=AVX, 8=AVX2, 9=AVX512
         // On systems with AVX-512 this will be higher
         assert!(feature_set < u32::MAX); // Just verify it's a valid number
+    }
+
+    #[test]
+    #[should_panic(expected = "grid counts must be positive")]
+    fn test_gen_uniform_grid_2d_zero_count() {
+        perlin()
+            .build()
+            .gen_uniform_grid_2d(&mut [], 0.0, 0.0, 0, 4, 1.0, 1.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "grid counts must be positive")]
+    fn test_gen_tileable_2d_zero_size() {
+        perlin()
+            .build()
+            .gen_tileable_2d(&mut [], 0, 0, 1.0, 1.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "grid size must fit in an i32")]
+    fn test_gen_uniform_grid_2d_overflow() {
+        let mut output = vec![0.0; 65536];
+        perlin()
+            .build()
+            .gen_uniform_grid_2d(&mut output, 0.0, 0.0, 65536, 65537, 1.0, 1.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "position arrays must not be empty")]
+    fn test_gen_position_array_2d_empty() {
+        perlin()
+            .build()
+            .gen_position_array_2d(&mut [], &[], &[], 0.0, 0.0, 1337);
+    }
+
+    #[test]
+    #[should_panic(expected = "noise_out and position arrays must have the same length")]
+    fn test_gen_position_array_4d_short_w() {
+        let positions = [0.0; 4];
+        perlin().build().gen_position_array_4d(
+            &mut [0.0; 4],
+            &positions,
+            &positions,
+            &positions,
+            &positions[..1],
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1337,
+        );
     }
 }
