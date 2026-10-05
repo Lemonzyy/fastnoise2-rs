@@ -286,7 +286,7 @@ impl MemberValue for &Node {
 
 #[cfg(test)]
 mod tests {
-    use crate::Node;
+    use crate::{FastNoiseError, Node};
 
     #[test]
     fn test_member_name_not_found_lists_display_names_in_order() {
@@ -344,11 +344,14 @@ mod tests {
     }
 
     #[test]
-    fn test_metadata_name_not_found_keeps_input() {
-        let error = Node::from_name("Perln").unwrap_err();
-        assert!(error
-            .to_string()
-            .starts_with("unknown node 'Perln' (expected one of 'Constant', "));
+    fn test_metadata_name_not_found_keeps_input_and_display_names() {
+        let Err(FastNoiseError::MetadataNameNotFound { expected, found }) =
+            Node::from_name("Perln")
+        else {
+            panic!("expected MetadataNameNotFound");
+        };
+        assert_eq!(found, "Perln");
+        assert!(expected.iter().any(|name| name == "Perlin"));
     }
 
     #[test]
