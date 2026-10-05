@@ -373,19 +373,26 @@ impl GeneratorWrapper<Gradient> {
     }
 }
 
-// Builder methods for DistanceToPoint with f32 coordinates
-impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
+// Builder methods for DistanceToPoint
+impl<X, Y, Z, W, M> GeneratorWrapper<DistanceToPoint<X, Y, Z, W, M>>
+where
+    X: Hybrid,
+    Y: Hybrid,
+    Z: Hybrid,
+    W: Hybrid,
+    M: Hybrid,
+{
     /// Sets the distance function for distance calculation.
     pub fn with_distance_function(mut self, distance_function: DistanceFunction) -> Self {
         self.0.distance_function = distance_function;
         self
     }
 
-    /// Sets the minkowski P value for Minkowski distance function.
-    pub fn with_minkowski_p<M: Hybrid>(
+    /// Sets the minkowski P value for Minkowski distance function (can be f32 or Generator).
+    pub fn with_minkowski_p<N: Hybrid>(
         self,
-        minkowski_p: M,
-    ) -> GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, M>> {
+        minkowski_p: N,
+    ) -> GeneratorWrapper<DistanceToPoint<X, Y, Z, W, N>> {
         DistanceToPoint {
             distance_function: self.0.distance_function,
             point_x: self.0.point_x,
@@ -398,10 +405,10 @@ impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
     }
 
     /// Sets the X coordinate of the target point (can be f32 or Generator).
-    pub fn with_point_x<X: Hybrid>(
+    pub fn with_point_x<N: Hybrid>(
         self,
-        point_x: X,
-    ) -> GeneratorWrapper<DistanceToPoint<X, f32, f32, f32, f32>> {
+        point_x: N,
+    ) -> GeneratorWrapper<DistanceToPoint<N, Y, Z, W, M>> {
         DistanceToPoint {
             distance_function: self.0.distance_function,
             point_x,
@@ -414,10 +421,10 @@ impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
     }
 
     /// Sets the Y coordinate of the target point (can be f32 or Generator).
-    pub fn with_point_y<Y: Hybrid>(
+    pub fn with_point_y<N: Hybrid>(
         self,
-        point_y: Y,
-    ) -> GeneratorWrapper<DistanceToPoint<f32, Y, f32, f32, f32>> {
+        point_y: N,
+    ) -> GeneratorWrapper<DistanceToPoint<X, N, Z, W, M>> {
         DistanceToPoint {
             distance_function: self.0.distance_function,
             point_x: self.0.point_x,
@@ -430,10 +437,10 @@ impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
     }
 
     /// Sets the Z coordinate of the target point (can be f32 or Generator).
-    pub fn with_point_z<Z: Hybrid>(
+    pub fn with_point_z<N: Hybrid>(
         self,
-        point_z: Z,
-    ) -> GeneratorWrapper<DistanceToPoint<f32, f32, Z, f32, f32>> {
+        point_z: N,
+    ) -> GeneratorWrapper<DistanceToPoint<X, Y, N, W, M>> {
         DistanceToPoint {
             distance_function: self.0.distance_function,
             point_x: self.0.point_x,
@@ -446,10 +453,10 @@ impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
     }
 
     /// Sets the W coordinate of the target point (can be f32 or Generator).
-    pub fn with_point_w<W: Hybrid>(
+    pub fn with_point_w<N: Hybrid>(
         self,
-        point_w: W,
-    ) -> GeneratorWrapper<DistanceToPoint<f32, f32, f32, W, f32>> {
+        point_w: N,
+    ) -> GeneratorWrapper<DistanceToPoint<X, Y, Z, N, M>> {
         DistanceToPoint {
             distance_function: self.0.distance_function,
             point_x: self.0.point_x,
@@ -462,13 +469,20 @@ impl GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, f32>> {
     }
 
     /// Sets all point coordinates at once.
-    pub fn with_point(mut self, point: [f32; 4]) -> Self {
-        let [px, py, pz, pw] = point;
-        self.0.point_x = px;
-        self.0.point_y = py;
-        self.0.point_z = pz;
-        self.0.point_w = pw;
-        self
+    pub fn with_point(
+        self,
+        point: [f32; 4],
+    ) -> GeneratorWrapper<DistanceToPoint<f32, f32, f32, f32, M>> {
+        let [point_x, point_y, point_z, point_w] = point;
+        DistanceToPoint {
+            distance_function: self.0.distance_function,
+            point_x,
+            point_y,
+            point_z,
+            point_w,
+            minkowski_p: self.0.minkowski_p,
+        }
+        .into()
     }
 }
 
@@ -729,6 +743,18 @@ mod tests {
             .with_distance_function(DistanceFunction::Minkowski)
             .with_point([0.0, 0.0, 0.0, 0.0])
             .with_minkowski_p(p_gen)
+            .build();
+        test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_distance_to_point_builders_after_hybrid() {
+        let node = distance_to_point()
+            .with_point_x(simplex())
+            .with_point_y(simplex().with_seed_offset(1))
+            .with_distance_function(DistanceFunction::Minkowski)
+            .with_minkowski_p(simplex())
+            .with_point([1.0, 2.0, 3.0, 4.0])
             .build();
         test_generator_produces_output(node.0);
     }
