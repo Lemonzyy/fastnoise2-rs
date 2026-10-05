@@ -50,6 +50,7 @@ fn main() {
             "cargo:rerun-if-changed={}",
             source_path.join("include").join("FastNoise").display()
         );
+        check_precompiled_library(Path::new(&lib_dir), &source_path);
         generate_bindings(source_path);
     } else {
         println!("cargo:warning={LIB_DIR_KEY} is not set; falling back to building from source");
@@ -159,6 +160,47 @@ fn build_from_source() {
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
     generate_bindings(out_path);
+}
+
+/// Checks that the precompiled library exports every function of the C header, to reject
+/// a library built from another FastNoise2 version instead of linking mismatched functions.
+fn check_precompiled_library(lib_dir: &Path, source_path: &Path) {
+    let lib_path = [format!("lib{LIB_NAME}.a"), format!("{LIB_NAME}.lib")]
+        .iter()
+        .map(|file_name| lib_dir.join(file_name))
+        .find(|path| path.exists())
+        .unwrap_or_else(|| {
+            panic!(
+                "no {LIB_NAME} static library found in '{}'",
+                lib_dir.display()
+            )
+        });
+    let lib = fs::read(&lib_path).expect("Failed to read precompiled library");
+
+    let header_path = source_path
+        .join("include")
+        .join("FastNoise")
+        .join(HEADER_NAME);
+    let header = fs::read_to_string(&header_path).expect("Failed to read FastNoise C header");
+
+    let missing = header
+        .split("FASTNOISE_API")
+        .skip(1)
+        .filter_map(|declaration| declaration.split('(').next()?.split_whitespace().last())
+        .map(|name| name.trim_start_matches('*'))
+        .filter(|name| {
+            !lib.windows(name.len())
+                .any(|window| window == name.as_bytes())
+        })
+        .collect::<Vec<_>>();
+
+    assert!(
+        missing.is_empty(),
+        "'{}' does not match the FastNoise2 version of '{}', missing functions: {}",
+        lib_path.display(),
+        header_path.display(),
+        missing.join(", ")
+    );
 }
 
 fn generate_bindings(source_path: PathBuf) {

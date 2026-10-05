@@ -62,7 +62,7 @@ cargo build --target wasm32-unknown-emscripten
 |----------|---------|----------|
 | `EMCC_CFLAGS` | Custom flags for emcc | No |
 | `FASTNOISE2_SOURCE_DIR` | Override FastNoise2 source path | No |
-| `FASTNOISE2_LIB_DIR` | Use precompiled library | No |
+| `FASTNOISE2_LIB_DIR` | Use precompiled library, which must export every function of the bundled C header | No |
 | `FASTNOISE2_BINDINGS_DIR` | Cache directory for bindings | No |
 
 ## Troubleshooting
