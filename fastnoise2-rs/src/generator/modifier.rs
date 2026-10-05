@@ -68,15 +68,19 @@ where
 /// Remaps the output value of the source generator from one range to another.
 /// Optionally clamps output to the To Min/Max range.
 #[derive(Clone, Debug)]
-pub struct Remap<S>
+pub struct Remap<S, FMin, FMax, TMin, TMax>
 where
     S: Generator,
+    FMin: Hybrid,
+    FMax: Hybrid,
+    TMin: Hybrid,
+    TMax: Hybrid,
 {
     pub source: S,
-    pub from_min: f32,
-    pub from_max: f32,
-    pub to_min: f32,
-    pub to_max: f32,
+    pub from_min: FMin,
+    pub from_max: FMax,
+    pub to_min: TMin,
+    pub to_max: TMax,
     /// Clamp output between `to_min` and `to_max`.
     pub clamp_output: bool,
 }
@@ -244,18 +248,22 @@ where
     }
 }
 
-impl<S> Generator for Remap<S>
+impl<S, FMin, FMax, TMin, TMax> Generator for Remap<S, FMin, FMax, TMin, TMax>
 where
     S: Generator,
+    FMin: Hybrid,
+    FMax: Hybrid,
+    TMin: Hybrid,
+    TMax: Hybrid,
 {
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Remap").unwrap();
         node.set("Source", &self.source).unwrap();
-        node.set("FromMin", self.from_min).unwrap();
-        node.set("FromMax", self.from_max).unwrap();
-        node.set("ToMin", self.to_min).unwrap();
-        node.set("ToMax", self.to_max).unwrap();
+        node.set("FromMin", self.from_min.clone()).unwrap();
+        node.set("FromMax", self.from_max.clone()).unwrap();
+        node.set("ToMin", self.to_min.clone()).unwrap();
+        node.set("ToMax", self.to_max.clone()).unwrap();
         node.set(
             "ClampOutput",
             if self.clamp_output { "True" } else { "False" },
@@ -463,13 +471,19 @@ where
     }
 
     /// Remaps output from one range to another without clamping.
-    pub fn remap(
+    pub fn remap<FMin, FMax, TMin, TMax>(
         self,
-        from_min: f32,
-        from_max: f32,
-        to_min: f32,
-        to_max: f32,
-    ) -> GeneratorWrapper<Remap<S>> {
+        from_min: FMin,
+        from_max: FMax,
+        to_min: TMin,
+        to_max: TMax,
+    ) -> GeneratorWrapper<Remap<S, FMin, FMax, TMin, TMax>>
+    where
+        FMin: Hybrid,
+        FMax: Hybrid,
+        TMin: Hybrid,
+        TMax: Hybrid,
+    {
         Remap {
             source: self.0,
             from_min,
@@ -482,14 +496,20 @@ where
     }
 
     /// Remaps output from one range to another with optional clamping.
-    pub fn remap_clamped(
+    pub fn remap_clamped<FMin, FMax, TMin, TMax>(
         self,
-        from_min: f32,
-        from_max: f32,
-        to_min: f32,
-        to_max: f32,
+        from_min: FMin,
+        from_max: FMax,
+        to_min: TMin,
+        to_max: TMax,
         clamp_output: bool,
-    ) -> GeneratorWrapper<Remap<S>> {
+    ) -> GeneratorWrapper<Remap<S, FMin, FMax, TMin, TMax>>
+    where
+        FMin: Hybrid,
+        FMax: Hybrid,
+        TMin: Hybrid,
+        TMax: Hybrid,
+    {
         Remap {
             source: self.0,
             from_min,
@@ -686,6 +706,17 @@ mod tests {
     fn test_cache() {
         let node = perlin().cache().build();
         test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_remap_hybrid_bounds() {
+        let constant_bounds = perlin().remap(-1.0, 1.0, 0.0, 1.0).build();
+        let generator_bounds = perlin().remap(-1.0, 1.0, 0.0, simplex()).build();
+        assert_outputs_differ(
+            &generate_output(&constant_bounds),
+            &generate_output(&generator_bounds),
+            "Remap.To Max",
+        );
     }
 
     #[test]
