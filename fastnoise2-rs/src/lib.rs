@@ -4,7 +4,7 @@
 //! [![Crates.io Version](https://img.shields.io/crates/v/fastnoise2)](https://crates.io/crates/fastnoise2)
 //! [![docs.rs](https://docs.rs/fastnoise2/badge.svg)](https://docs.rs/fastnoise2/latest/fastnoise2/)
 //!
-//! fastnoise2 provides an easy-to-use and mostly safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
+//! fastnoise2 provides an easy-to-use and safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
 //!
 //! ![Node Editor Node Tree](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/nodeeditor.png)
 //! ![Node Editor Node Tree Output](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/nodeeditor_output.bmp)
@@ -13,7 +13,39 @@
 //!
 //! ## Examples
 //!
-//! Here is an example of a encoded node tree, exported by FastNoise2's Node Editor.
+//! ### Typed nodes
+//!
+//! Every FastNoise2 node is a type generated from FastNoise2 metadata, configured with builder methods.
+//! Nodes are chained from their first input, and operators work with constants on either side.
+//!
+//! ```rust
+//! use fastnoise2::prelude::*;
+//!
+//! let terrain = perlin()
+//!     .with_feature_scale(150.0)
+//!     .fractal_f_bm()
+//!     .with_octaves(5)
+//!     .domain_warp_gradient()
+//!     .with_warp_amplitude(30.0);
+//! let node = (0.5 + terrain * 0.5).build();
+//!
+//! let (x_count, y_count) = (512, 512);
+//! let mut noise_out = vec![0.0; (x_count * y_count) as usize];
+//! let min_max = node.gen_uniform_grid_2d(&mut noise_out, 0.0, 0.0, x_count, y_count, 1.0, 1.0, 1337);
+//! ```
+//!
+//! A built `Node` can be shared without cloning: every use evaluates the same FastNoise2 node, which is what makes the `GeneratorCache` node effective.
+//!
+//! ```rust
+//! use fastnoise2::prelude::*;
+//!
+//! let shared = perlin().fractal_f_bm().build();
+//! let node = (&shared + &shared.domain_scale().with_scaling(2.0)).build();
+//! ```
+//!
+//! ### Encoded node trees
+//!
+//! Node trees exported by the FastNoise2 Node Editor can be used directly.
 //!
 //! ```rust
 //! use fastnoise2::Node;
@@ -30,17 +62,28 @@
 //!     &mut noise_out,
 //!     -x_count as f32 / 2.0 * step_size, // x_offset
 //!     -y_count as f32 / 2.0 * step_size, // y_offset
-//!     x_count,                            // x_count
-//!     y_count,                            // y_count
-//!     step_size,                          // x_step_size
-//!     step_size,                          // y_step_size
-//!     1337,                               // seed
+//!     x_count,                           // x_count
+//!     y_count,                           // y_count
+//!     step_size,                         // x_step_size
+//!     step_size,                         // y_step_size
+//!     1337,                              // seed
 //! );
-//!
-//! // use `noise_out`!
 //! ```
 //!
-//! You can also build node trees with the typed nodes of [`nodes`], or by name with [`NodeBuilder`].
+//! ### Nodes by name
+//!
+//! `NodeBuilder` creates nodes from their FastNoise2 names, and checks that every input is set before building.
+//!
+//! ```rust
+//! use fastnoise2::NodeBuilder;
+//!
+//! let perlin = NodeBuilder::new("Perlin")?.set("Feature Scale", 50.0)?.build()?;
+//! let fbm = NodeBuilder::new("FractalFBm")?
+//!     .set("Source", &perlin)?
+//!     .set("Octaves", 5)?
+//!     .build()?;
+//! # Ok::<(), fastnoise2::FastNoiseError>(())
+//! ```
 //!
 //! Take a look at [examples](https://github.com/Lemonzyy/fastnoise2-rs/tree/main/fastnoise2-rs/examples) to find out more.
 //!
