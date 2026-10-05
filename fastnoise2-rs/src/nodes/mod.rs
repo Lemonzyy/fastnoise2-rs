@@ -41,3 +41,6 @@ pub use fractal::*;
 pub use modifiers::*;
 
 pub use operators::*;
+
+#[cfg(test)]
+mod tests;
