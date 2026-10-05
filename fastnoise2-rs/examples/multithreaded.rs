@@ -1,14 +1,14 @@
 use std::thread;
 
-use fastnoise2::SafeNode;
+use fastnoise2::node::Node;
 
 fn main() {
-    let node = SafeNode::from_encoded_node_tree(
+    let node = Node::from_encoded_node_tree(
         "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==",
     )
     .unwrap();
 
-    // A SafeNode is an Arc wrapping a Node. Thus, cloning a SafeNode does not reinstantiate it.
+    // Cloning a Node shares the same C++ node, it is not instantiated again.
     let n1 = node.clone();
     let t1 = thread::spawn(move || {
         for i in 0..50 {

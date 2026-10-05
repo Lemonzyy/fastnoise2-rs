@@ -1,7 +1,7 @@
-// This example illustrates the use of "SafeNode::from_encoded_node_tree" to build a safe tree from an encoded node tree exported by the Node Editor.
+// This example illustrates the use of "Node::from_encoded_node_tree" to build a node tree exported by the Node Editor.
 use std::{env, fs, path::PathBuf, time::Instant};
 
-use fastnoise2::SafeNode;
+use fastnoise2::node::Node;
 use image::{GrayImage, Luma};
 
 // "Mountain Terrain" tree integrated into FastNoise2 Node Editor.
@@ -18,18 +18,11 @@ fn main() {
         DEFAULT_ENCODED_NODE_TREE.to_string()
     });
 
-    let node = SafeNode::from_encoded_node_tree(&encoded_node_tree).unwrap();
+    let node = Node::from_encoded_node_tree(&encoded_node_tree).unwrap();
 
     let mut noise = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
-    // SAFETY:
-    // Using `SafeNode::from_encoded_node_tree` is safe unlike manually constructing the node tree with
-    // `Node::from_name` and `Node::set`, as it ensures the nodes and parameters are correctly set by the C++ library's
-    // tools. However, once the node is created, you cannot modify its parameters.
-    // Modifying parameters directly using `Node::set` can introduce the same risks as manually building the node tree.
-    // Issues might arise due to incorrect parameter types, missing members, or other configuration errors.
-    // Ensure that all modifications are valid and consult the FastNoise2 documentation for guidance on parameter types and expected values.
     let step_size = 3.0;
     let min_max = node.gen_uniform_grid_2d(
         &mut noise,

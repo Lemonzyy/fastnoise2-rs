@@ -2,14 +2,16 @@
 
 use std::slice;
 
-use fastnoise2::generator::prelude::*;
-use fastnoise2::SafeNode;
+use fastnoise2::{
+    node::{Generator, Node},
+    nodes::*,
+};
 
 /// Generate 2D noise and write grayscale values (0-255) to output buffer
 #[no_mangle]
 pub extern "C" fn generate_noise(output: *mut u8, width: i32, height: i32) {
     let size = (width * height) as usize;
-    let node: GeneratorWrapper<SafeNode> = simplex().fbm(0.5, 0.0, 4, 2.0).build();
+    let node: Node = simplex().fractal_f_bm().with_octaves(4).build();
 
     let mut float_output = vec![0.0f32; size];
     node.gen_uniform_grid_2d(
