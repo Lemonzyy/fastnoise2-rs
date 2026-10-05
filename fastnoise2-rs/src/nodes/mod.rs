@@ -4,6 +4,7 @@
 pub mod enums;
 
 pub mod ext;
+mod ops;
 
 pub mod basic_generators;
 

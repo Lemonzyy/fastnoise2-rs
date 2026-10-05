@@ -158,6 +158,7 @@ pub trait GeneratorExt: Generator {
         DomainRotatePlane::new(self.build())
     }
 }
+
 impl<G: Generator + ?Sized> GeneratorExt for G {}
 
 /// Chaining methods available on [`DomainWarpSource`] generators.
@@ -172,4 +173,5 @@ pub trait DomainWarpSourceExt: DomainWarpSource {
         DomainWarpFractalIndependent::new(self.build())
     }
 }
+
 impl<G: DomainWarpSource + ?Sized> DomainWarpSourceExt for G {}
