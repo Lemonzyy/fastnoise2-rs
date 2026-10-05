@@ -32,6 +32,8 @@ impl Metadata {
 pub struct Member {
     /// Member name, as displayed by FastNoise2 (e.g. "Feature Scale", "Multiplier X").
     pub name: String,
+    /// Member description from FastNoise2, may be empty.
+    pub description: String,
     pub member_type: MemberType,
     pub index: i32,
     /// Enum values in FastNoise2 order, the position is the enum index.
@@ -111,6 +113,7 @@ fn load_metadata(id: i32) -> Metadata {
                 to_string(unsafe { fnGetMetadataVariableName(id, variable_idx) }),
                 unsafe { fnGetMetadataVariableDimensionIdx(id, variable_idx) },
             ),
+            description: to_string(unsafe { fnGetMetadataVariableDescription(id, variable_idx) }),
             member_type,
             index: variable_idx,
             enum_values,
@@ -123,6 +126,9 @@ fn load_metadata(id: i32) -> Metadata {
                 to_string(unsafe { fnGetMetadataNodeLookupName(id, node_lookup_idx) }),
                 unsafe { fnGetMetadataNodeLookupDimensionIdx(id, node_lookup_idx) },
             ),
+            description: to_string(unsafe {
+                fnGetMetadataNodeLookupDescription(id, node_lookup_idx)
+            }),
             member_type: MemberType::NodeLookup,
             index: node_lookup_idx,
             enum_values: Vec::new(),
@@ -135,6 +141,7 @@ fn load_metadata(id: i32) -> Metadata {
                 to_string(unsafe { fnGetMetadataHybridName(id, hybrid_idx) }),
                 unsafe { fnGetMetadataHybridDimensionIdx(id, hybrid_idx) },
             ),
+            description: to_string(unsafe { fnGetMetadataHybridDescription(id, hybrid_idx) }),
             member_type: MemberType::Hybrid,
             index: hybrid_idx,
             enum_values: Vec::new(),
@@ -180,6 +187,7 @@ pub trait MemberValue {
         FastNoiseError::InvalidMemberType {
             node: node.metadata().name.clone(),
             member: member.name.clone(),
+            description: member.description.clone(),
             expected: member.member_type,
             found: Self::TYPE,
         }
@@ -315,7 +323,23 @@ mod tests {
             .unwrap_err();
         assert_eq!(
             error.to_string(),
-            "invalid type for member 'Seed Offset' of node 'Perlin' (expected i32, found f32)"
+            "invalid type for member 'Seed Offset' of node 'Perlin' (expected i32, found f32)\n\
+             This value is added to the seed before generation\n\
+             Doesn't affect the seed passed to child nodes\n\
+             Useful if you have multiple nodes of the same type and want them to give different outputs"
+        );
+    }
+
+    #[test]
+    fn test_invalid_member_type_without_description() {
+        let error = Node::from_name("DistanceToPoint")
+            .unwrap()
+            .set("DistanceFunction", 1.0)
+            .unwrap_err();
+        assert_eq!(
+            error.to_string(),
+            "invalid type for member 'Distance Function' of node 'DistanceToPoint' \
+             (expected &str, found f32)"
         );
     }
 

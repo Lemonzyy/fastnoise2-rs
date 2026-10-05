@@ -48,13 +48,16 @@ pub enum FastNoiseError {
     ///
     /// This error occurs when there is a mismatch between the expected member type and the provided value type.
     #[error(
-        "invalid type for member '{member}' of node '{node}' (expected {expected}, found {found})"
+        "invalid type for member '{member}' of node '{node}' (expected {expected}, found {found}){}",
+        format_description(description)
     )]
     InvalidMemberType {
         /// The name of the node.
         node: String,
         /// The name of the member with the type mismatch.
         member: String,
+        /// The description of the member from FastNoise2, may be empty.
+        description: String,
         /// The expected member type.
         expected: MemberType,
         /// The actual member type found.
@@ -95,4 +98,12 @@ fn format_slice(slice: &[String]) -> String {
         .map(|s| format!("'{s}'"))
         .collect::<Vec<String>>()
         .join(", ")
+}
+
+fn format_description(description: &str) -> String {
+    if description.is_empty() {
+        String::new()
+    } else {
+        format!("\n{description}")
+    }
 }
