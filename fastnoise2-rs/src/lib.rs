@@ -70,6 +70,7 @@
 mod error;
 pub mod generator;
 mod metadata;
+pub mod node;
 mod safe;
 
 pub use error::FastNoiseError;
@@ -487,7 +488,7 @@ pub struct OutputMinMax {
 }
 
 impl OutputMinMax {
-    fn new([min, max]: [f32; 2]) -> Self {
+    pub(crate) fn new([min, max]: [f32; 2]) -> Self {
         Self { min, max }
     }
 }
