@@ -140,6 +140,12 @@ where
     pub remove_dimension: Dimension,
 }
 
+/// Caches the output of the source generator.
+///
+/// The cache is implemented by FastNoise2: each thread keeps the last value computed for a
+/// source node, keyed by the node pointer, seed and positions. A value is only reused when
+/// the same C++ source node is evaluated again with the same seed and positions, see
+/// [`cache`][GeneratorWrapper::cache] to share a source between several branches.
 #[derive(Clone, Debug)]
 pub struct GeneratorCache<S>
 where
@@ -578,6 +584,24 @@ where
         .into()
     }
 
+    /// Caches the output of this generator, see [`GeneratorCache`].
+    ///
+    /// Typed generators are values: each use is built into new C++ nodes. Cloning a typed
+    /// generator before building it therefore creates separate source nodes, and the cache
+    /// never reuses a value. Build the source once and share the resulting [`SafeNode`]
+    /// instead, so that every branch evaluates the same C++ node:
+    ///
+    /// ```rust
+    /// use fastnoise2::generator::prelude::*;
+    ///
+    /// // Built once: both branches use the same C++ source node, the second one hits the cache
+    /// let source = perlin().fbm(0.5, 0.0, 6, 2.0).build();
+    /// let node = (source.clone().cache() * source.cache()).build();
+    ///
+    /// // Not shared: `heavy` is built twice into two separate source nodes
+    /// let heavy = perlin().fbm(0.5, 0.0, 6, 2.0).cache();
+    /// let slow_node = (heavy.clone() * heavy).build();
+    /// ```
     pub fn cache(self) -> GeneratorWrapper<GeneratorCache<S>> {
         GeneratorCache { source: self.0 }.into()
     }
