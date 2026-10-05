@@ -14,7 +14,7 @@ pub extern "C" fn generate_noise(output: *mut u8, width: i32, height: i32) {
         &mut float_output,
         0.0, 0.0,
         width, height,
-        0.01, 0.01,
+        1.0, 1.0,
         1337,
     );
 

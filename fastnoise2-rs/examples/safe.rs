@@ -24,11 +24,11 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     let _n = Add {
         lhs: Fade {
             a: SineWave {
-                feature_scale: 0.1,
+                feature_scale: 100.0,
                 ..Default::default()
             },
             b: SineWave {
-                feature_scale: -0.2,
+                feature_scale: 50.0,
                 ..Default::default()
             },
             fade: Simplex::default(),
@@ -42,11 +42,11 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     let _n = Add {
         lhs: Fade {
             a: SineWave {
-                feature_scale: 0.1,
+                feature_scale: 100.0,
                 ..Default::default()
             },
             b: SineWave {
-                feature_scale: -0.2,
+                feature_scale: 50.0,
                 ..Default::default()
             },
             fade: Simplex::default(),
@@ -58,16 +58,16 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     };
 
     // You can, and I would recommend this, use functions to instance different types of nodes wrapped in a Generator, necessary for operators such as + - * /
-    let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + constant(0.5); // this uses a Constant node as entry to a hybrid member
-    let _n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5; // and this uses a float directly
+    let _n = sinewave(100.0).fade(sinewave(50.0), simplex()) + constant(0.5); // this uses a Constant node as entry to a hybrid member
+    let _n = sinewave(100.0).fade(sinewave(50.0), simplex()) + 0.5; // and this uses a float directly
 
     // You can also mix the two writings. Note the use of the GeneratorWrapper type to enable use of the operator
     let _n = GeneratorWrapper(Fade {
         a: SineWave {
-            feature_scale: 0.1,
+            feature_scale: 100.0,
             ..Default::default()
         },
-        b: sinewave(-0.2),
+        b: sinewave(50.0),
         fade: Simplex::default(),
         fade_min: -1.0,
         fade_max: 1.0,
@@ -75,13 +75,13 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
     }) + 0.5;
 
     // Qualifying the "fade" method can also lead to better syntax, although this is subjective.
-    let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), simplex()) + 0.5;
+    let _n = GeneratorWrapper::fade(sinewave(100.0), sinewave(50.0), simplex()) + 0.5;
 
     // simplex() takes two unnecessary parentheses, so you can create the Simplex structure directly, since GeneratorWrapper is not needed here.
-    let _n = GeneratorWrapper::fade(sinewave(0.1), sinewave(-0.2), Simplex::default()) + 0.5;
+    let _n = GeneratorWrapper::fade(sinewave(100.0), sinewave(50.0), Simplex::default()) + 0.5;
 
     // In the end, this is the most idiomatic writing, and it's easier to import functions by using "use fastnoise2::generator::prelude::*;"
-    let n = sinewave(0.1).fade(sinewave(-0.2), simplex()) + 0.5;
+    let n = sinewave(100.0).fade(sinewave(50.0), simplex()) + 0.5;
 
     n.build()
 }
@@ -92,7 +92,7 @@ fn main() {
 
     let mut noise = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
-    let step_size = 0.02;
+    let step_size = 0.5;
     let start = Instant::now();
     let min_max = node.gen_uniform_grid_2d(
         &mut noise,

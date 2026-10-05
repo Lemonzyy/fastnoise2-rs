@@ -8,7 +8,10 @@ const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
 fn create_node() -> GeneratorWrapper<SafeNode> {
-    (supersimplex().fbm(0.65, 0.5, 4, 2.5).domain_scale(0.66)
+    (supersimplex()
+        .with_feature_scale(1.0)
+        .fbm(0.65, 0.5, 4, 2.5)
+        .domain_scale(0.66)
         + gradient()
             .with_multipliers([0.0, 3.0, 0.0, 0.0])
             .with_offsets([0.0; 4]))
