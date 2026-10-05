@@ -33,6 +33,10 @@ where
     pub source: S,
     pub warp_amplitude: A,
     pub feature_scale: f32,
+    /// Offset applied to the seed. Default: 0
+    pub seed_offset: i32,
+    /// Per-axis multiplier applied to the warp amplitude (X, Y, Z, W). Default: [1.0; 4]
+    pub amplitude_scaling: [f32; 4],
 }
 
 /// Simplex-based domain warping.
@@ -45,6 +49,10 @@ where
     pub source: S,
     pub warp_amplitude: A,
     pub feature_scale: f32,
+    /// Offset applied to the seed. Default: 0
+    pub seed_offset: i32,
+    /// Per-axis multiplier applied to the warp amplitude (X, Y, Z, W). Default: [1.0; 4]
+    pub amplitude_scaling: [f32; 4],
     pub vectorization_scheme: VectorizationScheme,
 }
 
@@ -58,6 +66,10 @@ where
     pub source: S,
     pub warp_amplitude: A,
     pub feature_scale: f32,
+    /// Offset applied to the seed. Default: 0
+    pub seed_offset: i32,
+    /// Per-axis multiplier applied to the warp amplitude (X, Y, Z, W). Default: [1.0; 4]
+    pub amplitude_scaling: [f32; 4],
     pub vectorization_scheme: VectorizationScheme,
 }
 
@@ -73,6 +85,12 @@ where
         node.set("WarpAmplitude", self.warp_amplitude.clone())
             .unwrap();
         node.set("FeatureScale", self.feature_scale).unwrap();
+        node.set("SeedOffset", self.seed_offset).unwrap();
+        let [x, y, z, w] = self.amplitude_scaling;
+        node.set("AmplitudeScalingX", x).unwrap();
+        node.set("AmplitudeScalingY", y).unwrap();
+        node.set("AmplitudeScalingZ", z).unwrap();
+        node.set("AmplitudeScalingW", w).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -96,6 +114,12 @@ where
         node.set("WarpAmplitude", self.warp_amplitude.clone())
             .unwrap();
         node.set("FeatureScale", self.feature_scale).unwrap();
+        node.set("SeedOffset", self.seed_offset).unwrap();
+        let [x, y, z, w] = self.amplitude_scaling;
+        node.set("AmplitudeScalingX", x).unwrap();
+        node.set("AmplitudeScalingY", y).unwrap();
+        node.set("AmplitudeScalingZ", z).unwrap();
+        node.set("AmplitudeScalingW", w).unwrap();
         node.set(
             "VectorizationScheme",
             &*self.vectorization_scheme.to_string(),
@@ -124,6 +148,12 @@ where
         node.set("WarpAmplitude", self.warp_amplitude.clone())
             .unwrap();
         node.set("FeatureScale", self.feature_scale).unwrap();
+        node.set("SeedOffset", self.seed_offset).unwrap();
+        let [x, y, z, w] = self.amplitude_scaling;
+        node.set("AmplitudeScalingX", x).unwrap();
+        node.set("AmplitudeScalingY", y).unwrap();
+        node.set("AmplitudeScalingZ", z).unwrap();
+        node.set("AmplitudeScalingW", w).unwrap();
         node.set(
             "VectorizationScheme",
             &*self.vectorization_scheme.to_string(),
@@ -156,6 +186,8 @@ where
             source: self.0,
             warp_amplitude,
             feature_scale,
+            seed_offset: 0,
+            amplitude_scaling: [1.0; 4],
         }
         .into()
     }
@@ -172,6 +204,8 @@ where
             source: self.0,
             warp_amplitude,
             feature_scale,
+            seed_offset: 0,
+            amplitude_scaling: [1.0; 4],
             vectorization_scheme: VectorizationScheme::default(),
         }
         .into()
@@ -190,6 +224,8 @@ where
             source: self.0,
             warp_amplitude,
             feature_scale,
+            seed_offset: 0,
+            amplitude_scaling: [1.0; 4],
             vectorization_scheme,
         }
         .into()
@@ -207,6 +243,8 @@ where
             source: self.0,
             warp_amplitude,
             feature_scale,
+            seed_offset: 0,
+            amplitude_scaling: [1.0; 4],
             vectorization_scheme: VectorizationScheme::default(),
         }
         .into()
@@ -225,9 +263,65 @@ where
             source: self.0,
             warp_amplitude,
             feature_scale,
+            seed_offset: 0,
+            amplitude_scaling: [1.0; 4],
             vectorization_scheme,
         }
         .into()
+    }
+}
+
+impl<S, A> GeneratorWrapper<DomainWarpGradient<S, A>>
+where
+    S: Generator,
+    A: Hybrid,
+{
+    /// Sets the seed offset for variation.
+    pub fn with_seed_offset(mut self, offset: i32) -> Self {
+        self.0.seed_offset = offset;
+        self
+    }
+
+    /// Sets the per-axis multiplier applied to the warp amplitude (X, Y, Z, W).
+    pub fn with_amplitude_scaling(mut self, amplitude_scaling: [f32; 4]) -> Self {
+        self.0.amplitude_scaling = amplitude_scaling;
+        self
+    }
+}
+
+impl<S, A> GeneratorWrapper<DomainWarpSimplex<S, A>>
+where
+    S: Generator,
+    A: Hybrid,
+{
+    /// Sets the seed offset for variation.
+    pub fn with_seed_offset(mut self, offset: i32) -> Self {
+        self.0.seed_offset = offset;
+        self
+    }
+
+    /// Sets the per-axis multiplier applied to the warp amplitude (X, Y, Z, W).
+    pub fn with_amplitude_scaling(mut self, amplitude_scaling: [f32; 4]) -> Self {
+        self.0.amplitude_scaling = amplitude_scaling;
+        self
+    }
+}
+
+impl<S, A> GeneratorWrapper<DomainWarpSuperSimplex<S, A>>
+where
+    S: Generator,
+    A: Hybrid,
+{
+    /// Sets the seed offset for variation.
+    pub fn with_seed_offset(mut self, offset: i32) -> Self {
+        self.0.seed_offset = offset;
+        self
+    }
+
+    /// Sets the per-axis multiplier applied to the warp amplitude (X, Y, Z, W).
+    pub fn with_amplitude_scaling(mut self, amplitude_scaling: [f32; 4]) -> Self {
+        self.0.amplitude_scaling = amplitude_scaling;
+        self
     }
 }
 
@@ -238,6 +332,40 @@ mod tests {
         generator::{perlin::perlin, simplex::simplex},
         test_utils::*,
     };
+
+    #[test]
+    fn test_param_domain_warp_seed_offset_amplitude_scaling() {
+        let base = simplex().domain_warp_gradient(50.0, 100.0);
+        let output = generate_output(&base.clone().build());
+        assert_outputs_differ(
+            &output,
+            &generate_output(&base.clone().with_seed_offset(1).build()),
+            "seed_offset",
+        );
+        assert_outputs_differ(
+            &output,
+            &generate_output(&base.with_amplitude_scaling([1.0, 0.0, 1.0, 1.0]).build()),
+            "amplitude_scaling",
+        );
+
+        let simplex_warp = simplex().domain_warp_simplex(50.0, 100.0);
+        assert_outputs_differ(
+            &generate_output(&simplex_warp.clone().build()),
+            &generate_output(&simplex_warp.with_seed_offset(1).build()),
+            "seed_offset",
+        );
+
+        let super_simplex_warp = simplex().domain_warp_super_simplex(50.0, 100.0);
+        assert_outputs_differ(
+            &generate_output(&super_simplex_warp.clone().build()),
+            &generate_output(
+                &super_simplex_warp
+                    .with_amplitude_scaling([0.0, 1.0, 1.0, 1.0])
+                    .build(),
+            ),
+            "amplitude_scaling",
+        );
+    }
 
     #[test]
     fn test_domain_warp_gradient() {
