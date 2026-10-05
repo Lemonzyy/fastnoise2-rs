@@ -143,7 +143,7 @@ impl Node {
     }
 
     pub fn get_simd_level(&self) -> u32 {
-        unsafe { fnGetSIMDLevel(self.handle) }
+        unsafe { fnGetActiveFeatureSet(self.handle) }
     }
 
     /// Sets a value for a member.
