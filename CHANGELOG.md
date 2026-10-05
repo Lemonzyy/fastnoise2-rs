@@ -232,6 +232,29 @@ fractal_fbm(perlin(), 4)
     .ping_pong(2.0)  // apply ping-pong as modifier
 ```
 
+### Noise Generation Functions
+
+Grids now take float offsets and per-axis step sizes instead of integer starts and a frequency.
+Frequency moved to the nodes as `feature_scale` (default 100.0), so sampled coordinates are divided by it.
+
+```rust
+// Old
+node.gen_uniform_grid_2d(&mut out, x_start, y_start, x_size, y_size, frequency, seed);
+node.gen_tileable_2d(&mut out, x_size, y_size, frequency, seed);
+
+// New, same sampled coordinates with the default feature scale of 100.0
+let step = frequency * 100.0;
+node.gen_uniform_grid_2d(&mut out, x_start as f32 * step, y_start as f32 * step, x_size, y_size, step, step, seed);
+node.gen_tileable_2d(&mut out, x_size, y_size, step, step, seed);
+```
+
+The same applies to `gen_uniform_grid_3d` and `gen_uniform_grid_4d`.
+
+### fastnoise2-sys
+
+- `fnGenUniformGrid2D/3D/4D` and `fnGenTileable2D` signatures changed the same way
+- `fnNewFromMetadata` and `fnNewFromEncodedNodeTree` take a max `FastSIMD::FeatureSet`, use `~0u` (`u32::MAX`) for auto-detection, `0` is no longer auto and fails
+
 ---
 
 ## Upstream Reference
