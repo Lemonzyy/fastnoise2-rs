@@ -101,21 +101,6 @@ fn build_wasm() {
     println!("cargo:rustc-link-search=native={}", lib64_path.display());
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
-    // Copy Utility headers that cmake doesn't install
-    let src_utility = source_path
-        .join("include")
-        .join("FastNoise")
-        .join("Utility");
-    let dst_utility = out_path.join("include").join("FastNoise").join("Utility");
-    if src_utility.exists() && !dst_utility.exists() {
-        std::fs::create_dir_all(&dst_utility).expect("Failed to create Utility dir");
-        for entry in std::fs::read_dir(&src_utility).expect("Failed to read Utility dir") {
-            let entry = entry.expect("Failed to read entry");
-            let dst = dst_utility.join(entry.file_name());
-            std::fs::copy(entry.path(), &dst).expect("Failed to copy header");
-        }
-    }
-
     generate_bindings(out_path);
 }
 
@@ -183,21 +168,6 @@ fn build_from_source() {
     println!("cargo:rustc-link-search=native={}", lib_path.display());
     println!("cargo:rustc-link-search=native={}", lib64_path.display());
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
-
-    // Copy Utility headers that cmake doesn't install
-    let src_utility = source_path
-        .join("include")
-        .join("FastNoise")
-        .join("Utility");
-    let dst_utility = out_path.join("include").join("FastNoise").join("Utility");
-    if src_utility.exists() && !dst_utility.exists() {
-        std::fs::create_dir_all(&dst_utility).expect("Failed to create Utility dir");
-        for entry in std::fs::read_dir(&src_utility).expect("Failed to read Utility dir") {
-            let entry = entry.expect("Failed to read entry");
-            let dst = dst_utility.join(entry.file_name());
-            std::fs::copy(entry.path(), &dst).expect("Failed to copy header");
-        }
-    }
 
     generate_bindings(out_path);
 }
