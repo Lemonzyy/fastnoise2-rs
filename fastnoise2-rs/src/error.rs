@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use crate::metadata::MemberType;
 
-/// Errors that can occur when interacting with [`Node`][`crate::node::Node`].
+/// Errors that can occur when interacting with [`Node`][`crate::Node`].
 ///
 /// This enum covers various failure scenarios including metadata issues, value setting problems, and node creation errors.
 #[derive(Error, Debug)]

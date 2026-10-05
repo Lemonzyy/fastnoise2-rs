@@ -486,7 +486,7 @@ impl<G: Generator> From<G> for MemberValue {
 /// Builds a [`Node`] from its FastNoise2 metadata name, setting members by name.
 ///
 /// ```rust
-/// use fastnoise2::node::NodeBuilder;
+/// use fastnoise2::NodeBuilder;
 ///
 /// let perlin = NodeBuilder::new("Perlin")?.set("Feature Scale", 50.0)?.build()?;
 /// let fbm = NodeBuilder::new("FractalFBm")?

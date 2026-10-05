@@ -3,10 +3,7 @@
 // constants on either side.
 use std::{env, fs, path::PathBuf};
 
-use fastnoise2::{
-    node::{Generator, Node},
-    nodes::*,
-};
+use fastnoise2::prelude::*;
 use image::{GrayImage, Luma};
 
 const SIZE: i32 = 512;

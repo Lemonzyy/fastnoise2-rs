@@ -16,7 +16,7 @@
 //! Here is an example of a encoded node tree, exported by FastNoise2's Node Editor.
 //!
 //! ```rust
-//! use fastnoise2::node::Node;
+//! use fastnoise2::Node;
 //!
 //! let (x_count, y_count) = (1000, 1000);
 //! let step_size = 3.0;
@@ -40,7 +40,7 @@
 //! // use `noise_out`!
 //! ```
 //!
-//! You can also build node trees with the typed nodes of [`nodes`], or by name with [`node::NodeBuilder`].
+//! You can also build node trees with the typed nodes of [`nodes`], or by name with [`NodeBuilder`].
 //!
 //! Take a look at [examples](https://github.com/Lemonzyy/fastnoise2-rs/tree/main/fastnoise2-rs/examples) to find out more.
 //!
@@ -69,12 +69,18 @@
 #![allow(clippy::too_many_arguments)]
 mod error;
 mod metadata;
-pub mod node;
+mod node;
 #[rustfmt::skip]
 pub mod nodes;
 
 pub use error::FastNoiseError;
 pub use metadata::MemberType;
+pub use node::{Generator, Hybrid, MemberValue, Node, NodeBuilder};
+
+/// Everything needed to build node trees: `use fastnoise2::prelude::*;`
+pub mod prelude {
+    pub use crate::{nodes::*, Generator, Hybrid, Node, NodeBuilder};
+}
 
 /// Holds the minimum and maximum values from noise generation.
 ///

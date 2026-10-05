@@ -1,7 +1,7 @@
 // This example illustrates the use of "Node::from_encoded_node_tree" to build a node tree exported by the Node Editor.
 use std::{env, fs, path::PathBuf, time::Instant};
 
-use fastnoise2::node::Node;
+use fastnoise2::Node;
 use image::{GrayImage, Luma};
 
 // "Mountain Terrain" tree integrated into FastNoise2 Node Editor.

@@ -2,7 +2,7 @@
 // members are set by name, and `build` checks that every input is set.
 use std::{env, fs, path::PathBuf};
 
-use fastnoise2::node::{Hybrid, Node, NodeBuilder};
+use fastnoise2::{Hybrid, Node, NodeBuilder};
 use image::{GrayImage, Luma};
 
 const SIZE: i32 = 512;

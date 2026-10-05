@@ -1,10 +1,7 @@
 // This example illustrates the use of the typed API. It builds the "Simple Terrain" example integrated into an old version of the Node Editor.
 use std::{env, fs, path::PathBuf, time::Instant};
 
-use fastnoise2::{
-    node::{Generator, Node},
-    nodes::*,
-};
+use fastnoise2::prelude::*;
 use image::{GrayImage, Luma};
 
 const X_SIZE: i32 = 1024;

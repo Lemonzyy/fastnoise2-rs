@@ -2,10 +2,7 @@
 
 use std::slice;
 
-use fastnoise2::{
-    node::{Generator, Node},
-    nodes::*,
-};
+use fastnoise2::prelude::*;
 
 /// Generate 2D noise and write grayscale values (0-255) to output buffer
 #[no_mangle]

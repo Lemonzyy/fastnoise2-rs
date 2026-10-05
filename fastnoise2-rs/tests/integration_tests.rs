@@ -1,4 +1,4 @@
-use fastnoise2::{node::Generator, nodes::*};
+use fastnoise2::prelude::*;
 
 /// Asserts that a generator produces finite, varying noise.
 fn assert_produces_noise(generator: impl Generator) {

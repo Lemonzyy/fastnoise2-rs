@@ -1,5 +1,4 @@
 use std::{
-    any::type_name,
     collections::HashMap,
     ffi::{c_char, CStr},
     fmt,
@@ -7,8 +6,6 @@ use std::{
 };
 
 use fastnoise2_sys::*;
-
-use crate::node::Node;
 
 #[derive(Debug)]
 pub(crate) struct Metadata {
@@ -59,20 +56,20 @@ pub enum MemberType {
     Int,
     /// An enumerated value represented as a string ([`&str`]).
     Enum,
-    /// A reference to a [`Node`] instance.
+    /// A reference to a [`Node`](crate::Node) instance.
     NodeLookup,
-    /// A member that can be either a floating-point value ([`f32`]) or a [`Node`] reference.
+    /// A member that can be either a floating-point value ([`f32`]) or a [`Node`](crate::Node) reference.
     Hybrid,
 }
 
 impl fmt::Display for MemberType {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Self::Float => f.write_str(type_name::<f32>()),
-            Self::Int => f.write_str(type_name::<i32>()),
-            Self::Enum => f.write_str(type_name::<&str>()),
-            Self::NodeLookup => f.write_str(type_name::<&Node>()),
-            Self::Hybrid => f.write_fmt(format_args!("{} or {}", Self::Float, Self::NodeLookup)),
+            Self::Float => f.write_str("f32"),
+            Self::Int => f.write_str("i32"),
+            Self::Enum => f.write_str("&str"),
+            Self::NodeLookup => f.write_str("Node"),
+            Self::Hybrid => f.write_str("f32 or Node"),
         }
     }
 }
@@ -252,6 +249,21 @@ mod tests {
         };
         assert_eq!(found, "Perln");
         assert!(expected.iter().any(|name| name == "Perlin"));
+    }
+
+    #[test]
+    fn test_member_type_names() {
+        let error = NodeBuilder::new("Perlin")
+            .unwrap()
+            .set(
+                "Seed Offset",
+                NodeBuilder::new("Perlin").unwrap().build().unwrap(),
+            )
+            .err()
+            .unwrap();
+        assert!(error.to_string().starts_with(
+            "invalid type for member 'Seed Offset' of node 'Perlin' (expected i32, found Node)"
+        ));
     }
 
     #[test]

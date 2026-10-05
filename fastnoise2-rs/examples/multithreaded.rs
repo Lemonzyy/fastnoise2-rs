@@ -1,6 +1,6 @@
 use std::thread;
 
-use fastnoise2::node::Node;
+use fastnoise2::Node;
 
 fn main() {
     let node = Node::from_encoded_node_tree(
