@@ -88,7 +88,7 @@ fn create_node() -> GeneratorWrapper<SafeNode> {
 
 fn main() {
     let node = create_node();
-    println!("SIMD level: {}", node.get_simd_level());
+    println!("Active feature set: {}", node.get_active_feature_set());
 
     let mut noise = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 

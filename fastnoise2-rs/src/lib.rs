@@ -114,7 +114,7 @@ impl Node {
                 found: metadata_name,
             }
         })?;
-        // Pass u32::MAX (~0u in C++) for auto-detect SIMD level
+        // Pass u32::MAX (~0u in C++) for auto-detect feature set
         let handle = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
         Ok(Self {
             handle,
@@ -130,7 +130,7 @@ impl Node {
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
         let cstring =
             CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
-        // Pass u32::MAX (~0u in C++) for auto-detect SIMD level
+        // Pass u32::MAX (~0u in C++) for auto-detect feature set
         let node_ptr = unsafe { fnNewFromEncodedNodeTree(cstring.as_ptr(), u32::MAX) };
         if node_ptr.is_null() {
             Err(FastNoiseError::NodeCreationFailed)
@@ -142,7 +142,7 @@ impl Node {
         }
     }
 
-    pub fn get_simd_level(&self) -> u32 {
+    pub fn get_active_feature_set(&self) -> u32 {
         unsafe { fnGetActiveFeatureSet(self.handle) }
     }
 
