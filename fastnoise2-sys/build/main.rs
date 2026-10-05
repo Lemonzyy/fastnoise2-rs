@@ -175,6 +175,7 @@ fn check_precompiled_library(lib_dir: &Path, source_path: &Path) {
                 lib_dir.display()
             )
         });
+
     let lib = fs::read(&lib_path).expect("Failed to read precompiled library");
 
     let header_path = source_path
@@ -290,11 +291,13 @@ fn generate_bindings(source_path: PathBuf) {
 /// build doesn't download it
 fn new_cmake_config(source_path: &Path) -> Config {
     let mut config = Config::new(source_path);
+
     if env::var(SOURCE_DIR_KEY).is_err() {
         let fastsimd_path = default_fastsimd_path();
         println!("cargo:rerun-if-changed={}", fastsimd_path.display());
         config.define("CPM_FastSIMD_SOURCE", &fastsimd_path);
     }
+
     config
 }
 

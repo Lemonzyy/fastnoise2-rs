@@ -35,6 +35,7 @@ impl NodeHandle {
     /// `ptr` must be a node reference returned by FastNoise2 and owned by the caller.
     unsafe fn new(ptr: *mut c_void) -> Option<Self> {
         let ptr = NonNull::new(ptr)?;
+
         let metadata_id = unsafe { fnGetMetadataID(ptr.as_ptr()) };
         Some(Self { ptr, metadata_id })
     }
@@ -73,8 +74,10 @@ impl Node {
     /// Returns an error if the encoded node tree is invalid.
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
         let encoded_node_tree = CString::new(encoded_node_tree)?;
+
         // u32::MAX (~0u in C++) auto-detects the feature set
         let ptr = unsafe { fnNewFromEncodedNodeTree(encoded_node_tree.as_ptr(), u32::MAX) };
+
         unsafe { NodeHandle::new(ptr) }
             .map(|handle| Self(Arc::new(handle)))
             .ok_or(FastNoiseError::NodeCreationFailed)
@@ -108,7 +111,9 @@ impl Node {
         seed: i32,
     ) -> OutputMinMax {
         assert!(noise_out.len() >= grid_len(&[x_count, y_count]));
+
         let mut min_max = [0.0; 2];
+
         unsafe {
             fnGenUniformGrid2D(
                 self.as_ptr(),
@@ -123,6 +128,7 @@ impl Node {
                 min_max.as_mut_ptr(),
             )
         };
+
         OutputMinMax::new(min_max)
     }
 
@@ -143,7 +149,9 @@ impl Node {
         seed: i32,
     ) -> OutputMinMax {
         assert!(noise_out.len() >= grid_len(&[x_count, y_count, z_count]));
+
         let mut min_max = [0.0; 2];
+
         unsafe {
             fnGenUniformGrid3D(
                 self.as_ptr(),
@@ -161,6 +169,7 @@ impl Node {
                 min_max.as_mut_ptr(),
             )
         };
+
         OutputMinMax::new(min_max)
     }
 
@@ -184,7 +193,9 @@ impl Node {
         seed: i32,
     ) -> OutputMinMax {
         assert!(noise_out.len() >= grid_len(&[x_count, y_count, z_count, w_count]));
+
         let mut min_max = [0.0; 2];
+
         unsafe {
             fnGenUniformGrid4D(
                 self.as_ptr(),
@@ -205,6 +216,7 @@ impl Node {
                 min_max.as_mut_ptr(),
             )
         };
+
         OutputMinMax::new(min_max)
     }
 
@@ -220,7 +232,9 @@ impl Node {
         seed: i32,
     ) -> OutputMinMax {
         check_position_arrays(noise_out, &[x_pos_array, y_pos_array]);
+
         let mut min_max = [0.0; 2];
+
         unsafe {
             fnGenPositionArray2D(
                 self.as_ptr(),
@@ -234,6 +248,7 @@ impl Node {
                 min_max.as_mut_ptr(),
             )
         };
+
         OutputMinMax::new(min_max)
     }
 
@@ -251,7 +266,9 @@ impl Node {
         seed: i32,
     ) -> OutputMinMax {
         check_position_arrays(noise_out, &[x_pos_array, y_pos_array, z_pos_array]);
+
         let mut min_max = [0.0; 2];
+
         unsafe {
             fnGenPositionArray3D(
                 self.as_ptr(),
@@ -267,6 +284,7 @@ impl Node {
                 min_max.as_mut_ptr(),
             )
         };
+
         OutputMinMax::new(min_max)
     }
 
@@ -289,7 +307,9 @@ impl Node {
             noise_out,
             &[x_pos_array, y_pos_array, z_pos_array, w_pos_array],
         );
+
         let mut min_max = [0.0; 2];
+
         unsafe {
             fnGenPositionArray4D(
                 self.as_ptr(),
@@ -307,6 +327,7 @@ impl Node {
                 min_max.as_mut_ptr(),
             )
         };
+
         OutputMinMax::new(min_max)
     }
 
@@ -322,7 +343,9 @@ impl Node {
         seed: i32,
     ) -> OutputMinMax {
         assert!(noise_out.len() >= grid_len(&[x_size, y_size]));
+
         let mut min_max = [0.0; 2];
+
         unsafe {
             fnGenTileable2D(
                 self.as_ptr(),
@@ -335,6 +358,7 @@ impl Node {
                 min_max.as_mut_ptr(),
             )
         };
+
         OutputMinMax::new(min_max)
     }
 
@@ -490,15 +514,18 @@ impl NodeBuilder {
                 expected: NODE_METADATA.iter().map(|m| m.name.clone()).collect(),
                 found: node_name.to_string(),
             })?;
+
         // u32::MAX (~0u in C++) auto-detects the feature set
         let ptr = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
         let handle = unsafe { NodeHandle::new(ptr) }.ok_or(FastNoiseError::NodeCreationFailed)?;
+
         let input_count = handle
             .metadata()
             .members
             .iter()
             .filter(|member| matches!(member.member_type, MemberType::NodeLookup))
             .count();
+
         Ok(Self {
             handle,
             inputs_set: vec![false; input_count],
@@ -524,6 +551,7 @@ impl NodeBuilder {
                     expected: metadata.members.iter().map(|m| m.name.clone()).collect(),
                     found: member_name.to_string(),
                 })?;
+
         let ptr = self.handle.ptr.as_ptr();
 
         let is_set = match (member.member_type, value.into()) {
@@ -543,12 +571,14 @@ impl NodeBuilder {
                             expected: member.enum_values.clone(),
                             found: value,
                         })?;
+
                 unsafe { fnSetVariableIntEnum(ptr, member.index, enum_index) }
             }
             (MemberType::NodeLookup, MemberValue::Node(node)) => {
                 if !unsafe { fnSetNodeLookup(ptr, member.index, node.as_ptr()) } {
                     return Err(input_not_accepted(metadata, member, &node));
                 }
+
                 self.inputs_set[member.index as usize] = true;
                 true
             }
@@ -570,6 +600,7 @@ impl NodeBuilder {
                 member: member.name.clone(),
             });
         }
+
         Ok(self)
     }
 
@@ -583,12 +614,14 @@ impl NodeBuilder {
             .iter()
             .filter(|member| matches!(member.member_type, MemberType::NodeLookup))
             .find(|member| !self.inputs_set[member.index as usize]);
+
         if let Some(member) = missing_input {
             return Err(FastNoiseError::MissingInput {
                 node: metadata.name.clone(),
                 member: member.name.clone(),
             });
         }
+
         Ok(Node(Arc::new(self.handle)))
     }
 }

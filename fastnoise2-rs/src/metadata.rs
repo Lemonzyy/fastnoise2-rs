@@ -100,6 +100,7 @@ fn load_metadata(id: i32) -> Metadata {
             2 => MemberType::Enum,
             _ => MemberType::Hybrid,
         };
+
         let enum_values = match member_type {
             MemberType::Enum => (0..unsafe { fnGetMetadataEnumCount(id, variable_idx) })
                 .map(|enum_idx| {
@@ -108,6 +109,7 @@ fn load_metadata(id: i32) -> Metadata {
                 .collect(),
             _ => Vec::new(),
         };
+
         members.push(Member {
             name: dimension_member_name(
                 to_string(unsafe { fnGetMetadataVariableName(id, variable_idx) }),
