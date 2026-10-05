@@ -51,7 +51,7 @@ Updated FastNoise2 C++ submodule from `f8facba` to `3728fde`:
   - `Simplex` & `SuperSimplex`:
     - Added `seed_offset`, `output_min`, `output_max` fields
     - Builder methods: `.with_feature_scale()`, `.with_seed_offset()`, `.with_output_range()`
-    - Kept feature_scale default at 1.0 for backward compatibility
+    - Defaults: feature_scale=100.0, seed_offset=0, output_range=(-1.0, 1.0)
   - `White`:
     - Added `seed_offset`, `output_min`, `output_max` fields
     - Builder methods: `.with_seed_offset()`, `.with_output_range()`
