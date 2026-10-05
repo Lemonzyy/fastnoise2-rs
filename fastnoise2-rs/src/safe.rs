@@ -427,11 +427,10 @@ mod tests {
     fn test_get_active_feature_set() {
         let node = perlin().build();
         let feature_set = node.0.get_active_feature_set();
-        // Just verify we can get a SIMD level - the actual value depends on the system
-        // SIMD levels: 0=Scalar, 1=SSE, 2=SSE2, 3=SSE3, 4=SSSE3, 5=SSE41, 6=SSE42,
-        //              7=AVX, 8=AVX2, 9=AVX512
-        // On systems with AVX-512 this will be higher
-        assert!(feature_set < u32::MAX); // Just verify it's a valid number
+        // FastSIMD::FeatureSet flags, the actual value depends on the CPU.
+        // 0 is FeatureSet::Invalid and u32::MAX is FeatureSet::Max.
+        assert_ne!(feature_set, 0);
+        assert_ne!(feature_set, u32::MAX);
     }
 
     #[test]
