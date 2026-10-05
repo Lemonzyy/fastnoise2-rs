@@ -23,7 +23,8 @@ fn main() {
     // WASM builds use pure WASM with SIMD128
     if target_arch == "wasm32" {
         build_wasm();
-        return; // WASM doesn't need C++ stdlib linking
+        emit_std_cpp_link();
+        return;
     }
 
     // Native builds follow existing logic
@@ -272,8 +273,16 @@ fn emit_std_cpp_link() {
     let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
 
     match (target_os.as_str(), target_env.as_str()) {
-        ("linux", _) | ("windows", "gnu") => println!("cargo:rustc-link-lib=dylib=stdc++"),
-        ("macos" | "freebsd", _) => println!("cargo:rustc-link-lib=dylib=c++"),
+        ("linux" | "netbsd", _) | ("windows", "gnu") => {
+            println!("cargo:rustc-link-lib=dylib=stdc++")
+        }
+        ("macos" | "ios" | "tvos" | "watchos" | "visionos" | "freebsd" | "openbsd", _)
+        | ("windows", "gnullvm") => println!("cargo:rustc-link-lib=dylib=c++"),
+        ("android", _) => println!("cargo:rustc-link-lib=dylib=c++_shared"),
+        ("emscripten", _) => {
+            println!("cargo:rustc-link-lib=c++");
+            println!("cargo:rustc-link-lib=c++abi");
+        }
         ("windows", "msvc") => {} // MSVC links C++ stdlib automatically
         _ => println!("cargo:warning=Unknown target for C++ stdlib linking"),
     }
