@@ -176,10 +176,22 @@ fn generate_bindings(source_path: PathBuf) {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     let bindings_path = out_path.join("bindings.rs");
 
+    let include_path = source_path.join("include").join("FastNoise");
+    let header_path = include_path.join(HEADER_NAME);
+
+    let header = std::fs::read(&header_path).expect("Failed to read FastNoise C header");
+
+    // Cached bindings are stored per crate version along with the header they were
+    // generated from, and only reused if that header is identical to the current one
+    let cache_path = env::var(BINDINGS_CACHE_KEY)
+        .ok()
+        .map(|cache_dir| PathBuf::from(cache_dir).join(env!("CARGO_PKG_VERSION")));
+
     // Check for cached bindings first
-    if let Ok(cache_dir) = env::var(BINDINGS_CACHE_KEY) {
-        let cached_bindings = PathBuf::from(&cache_dir).join("bindings.rs");
-        if cached_bindings.exists() {
+    if let Some(cache_path) = &cache_path {
+        let cached_bindings = cache_path.join("bindings.rs");
+        let cached_header = std::fs::read(cache_path.join(HEADER_NAME)).ok();
+        if cached_bindings.exists() && cached_header.as_ref() == Some(&header) {
             println!(
                 "cargo:warning=using cached bindings from '{}'",
                 cached_bindings.display()
@@ -194,9 +206,6 @@ fn generate_bindings(source_path: PathBuf) {
         "cargo:warning=generating Rust bindings for FastNoise2 (this is slow, set \
      FASTNOISE2_BINDINGS_DIR to cache)"
     );
-
-    let include_path = source_path.join("include").join("FastNoise");
-    let header_path = include_path.join(HEADER_NAME);
 
     // FastNoise C API bindings are target-agnostic (pure extern "C" declarations
     // with only primitive types like c_int, c_void, f32, bool).
@@ -235,11 +244,11 @@ fn generate_bindings(source_path: PathBuf) {
     );
 
     // Save to cache if dir is set
-    if let Ok(cache_dir) = env::var(BINDINGS_CACHE_KEY) {
-        let cache_path = PathBuf::from(&cache_dir);
-        std::fs::create_dir_all(&cache_path).ok();
+    if let Some(cache_path) = &cache_path {
+        std::fs::create_dir_all(cache_path).ok();
         let cached_bindings = cache_path.join("bindings.rs");
         std::fs::copy(&bindings_path, &cached_bindings).ok();
+        std::fs::write(cache_path.join(HEADER_NAME), &header).ok();
         println!(
             "cargo:warning=bindings cached to '{}'",
             cached_bindings.display()

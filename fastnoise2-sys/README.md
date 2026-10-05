@@ -72,7 +72,7 @@ source /path/to/emsdk/emsdk_env.sh
 
 ### Slow bindgen compilation
 
-Set `FASTNOISE2_BINDINGS_DIR` to cache generated bindings:
+Set `FASTNOISE2_BINDINGS_DIR` to cache generated bindings. Cached files are keyed by crate version and C header content, so they are regenerated after an update:
 
 ```bash
 export FASTNOISE2_BINDINGS_DIR=~/.cache/fastnoise2-bindings
