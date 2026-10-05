@@ -29,6 +29,8 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 ### Changed
 
 - **Breaking**: `Remap` bounds and `Gradient` offsets are hybrid (f32 or Generator), adding type parameters to `Remap<S, FMin, FMax, TMin, TMax>` and `Gradient<X, Y, Z, W>`
+- **Breaking**: `FastNoiseError` member errors name the node and member, `Set*Failed` variants are merged into `SetMemberFailed`
+- Errors use FastNoise2 display names in metadata order (e.g. `'Feature Scale'` instead of `'featurescale'`), and invalid type errors include the member description from FastNoise2
 - **Breaking**: `Node::get_simd_level` and `SafeNode::get_simd_level` renamed to `get_active_feature_set`
 - `SafeNode` generation functions panic on non-positive counts, grid sizes overflowing an `i32` and empty position arrays
 - `DistanceToPoint` builder methods are available whatever the coordinate and `minkowski_p` types
