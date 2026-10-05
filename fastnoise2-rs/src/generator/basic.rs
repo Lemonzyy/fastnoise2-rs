@@ -43,15 +43,25 @@ pub struct SineWave {
 /// Gradient generator (formerly PositionOutput in older FastNoise2 versions).
 /// Outputs a linear gradient based on position coordinates.
 #[derive(Clone, Debug)]
-pub struct Gradient {
+pub struct Gradient<X, Y, Z, W>
+where
+    X: Hybrid,
+    Y: Hybrid,
+    Z: Hybrid,
+    W: Hybrid,
+{
     pub multiplier_x: f32,
     pub multiplier_y: f32,
     pub multiplier_z: f32,
     pub multiplier_w: f32,
-    pub offset_x: f32,
-    pub offset_y: f32,
-    pub offset_z: f32,
-    pub offset_w: f32,
+    /// X offset (can be f32 or Generator).
+    pub offset_x: X,
+    /// Y offset (can be f32 or Generator).
+    pub offset_y: Y,
+    /// Z offset (can be f32 or Generator).
+    pub offset_z: Z,
+    /// W offset (can be f32 or Generator).
+    pub offset_w: W,
 }
 
 /// Distance to point generator.
@@ -78,7 +88,7 @@ where
     pub minkowski_p: M,
 }
 
-impl Default for Gradient {
+impl Default for Gradient<f32, f32, f32, f32> {
     fn default() -> Self {
         Self {
             multiplier_x: 0.0,
@@ -178,7 +188,13 @@ impl Generator for SineWave {
     }
 }
 
-impl Generator for Gradient {
+impl<X, Y, Z, W> Generator for Gradient<X, Y, Z, W>
+where
+    X: Hybrid,
+    Y: Hybrid,
+    Z: Hybrid,
+    W: Hybrid,
+{
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
     fn build(&self) -> GeneratorWrapper<SafeNode> {
         let mut node = Node::from_name("Gradient").unwrap();
@@ -186,10 +202,10 @@ impl Generator for Gradient {
         node.set("MultiplierY", self.multiplier_y).unwrap();
         node.set("MultiplierZ", self.multiplier_z).unwrap();
         node.set("MultiplierW", self.multiplier_w).unwrap();
-        node.set("OffsetX", self.offset_x).unwrap();
-        node.set("OffsetY", self.offset_y).unwrap();
-        node.set("OffsetZ", self.offset_z).unwrap();
-        node.set("OffsetW", self.offset_w).unwrap();
+        node.set("OffsetX", self.offset_x.clone()).unwrap();
+        node.set("OffsetY", self.offset_y.clone()).unwrap();
+        node.set("OffsetZ", self.offset_z.clone()).unwrap();
+        node.set("OffsetW", self.offset_w.clone()).unwrap();
         SafeNode(node.into()).into()
     }
 }
@@ -245,7 +261,7 @@ pub fn sinewave(feature_scale: f32) -> GeneratorWrapper<SineWave> {
 }
 
 /// Creates a Gradient generator with default parameters (all multipliers = 0.0, all offsets = 0.0).
-pub fn gradient() -> GeneratorWrapper<Gradient> {
+pub fn gradient() -> GeneratorWrapper<Gradient<f32, f32, f32, f32>> {
     Gradient::default().into()
 }
 
@@ -303,7 +319,13 @@ impl GeneratorWrapper<SineWave> {
 }
 
 // Builder methods for Gradient
-impl GeneratorWrapper<Gradient> {
+impl<X, Y, Z, W> GeneratorWrapper<Gradient<X, Y, Z, W>>
+where
+    X: Hybrid,
+    Y: Hybrid,
+    Z: Hybrid,
+    W: Hybrid,
+{
     /// Sets the X multiplier for the gradient.
     pub fn with_multiplier_x(mut self, multiplier: f32) -> Self {
         self.0.multiplier_x = multiplier;
@@ -338,38 +360,80 @@ impl GeneratorWrapper<Gradient> {
         self
     }
 
-    /// Sets the X offset for the gradient.
-    pub fn with_offset_x(mut self, offset: f32) -> Self {
-        self.0.offset_x = offset;
-        self
+    /// Sets the X offset for the gradient (can be f32 or Generator).
+    pub fn with_offset_x<N: Hybrid>(self, offset: N) -> GeneratorWrapper<Gradient<N, Y, Z, W>> {
+        Gradient {
+            multiplier_x: self.0.multiplier_x,
+            multiplier_y: self.0.multiplier_y,
+            multiplier_z: self.0.multiplier_z,
+            multiplier_w: self.0.multiplier_w,
+            offset_x: offset,
+            offset_y: self.0.offset_y,
+            offset_z: self.0.offset_z,
+            offset_w: self.0.offset_w,
+        }
+        .into()
     }
 
-    /// Sets the Y offset for the gradient.
-    pub fn with_offset_y(mut self, offset: f32) -> Self {
-        self.0.offset_y = offset;
-        self
+    /// Sets the Y offset for the gradient (can be f32 or Generator).
+    pub fn with_offset_y<N: Hybrid>(self, offset: N) -> GeneratorWrapper<Gradient<X, N, Z, W>> {
+        Gradient {
+            multiplier_x: self.0.multiplier_x,
+            multiplier_y: self.0.multiplier_y,
+            multiplier_z: self.0.multiplier_z,
+            multiplier_w: self.0.multiplier_w,
+            offset_x: self.0.offset_x,
+            offset_y: offset,
+            offset_z: self.0.offset_z,
+            offset_w: self.0.offset_w,
+        }
+        .into()
     }
 
-    /// Sets the Z offset for the gradient.
-    pub fn with_offset_z(mut self, offset: f32) -> Self {
-        self.0.offset_z = offset;
-        self
+    /// Sets the Z offset for the gradient (can be f32 or Generator).
+    pub fn with_offset_z<N: Hybrid>(self, offset: N) -> GeneratorWrapper<Gradient<X, Y, N, W>> {
+        Gradient {
+            multiplier_x: self.0.multiplier_x,
+            multiplier_y: self.0.multiplier_y,
+            multiplier_z: self.0.multiplier_z,
+            multiplier_w: self.0.multiplier_w,
+            offset_x: self.0.offset_x,
+            offset_y: self.0.offset_y,
+            offset_z: offset,
+            offset_w: self.0.offset_w,
+        }
+        .into()
     }
 
-    /// Sets the W offset for the gradient.
-    pub fn with_offset_w(mut self, offset: f32) -> Self {
-        self.0.offset_w = offset;
-        self
+    /// Sets the W offset for the gradient (can be f32 or Generator).
+    pub fn with_offset_w<N: Hybrid>(self, offset: N) -> GeneratorWrapper<Gradient<X, Y, Z, N>> {
+        Gradient {
+            multiplier_x: self.0.multiplier_x,
+            multiplier_y: self.0.multiplier_y,
+            multiplier_z: self.0.multiplier_z,
+            multiplier_w: self.0.multiplier_w,
+            offset_x: self.0.offset_x,
+            offset_y: self.0.offset_y,
+            offset_z: self.0.offset_z,
+            offset_w: offset,
+        }
+        .into()
     }
 
     /// Sets all offsets at once.
-    pub fn with_offsets(mut self, offsets: [f32; 4]) -> Self {
-        let [ox, oy, oz, ow] = offsets;
-        self.0.offset_x = ox;
-        self.0.offset_y = oy;
-        self.0.offset_z = oz;
-        self.0.offset_w = ow;
-        self
+    pub fn with_offsets(self, offsets: [f32; 4]) -> GeneratorWrapper<Gradient<f32, f32, f32, f32>> {
+        let [offset_x, offset_y, offset_z, offset_w] = offsets;
+        Gradient {
+            multiplier_x: self.0.multiplier_x,
+            multiplier_y: self.0.multiplier_y,
+            multiplier_z: self.0.multiplier_z,
+            multiplier_w: self.0.multiplier_w,
+            offset_x,
+            offset_y,
+            offset_z,
+            offset_w,
+        }
+        .into()
     }
 }
 
@@ -745,6 +809,26 @@ mod tests {
             .with_minkowski_p(p_gen)
             .build();
         test_generator_produces_output(node.0);
+    }
+
+    #[test]
+    fn test_gradient_default_matches_cpp() {
+        assert_matches_cpp_default(gradient(), "Gradient");
+    }
+
+    #[test]
+    fn test_gradient_hybrid_offsets() {
+        let gradient_x = gradient().with_multiplier_x(1.0);
+        let constant_offset = gradient_x.clone().with_offset_x(1.0).build();
+        let generator_offset = gradient_x
+            .with_offset_x(simplex())
+            .with_multiplier_y(1.0)
+            .build();
+        assert_outputs_differ(
+            &generate_output(&constant_offset),
+            &generate_output(&generator_offset),
+            "Gradient.OffsetX",
+        );
     }
 
     #[test]
