@@ -305,7 +305,7 @@ mod tests {
         let node = perlin().build();
         let value = node.0.gen_single_2d(0.5, 0.5, 1337);
         assert!(value.is_finite());
-        assert!(value >= -1.5 && value <= 1.5); // Perlin should be roughly -1 to 1
+        assert!((-1.5..=1.5).contains(&value)); // Perlin should be roughly -1 to 1
     }
 
     #[test]
