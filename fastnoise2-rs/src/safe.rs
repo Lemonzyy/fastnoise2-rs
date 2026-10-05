@@ -294,12 +294,10 @@ mod tests {
 
     #[test]
     fn test_encoded_node_tree() {
-        let encoded = "DQAFAAAAAAAAQAgAAAAAAD8="; // Simple Perlin
-        let node = SafeNode::from_encoded_node_tree(encoded);
-        // This might fail if the encoded string is invalid
-        if let Ok(node) = node {
-            test_generator_produces_output(node);
-        }
+        // "Mountain Terrain" example from the Node Editor
+        let encoded = "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
+        let node = SafeNode::from_encoded_node_tree(encoded).unwrap();
+        test_generator_produces_output(node);
     }
 
     #[test]
