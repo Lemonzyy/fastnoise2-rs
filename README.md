@@ -99,7 +99,7 @@ fastnoise2-sys, the underlying bindings for fastnoise2, uses a build script that
 To build FastNoise2 from source using fastnoise2-sys, ensure you have:
 
 - [CMake](https://cmake.org/)
-- a C++17 compiler
+- a C++17 compiler, Clang on non x86 targets (e.g. aarch64) as FastNoise2 doesn't support GCC there
 
 ## Notes
 

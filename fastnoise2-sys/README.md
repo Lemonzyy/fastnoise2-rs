@@ -6,7 +6,7 @@ Low-level Rust FFI bindings for [FastNoise2](https://github.com/Auburn/FastNoise
 
 ### Native Platforms (Linux, Windows, macOS)
 
-Native builds use [CMake](https://cmake.org/) and require a C++17 compiler:
+Native builds use [CMake](https://cmake.org/) and require a C++17 compiler. On non x86 targets (e.g. aarch64), FastNoise2 only supports Clang, set `CC=clang CXX=clang++`:
 
 ```bash
 cargo build
