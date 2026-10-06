@@ -38,7 +38,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 - **Breaking**: `Node` is now the safe, built node. Nodes by name use `NodeBuilder` instead of `Node::from_name` and `Node::set`
 - **Breaking**: names are generated from FastNoise2 names (e.g. `fbm()` is `fractal_f_bm()`, `supersimplex()` is `super_simplex()`), and constructors with positional arguments are replaced by builder methods
 - **Breaking**: default values come from FastNoise2 metadata, `DistanceToPoint` distance function defaults to `Euclidean` like in the Node Editor
-- **Breaking**: `get_simd_level` renamed to `get_active_feature_set`
+- **Breaking**: `get_simd_level` renamed to `get_active_feature_set`, which returns a `FeatureSet` instead of a `u32`
 - **Breaking**: `FastNoiseError` member errors name the node and member, `Set*Failed` variants are merged into `SetMemberFailed`
 - Errors use FastNoise2 display names in metadata order (e.g. `'Feature Scale'` instead of `'featurescale'`), and invalid type errors include the member description from FastNoise2
 - Generation functions panic on non-positive counts, grid sizes overflowing an `i32` and empty position arrays

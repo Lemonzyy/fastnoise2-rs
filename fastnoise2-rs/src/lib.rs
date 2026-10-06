@@ -121,12 +121,14 @@
 #[cfg(feature = "encode")]
 mod encode;
 mod error;
+mod feature_set;
 mod metadata;
 mod node;
 #[rustfmt::skip]
 pub mod nodes;
 
 pub use error::FastNoiseError;
+pub use feature_set::FeatureSet;
 pub use metadata::{Member, MemberType, Metadata};
 pub use node::{Generator, Hybrid, MemberValue, Node, NodeBuilder};
 

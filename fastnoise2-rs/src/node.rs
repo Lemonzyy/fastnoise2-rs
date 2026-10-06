@@ -14,7 +14,7 @@ use std::{
 use fastnoise2_sys::*;
 
 use crate::{
-    FastNoiseError, MemberType, OutputMinMax,
+    FastNoiseError, FeatureSet, MemberType, OutputMinMax,
     metadata::{METADATA_NAME_LOOKUP, Member, Metadata, NODE_METADATA, format_lookup},
 };
 
@@ -172,9 +172,10 @@ impl Node {
         self.0.handle.metadata()
     }
 
-    /// The `FastSIMD::FeatureSet` used by this node.
-    pub fn get_active_feature_set(&self) -> u32 {
-        unsafe { fnGetActiveFeatureSet(self.as_ptr()) }
+    /// The SIMD feature set this node generates noise with.
+    pub fn get_active_feature_set(&self) -> FeatureSet {
+        let bits = unsafe { fnGetActiveFeatureSet(self.as_ptr()) };
+        FeatureSet::from_bits(bits).expect("FastNoise2 nodes have a known feature set")
     }
 
     fn as_ptr(&self) -> *mut c_void {
