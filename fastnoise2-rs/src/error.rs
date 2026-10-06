@@ -88,6 +88,21 @@ pub enum FastNoiseError {
         input: String,
     },
 
+    /// Indicates that a node tree can't be encoded because it contains a node created from an
+    /// encoded node tree, whose values are unknown.
+    #[error(
+        "node '{node}' was created from an encoded node tree, it can only be encoded on its own"
+    )]
+    NotEncodable {
+        /// The name of the node.
+        node: String,
+    },
+
+    /// Indicates that a node tree can't be encoded because it has more distinct nodes than the
+    /// format can reference (65536).
+    #[error("node tree has too many distinct nodes to be encoded, the maximum is 65536")]
+    TooManyNodes,
+
     /// Indicates that FastNoise2 failed to set the value of a member.
     #[error("failed to set member '{member}' of node '{node}'")]
     SetMemberFailed {

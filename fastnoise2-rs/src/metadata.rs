@@ -35,6 +35,9 @@ pub struct Member {
     pub index: i32,
     /// Enum values in FastNoise2 order, the position is the enum index.
     pub enum_values: Vec<String>,
+    /// Default value: the bits of the float for float and hybrid members, the value for int and
+    /// enum members, 0 for node lookups.
+    pub default_bits: i32,
 }
 
 impl Member {
@@ -48,7 +51,7 @@ impl Member {
 }
 
 /// Defines the type of value or reference a node can handle.
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum MemberType {
     /// A floating-point number ([`f32`]).
     Float,
@@ -113,6 +116,8 @@ fn load_metadata(id: i32) -> Metadata {
                 unsafe { fnGetMetadataVariableDimensionIdx(id, variable_idx) },
             ),
             description: to_string(unsafe { fnGetMetadataVariableDescription(id, variable_idx) }),
+            // The raw bits of the value union, whatever the variable type
+            default_bits: unsafe { fnGetMetadataVariableDefaultIntEnum(id, variable_idx) },
             member_type,
             index: variable_idx,
             enum_values,
@@ -131,6 +136,7 @@ fn load_metadata(id: i32) -> Metadata {
             member_type: MemberType::NodeLookup,
             index: node_lookup_idx,
             enum_values: Vec::new(),
+            default_bits: 0,
         });
     }
 
@@ -144,6 +150,7 @@ fn load_metadata(id: i32) -> Metadata {
             member_type: MemberType::Hybrid,
             index: hybrid_idx,
             enum_values: Vec::new(),
+            default_bits: unsafe { fnGetMetadataHybridDefault(id, hybrid_idx) }.to_bits() as i32,
         });
     }
 

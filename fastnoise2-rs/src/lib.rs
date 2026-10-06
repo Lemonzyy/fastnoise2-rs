@@ -110,6 +110,7 @@
 //! - The `FASTNOISE2_SOURCE_DIR` environment variable is generally not needed as fastnoise2-sys includes the FastNoise2 source code as a Git submodule. If you need to use a different source directory, set `FASTNOISE2_SOURCE_DIR` to point to the root of the FastNoise2 source code. FastSIMD, the FastNoise2 dependency, is also included as a Git submodule and used when `FASTNOISE2_SOURCE_DIR` is not set, so building does not need network access.
 //!
 #![allow(clippy::too_many_arguments)]
+mod encode;
 mod error;
 mod metadata;
 mod node;

@@ -14,14 +14,50 @@ use std::{
 use fastnoise2_sys::*;
 
 use crate::{
-    FastNoiseError, MemberType, OutputMinMax,
+    FastNoiseError, MemberType, OutputMinMax, encode,
     metadata::{METADATA_NAME_LOOKUP, Member, Metadata, NODE_METADATA, format_lookup},
 };
 
 /// Owner of a FastNoise2 node reference, released on drop.
-struct NodeHandle {
+pub(crate) struct NodeHandle {
     ptr: NonNull<c_void>,
     metadata_id: i32,
+}
+
+/// What is known about a node to encode it: FastNoise2 nodes can't be read back.
+pub(crate) enum Description {
+    /// Built with a [`NodeBuilder`], from the values it set.
+    Built(NodeData),
+    /// Created from an encoded node tree.
+    Encoded(String),
+}
+
+/// Values set on a node, like FastNoise2's `NodeData`, `None` for a member left at its default.
+pub(crate) struct NodeData {
+    /// By variable index: the bits of a float, an int or an enum index.
+    pub(crate) variables: Vec<Option<i32>>,
+    /// By node lookup index.
+    pub(crate) inputs: Vec<Option<Node>>,
+    /// By hybrid index.
+    pub(crate) hybrids: Vec<Option<Hybrid>>,
+}
+
+impl NodeData {
+    fn new(metadata: &Metadata) -> Self {
+        let count = |member_types: &[MemberType]| {
+            metadata
+                .members
+                .iter()
+                .filter(|member| member_types.contains(&member.member_type))
+                .count()
+        };
+
+        Self {
+            variables: vec![None; count(&[MemberType::Float, MemberType::Int, MemberType::Enum])],
+            inputs: vec![None; count(&[MemberType::NodeLookup])],
+            hybrids: vec![None; count(&[MemberType::Hybrid])],
+        }
+    }
 }
 
 // SAFETY: FastNoise2 node reference counts are atomic, noise generation only reads the node,
@@ -40,7 +76,12 @@ impl NodeHandle {
     }
 
     #[inline]
-    fn metadata(&self) -> &'static Metadata {
+    pub(crate) fn metadata_id(&self) -> i32 {
+        self.metadata_id
+    }
+
+    #[inline]
+    pub(crate) fn metadata(&self) -> &'static Metadata {
         &NODE_METADATA[self.metadata_id as usize]
     }
 }
@@ -56,12 +97,17 @@ impl Drop for NodeHandle {
 /// Cloning a node shares the same C++ node, so a node used in several places of a tree is
 /// evaluated by the same C++ node (which is what makes `GeneratorCache` effective).
 #[derive(Clone)]
-pub struct Node(Arc<NodeHandle>);
+pub struct Node(pub(crate) Arc<NodeInner>);
+
+pub(crate) struct NodeInner {
+    pub(crate) handle: NodeHandle,
+    pub(crate) description: Description,
+}
 
 impl fmt::Debug for Node {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("Node")
-            .field(&self.0.metadata().name)
+            .field(&self.0.handle.metadata().name)
             .finish()
     }
 }
@@ -72,19 +118,45 @@ impl Node {
     /// # Errors
     /// Returns an error if the encoded node tree is invalid.
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
+        let description = Description::Encoded(encoded_node_tree.to_string());
         let encoded_node_tree = CString::new(encoded_node_tree)?;
 
         // u32::MAX (~0u in C++) auto-detects the feature set
         let ptr = unsafe { fnNewFromEncodedNodeTree(encoded_node_tree.as_ptr(), u32::MAX) };
 
         unsafe { NodeHandle::new(ptr) }
-            .map(|handle| Self(Arc::new(handle)))
+            .map(|handle| {
+                Self(Arc::new(NodeInner {
+                    handle,
+                    description,
+                }))
+            })
             .ok_or(FastNoiseError::NodeCreationFailed)
+    }
+
+    /// Encodes the node tree in the format of the FastNoise2 Node Editor, which can load it or
+    /// pass it to [`Node::from_encoded_node_tree`].
+    ///
+    /// ```rust
+    /// use fastnoise2::prelude::*;
+    ///
+    /// let node = perlin().fractal_f_bm().with_octaves(5).build();
+    /// let encoded = node.encode()?;
+    /// let decoded = Node::from_encoded_node_tree(&encoded)?;
+    /// assert_eq!(decoded.gen_single_2d(1.0, 2.0, 1337), node.gen_single_2d(1.0, 2.0, 1337));
+    /// # Ok::<(), fastnoise2::FastNoiseError>(())
+    /// ```
+    ///
+    /// # Errors
+    /// Returns an error if the tree contains a node created from an encoded node tree, unless it
+    /// is the node itself, or if a node is shared after more than 65536 distinct nodes.
+    pub fn encode(&self) -> Result<String, FastNoiseError> {
+        encode::encode(self)
     }
 
     /// The FastNoise2 node name (e.g. "Perlin").
     pub fn name(&self) -> &'static str {
-        &self.0.metadata().name
+        &self.0.handle.metadata().name
     }
 
     /// The `FastSIMD::FeatureSet` used by this node.
@@ -93,7 +165,7 @@ impl Node {
     }
 
     fn as_ptr(&self) -> *mut c_void {
-        self.0.ptr.as_ptr()
+        self.0.handle.ptr.as_ptr()
     }
 
     /// # Panics
@@ -499,8 +571,7 @@ impl<G: Generator> From<G> for MemberValue {
 /// ```
 pub struct NodeBuilder {
     handle: NodeHandle,
-    /// Whether each node lookup member is set, by node lookup index.
-    inputs_set: Vec<bool>,
+    data: NodeData,
 }
 
 impl NodeBuilder {
@@ -517,18 +588,9 @@ impl NodeBuilder {
         // u32::MAX (~0u in C++) auto-detects the feature set
         let ptr = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
         let handle = unsafe { NodeHandle::new(ptr) }.ok_or(FastNoiseError::NodeCreationFailed)?;
+        let data = NodeData::new(handle.metadata());
 
-        let input_count = handle
-            .metadata()
-            .members
-            .iter()
-            .filter(|member| matches!(member.member_type, MemberType::NodeLookup))
-            .count();
-
-        Ok(Self {
-            handle,
-            inputs_set: vec![false; input_count],
-        })
+        Ok(Self { handle, data })
     }
 
     /// Sets a member by name, ignoring case and spaces (e.g. "Feature Scale" or "featurescale").
@@ -552,14 +614,18 @@ impl NodeBuilder {
                 })?;
 
         let ptr = self.handle.ptr.as_ptr();
+        let data = &mut self.data;
+        let index = member.index as usize;
 
         let is_set = match (member.member_type, value.into()) {
-            (MemberType::Float, MemberValue::Float(value)) => unsafe {
-                fnSetVariableFloat(ptr, member.index, value)
-            },
-            (MemberType::Int, MemberValue::Int(value)) => unsafe {
-                fnSetVariableIntEnum(ptr, member.index, value)
-            },
+            (MemberType::Float, MemberValue::Float(value)) => {
+                data.variables[index] = Some(value.to_bits() as i32);
+                unsafe { fnSetVariableFloat(ptr, member.index, value) }
+            }
+            (MemberType::Int, MemberValue::Int(value)) => {
+                data.variables[index] = Some(value);
+                unsafe { fnSetVariableIntEnum(ptr, member.index, value) }
+            }
             (MemberType::Enum, MemberValue::Enum(value)) => {
                 let enum_index =
                     member
@@ -571,6 +637,7 @@ impl NodeBuilder {
                             found: value,
                         })?;
 
+                data.variables[index] = Some(enum_index);
                 unsafe { fnSetVariableIntEnum(ptr, member.index, enum_index) }
             }
             (MemberType::NodeLookup, MemberValue::Node(node)) => {
@@ -578,16 +645,19 @@ impl NodeBuilder {
                     return Err(input_not_accepted(metadata, member, &node));
                 }
 
-                self.inputs_set[member.index as usize] = true;
+                data.inputs[index] = Some(node);
                 true
             }
-            (MemberType::Hybrid, MemberValue::Float(value)) => unsafe {
-                fnSetHybridFloat(ptr, member.index, value)
-            },
+            (MemberType::Hybrid, MemberValue::Float(value)) => {
+                data.hybrids[index] = Some(Hybrid::Value(value));
+                unsafe { fnSetHybridFloat(ptr, member.index, value) }
+            }
             (MemberType::Hybrid, MemberValue::Node(node)) => {
                 if !unsafe { fnSetHybridNodeLookup(ptr, member.index, node.as_ptr()) } {
                     return Err(input_not_accepted(metadata, member, &node));
                 }
+
+                data.hybrids[index] = Some(Hybrid::Node(node));
                 true
             }
             (_, value) => return Err(invalid_member_type(metadata, member, &value)),
@@ -612,7 +682,7 @@ impl NodeBuilder {
             .members
             .iter()
             .filter(|member| matches!(member.member_type, MemberType::NodeLookup))
-            .find(|member| !self.inputs_set[member.index as usize]);
+            .find(|member| self.data.inputs[member.index as usize].is_none());
 
         if let Some(member) = missing_input {
             return Err(FastNoiseError::MissingInput {
@@ -621,7 +691,10 @@ impl NodeBuilder {
             });
         }
 
-        Ok(Node(Arc::new(self.handle)))
+        Ok(Node(Arc::new(NodeInner {
+            handle: self.handle,
+            description: Description::Built(self.data),
+        })))
     }
 }
 

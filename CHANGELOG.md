@@ -25,6 +25,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 - `Generator` trait, implemented by `Node`, typed nodes and references to them
 - `Hybrid` and `MemberValue` value types
 - `NodeBuilder`: nodes by FastNoise2 name, rejecting a missing input (`FastNoiseError::MissingInput`) or an input not accepting a node (`FastNoiseError::InputNotAccepted`)
+- `Node::encode`: encodes a node tree in the format of the FastNoise2 Node Editor, a node shared in the tree is encoded once
 - `fastnoise2-codegen` crate (not published), generating `fastnoise2-rs/src/nodes`, with `--check` to verify it is up to date
 - `nodes` and `node_builder` examples
 - `rust-version = "1.85"` and edition 2024
