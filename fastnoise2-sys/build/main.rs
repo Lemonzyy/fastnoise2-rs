@@ -109,6 +109,8 @@ fn build_from_source() {
     // Watch the whole source tree, not only headers, so C++ and CMake changes rebuild the library
     println!("cargo:rerun-if-changed={}", source_path.display());
 
+    check_compiler_supported();
+
     // Pre-create pdb-files directory structure to prevent CMake install failure on Windows
     // FastNoise2's CMakeLists.txt tries to install PDB files that may not exist in Release builds
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
@@ -312,6 +314,26 @@ fn source_path() -> PathBuf {
             check_submodule("FastNoise2", &path);
             path
         })
+}
+
+/// Panics if the C++ compiler can't build FastNoise2 for the target.
+///
+/// FastNoise2 adds the x86 only `-mno-vzeroupper` option for every GCC build, and FastSIMD's NEON
+/// code doesn't compile with GCC, only Clang is supported on other architectures.
+fn check_compiler_supported() {
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    if matches!(target_arch.as_str(), "x86" | "x86_64") {
+        return;
+    }
+
+    let compiler = cc::Build::new().cpp(true).get_compiler();
+    let is_gcc = compiler.is_like_gnu() && !compiler.is_like_clang();
+    assert!(
+        !is_gcc,
+        "FastNoise2 doesn't support GCC when targeting {target_arch} ('{}'), build with Clang: run \
+         `cargo clean -p fastnoise2-sys`, then set `CC=clang CXX=clang++`",
+        compiler.path().display()
+    );
 }
 
 /// Panics with the command to run if a bundled submodule is not checked out, e.g. after
