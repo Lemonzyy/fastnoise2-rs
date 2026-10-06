@@ -167,6 +167,11 @@ impl Node {
         &self.0.handle.metadata().name
     }
 
+    /// The FastNoise2 metadata of the node type.
+    pub fn metadata(&self) -> &'static Metadata {
+        self.0.handle.metadata()
+    }
+
     /// The `FastSIMD::FeatureSet` used by this node.
     pub fn get_active_feature_set(&self) -> u32 {
         unsafe { fnGetActiveFeatureSet(self.as_ptr()) }

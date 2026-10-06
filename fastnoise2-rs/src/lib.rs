@@ -127,7 +127,7 @@ mod node;
 pub mod nodes;
 
 pub use error::FastNoiseError;
-pub use metadata::MemberType;
+pub use metadata::{Member, MemberType, Metadata};
 pub use node::{Generator, Hybrid, MemberValue, Node, NodeBuilder};
 
 /// Everything needed to build node trees: `use fastnoise2::prelude::*;`

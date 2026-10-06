@@ -7,17 +7,67 @@ use std::{
 
 use fastnoise2_sys::*;
 
+use crate::MemberValue;
+
+/// FastNoise2 metadata of a node type: its name, description and members.
+///
+/// ```rust
+/// use fastnoise2::Metadata;
+///
+/// let fbm = Metadata::by_name("fractal fbm").unwrap();
+/// assert_eq!(fbm.name(), "FractalFBm");
+///
+/// for member in fbm.members() {
+///     println!("{} ({}): {:?}", member.name(), member.member_type(), member.default_value());
+/// }
+/// ```
 #[derive(Debug)]
-pub(crate) struct Metadata {
+pub struct Metadata {
     /// Node name, as displayed by FastNoise2 (e.g. "Perlin").
-    pub name: String,
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) groups: Vec<String>,
     /// Members in FastNoise2 metadata order: variables, node lookups, then hybrids.
-    pub members: Vec<Member>,
+    pub(crate) members: Vec<Member>,
     /// Index into `members` by formatted lookup name.
     member_lookup: HashMap<String, usize>,
 }
 
 impl Metadata {
+    /// Metadata of every FastNoise2 node type.
+    pub fn all() -> &'static [Metadata] {
+        &NODE_METADATA
+    }
+
+    /// Metadata of a node type by name, ignoring case and spaces (e.g. "FractalFBm" or
+    /// "fractal fbm").
+    pub fn by_name(name: &str) -> Option<&'static Metadata> {
+        METADATA_NAME_LOOKUP
+            .get(&format_lookup(name))
+            .map(|&id| &NODE_METADATA[id as usize])
+    }
+
+    /// Node name, as displayed by FastNoise2 (e.g. "Perlin").
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Node description from FastNoise2, may be empty.
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    /// Groups of the node in the FastNoise2 Node Editor (e.g. "Coherent Noise").
+    pub fn groups(&self) -> &[String] {
+        &self.groups
+    }
+
+    /// Members in FastNoise2 order: variables, inputs (node lookups), then hybrids.
+    pub fn members(&self) -> &[Member] {
+        &self.members
+    }
+
+    /// Member by name, ignoring case and spaces (e.g. "Feature Scale" or "featurescale").
     pub fn member(&self, name: &str) -> Option<&Member> {
         self.member_lookup
             .get(&format_lookup(name))
@@ -25,24 +75,58 @@ impl Metadata {
     }
 }
 
+/// FastNoise2 metadata of a node member.
 #[derive(Debug, Clone)]
 pub struct Member {
     /// Member name, as displayed by FastNoise2 (e.g. "Feature Scale", "Multiplier X").
-    pub name: String,
-    /// Member description from FastNoise2, may be empty.
-    pub description: String,
-    pub member_type: MemberType,
-    pub index: i32,
+    pub(crate) name: String,
+    pub(crate) description: String,
+    pub(crate) member_type: MemberType,
+    /// Index among the members of the same kind (variables, node lookups or hybrids).
+    pub(crate) index: i32,
     /// Enum values in FastNoise2 order, the position is the enum index.
-    pub enum_values: Vec<String>,
+    pub(crate) enum_values: Vec<String>,
     /// Default value: the bits of the float for float and hybrid members, the value for int and
     /// enum members, 0 for node lookups.
-    #[cfg_attr(not(feature = "encode"), allow(dead_code))]
-    pub default_bits: i32,
+    pub(crate) default_bits: i32,
 }
 
 impl Member {
-    pub fn enum_index(&self, value: &str) -> Option<i32> {
+    /// Member name, as displayed by FastNoise2 (e.g. "Feature Scale", "Multiplier X").
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// Member description from FastNoise2, may be empty.
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+
+    pub fn member_type(&self) -> MemberType {
+        self.member_type
+    }
+
+    /// Enum values in FastNoise2 order, empty if the member is not an enum.
+    pub fn enum_values(&self) -> &[String] {
+        &self.enum_values
+    }
+
+    /// FastNoise2 default value, `None` for inputs (node lookups), which have none. The default
+    /// of a hybrid member is a float.
+    pub fn default_value(&self) -> Option<MemberValue> {
+        match self.member_type {
+            MemberType::Float | MemberType::Hybrid => {
+                Some(MemberValue::Float(f32::from_bits(self.default_bits as u32)))
+            }
+            MemberType::Int => Some(MemberValue::Int(self.default_bits)),
+            MemberType::Enum => Some(MemberValue::Enum(
+                self.enum_values[self.default_bits as usize].clone(),
+            )),
+            MemberType::NodeLookup => None,
+        }
+    }
+
+    pub(crate) fn enum_index(&self, value: &str) -> Option<i32> {
         let value = format_lookup(value);
         self.enum_values
             .iter()
@@ -163,6 +247,10 @@ fn load_metadata(id: i32) -> Metadata {
 
     Metadata {
         name: to_string(unsafe { fnGetMetadataName(id) }),
+        description: to_string(unsafe { fnGetMetadataDescription(id) }),
+        groups: (0..unsafe { fnGetMetadataGroupCount(id) })
+            .map(|group_idx| to_string(unsafe { fnGetMetadataGroupName(id, group_idx) }))
+            .collect(),
         members,
         member_lookup,
     }
@@ -187,7 +275,57 @@ fn dimension_member_name(name: String, dim_idx: i32) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::{FastNoiseError, node::NodeBuilder};
+
+    #[test]
+    fn test_all_and_by_name() {
+        assert_eq!(Metadata::all().len(), NODE_METADATA.len());
+        assert!(
+            Metadata::all()
+                .iter()
+                .any(|metadata| metadata.name() == "Perlin")
+        );
+
+        assert_eq!(
+            Metadata::by_name("fractal fbm").unwrap().name(),
+            "FractalFBm"
+        );
+        assert!(Metadata::by_name("Perln").is_none());
+    }
+
+    #[test]
+    fn test_descriptions_and_groups() {
+        let perlin = Metadata::by_name("Perlin").unwrap();
+        assert!(!perlin.description().is_empty());
+        assert_eq!(perlin.groups(), ["Coherent Noise"]);
+
+        let progressive = Metadata::by_name("DomainWarpFractalProgressive").unwrap();
+        assert_eq!(progressive.groups(), ["Domain Warp", "Fractal"]);
+    }
+
+    #[test]
+    fn test_member_default_values() {
+        let fbm = Metadata::by_name("FractalFBm").unwrap();
+        let default = |name: &str| fbm.member(name).unwrap().default_value();
+
+        assert!(matches!(default("Octaves"), Some(MemberValue::Int(3))));
+        assert!(matches!(
+            default("Lacunarity"),
+            Some(MemberValue::Float(2.0))
+        ));
+        assert!(matches!(default("Gain"), Some(MemberValue::Float(0.5))));
+        assert!(default("Source").is_none());
+
+        let cellular = Metadata::by_name("CellularValue").unwrap();
+        let distance_function = cellular.member("Distance Function").unwrap();
+        assert_eq!(distance_function.member_type(), MemberType::Enum);
+        assert_eq!(distance_function.enum_values()[0], "Euclidean");
+        assert!(matches!(
+            distance_function.default_value(),
+            Some(MemberValue::Enum(value)) if value == "Euclidean Squared"
+        ));
+    }
 
     #[test]
     fn test_member_name_not_found_lists_display_names_in_order() {
