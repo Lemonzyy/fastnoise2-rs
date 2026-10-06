@@ -15,6 +15,7 @@ use fastnoise2_sys::*;
 
 use crate::{
     FastNoiseError, FeatureSet, MemberType, OutputMinMax,
+    feature_set::max_feature_set_bits,
     metadata::{METADATA_NAME_LOOKUP, Member, Metadata, NODE_METADATA, format_lookup},
 };
 
@@ -127,8 +128,8 @@ impl Node {
         let description = Description::Encoded(encoded_node_tree.to_string());
         let encoded_node_tree = CString::new(encoded_node_tree)?;
 
-        // u32::MAX (~0u in C++) auto-detects the feature set
-        let ptr = unsafe { fnNewFromEncodedNodeTree(encoded_node_tree.as_ptr(), u32::MAX) };
+        let ptr =
+            unsafe { fnNewFromEncodedNodeTree(encoded_node_tree.as_ptr(), max_feature_set_bits()) };
 
         unsafe { NodeHandle::new(ptr) }
             .map(|handle| {
@@ -602,8 +603,7 @@ impl NodeBuilder {
                 found: node_name.to_string(),
             })?;
 
-        // u32::MAX (~0u in C++) auto-detects the feature set
-        let ptr = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
+        let ptr = unsafe { fnNewFromMetadata(metadata_id, max_feature_set_bits()) };
         let handle = unsafe { NodeHandle::new(ptr) }.ok_or(FastNoiseError::NodeCreationFailed)?;
 
         let input_count = handle

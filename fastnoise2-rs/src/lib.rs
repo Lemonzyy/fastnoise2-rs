@@ -128,7 +128,7 @@ mod node;
 pub mod nodes;
 
 pub use error::FastNoiseError;
-pub use feature_set::FeatureSet;
+pub use feature_set::{FeatureSet, with_max_feature_set};
 pub use metadata::{Member, MemberType, Metadata};
 pub use node::{Generator, Hybrid, MemberValue, Node, NodeBuilder};
 

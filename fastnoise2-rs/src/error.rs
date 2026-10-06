@@ -2,7 +2,7 @@ use std::ffi::NulError;
 
 use thiserror::Error;
 
-use crate::metadata::MemberType;
+use crate::{FeatureSet, metadata::MemberType};
 
 /// Errors that can occur when interacting with [`Node`][`crate::Node`].
 ///
@@ -102,6 +102,15 @@ pub enum FastNoiseError {
     /// format can reference (65536).
     #[error("node tree has too many distinct nodes to be encoded, the maximum is 65536")]
     TooManyNodes,
+
+    /// Indicates that FastNoise2 isn't compiled for a feature set on this target.
+    #[error(
+        "feature set {requested} is not available on this target, FastNoise2 detected {detected}"
+    )]
+    FeatureSetNotAvailable {
+        requested: FeatureSet,
+        detected: FeatureSet,
+    },
 
     /// Indicates that FastNoise2 failed to set the value of a member.
     #[error("failed to set member '{member}' of node '{node}'")]

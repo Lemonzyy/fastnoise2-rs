@@ -1,5 +1,82 @@
 //! SIMD feature sets FastNoise2 nodes are compiled for.
-use std::fmt;
+use std::{cell::Cell, fmt, sync::LazyLock};
+
+use fastnoise2_sys::*;
+
+use crate::FastNoiseError;
+
+thread_local! {
+    /// `maxFeatureSet` passed to FastNoise2 when creating nodes, `u32::MAX` detects the best one.
+    static MAX_FEATURE_SET: Cell<u32> = const { Cell::new(u32::MAX) };
+}
+
+/// The feature set FastNoise2 picks when detecting it.
+static DETECTED: LazyLock<FeatureSet> = LazyLock::new(|| {
+    let node = unsafe { fnNewFromMetadata(0, u32::MAX) };
+    assert!(!node.is_null(), "FastNoise2 has a node with metadata id 0");
+
+    let bits = unsafe { fnGetActiveFeatureSet(node) };
+    unsafe { fnDeleteNodeRef(node) };
+
+    FeatureSet::from_bits(bits).expect("FastNoise2 nodes have a known feature set")
+});
+
+/// Runs `f` creating nodes with at most the `max` feature set, on this thread. It applies to every
+/// node created in `f`, by [`Generator::build`](crate::Generator::build), [`NodeBuilder`](crate::NodeBuilder)
+/// or [`Node::from_encoded_node_tree`](crate::Node::from_encoded_node_tree), and nodes use the best
+/// feature set FastNoise2 is compiled for up to `max`.
+///
+/// A higher feature set than [`FeatureSet::detected`] is lowered to it, as the CPU doesn't support it.
+///
+/// ```rust
+/// use fastnoise2::{FeatureSet, prelude::*, with_max_feature_set};
+///
+/// # #[cfg(any(target_arch = "x86", target_arch = "x86_64"))] {
+/// let node = with_max_feature_set(FeatureSet::Sse41, || perlin().fractal_f_bm().build())?;
+/// assert_eq!(node.get_active_feature_set(), FeatureSet::Sse41);
+/// # }
+/// # Ok::<(), fastnoise2::FastNoiseError>(())
+/// ```
+///
+/// # Errors
+/// Returns an error if FastNoise2 isn't compiled for `max` or a lower feature set on this target
+/// (e.g. [`FeatureSet::Scalar`], or [`FeatureSet::Neon`] on x86).
+pub fn with_max_feature_set<R>(
+    max: FeatureSet,
+    f: impl FnOnce() -> R,
+) -> Result<R, FastNoiseError> {
+    let detected = FeatureSet::detected();
+    if !max.is_compiled_up_to(detected) {
+        return Err(FastNoiseError::FeatureSetNotAvailable {
+            requested: max,
+            detected,
+        });
+    }
+
+    // Restores the previous maximum, also when `f` panics
+    struct Restore(u32);
+
+    impl Drop for Restore {
+        fn drop(&mut self) {
+            MAX_FEATURE_SET.set(self.0);
+        }
+    }
+
+    let bits = if max.bits() >= detected.bits() {
+        u32::MAX
+    } else {
+        max.bits()
+    };
+    let _restore = Restore(MAX_FEATURE_SET.replace(bits));
+
+    Ok(f())
+}
+
+/// `maxFeatureSet` to create nodes with on this thread, see [`with_max_feature_set`].
+#[inline]
+pub(crate) fn max_feature_set_bits() -> u32 {
+    MAX_FEATURE_SET.get()
+}
 
 /// A SIMD feature set (`FastSIMD::FeatureSet`), the instructions a node generates noise with.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -86,6 +163,26 @@ impl FeatureSet {
         }
     }
 
+    /// The best feature set FastNoise2 is compiled for and the CPU supports, used by default.
+    pub fn detected() -> Self {
+        *DETECTED
+    }
+
+    /// Whether FastNoise2 is compiled for this feature set or a lower one of the same
+    /// architecture as `detected`, so creating a node with it as maximum succeeds.
+    fn is_compiled_up_to(self, detected: Self) -> bool {
+        // The lowest feature set FastSIMD compiles by default for each architecture
+        let minimum = match detected.bits() {
+            bits if bits & flag::X86 != 0 => Self::Sse2,
+            bits if bits & flag::ARM != 0 => Self::Neon,
+            _ => Self::Wasm,
+        };
+        let architecture = flag::X86 | flag::ARM | flag::WASM;
+
+        self.bits() & architecture == detected.bits() & architecture
+            && self.bits() >= minimum.bits()
+    }
+
     pub(crate) fn from_bits(bits: u32) -> Option<Self> {
         Self::ALL
             .into_iter()
@@ -127,6 +224,80 @@ mod tests {
         assert_eq!(FeatureSet::Neon.bits(), 0xc000);
         assert_eq!(FeatureSet::Aarch64.bits(), 0x1c000);
         assert_eq!(FeatureSet::Wasm.bits(), 0x20000);
+    }
+
+    fn perlin_feature_set() -> FeatureSet {
+        crate::NodeBuilder::new("Perlin")
+            .unwrap()
+            .build()
+            .unwrap()
+            .get_active_feature_set()
+    }
+
+    #[test]
+    fn test_detected_by_default() {
+        assert_eq!(perlin_feature_set(), FeatureSet::detected());
+    }
+
+    #[test]
+    fn test_with_max_feature_set() {
+        let minimum = FeatureSet::ALL
+            .into_iter()
+            .find(|feature_set| feature_set.is_compiled_up_to(FeatureSet::detected()))
+            .unwrap();
+
+        let (inner, nested) = with_max_feature_set(minimum, || {
+            let nested = with_max_feature_set(FeatureSet::detected(), perlin_feature_set).unwrap();
+            (perlin_feature_set(), nested)
+        })
+        .unwrap();
+
+        assert_eq!(inner, minimum);
+        assert_eq!(nested, FeatureSet::detected());
+        assert_eq!(perlin_feature_set(), FeatureSet::detected());
+    }
+
+    /// A typed tree built in the scope has every node at the minimum feature set.
+    #[test]
+    fn test_with_max_feature_set_generates() {
+        use crate::{Generator, nodes::*};
+
+        let minimum = FeatureSet::ALL
+            .into_iter()
+            .find(|feature_set| feature_set.is_compiled_up_to(FeatureSet::detected()))
+            .unwrap();
+        let node = with_max_feature_set(minimum, || {
+            (perlin().fractal_f_bm().domain_warp_gradient().build() + 1.0).build()
+        })
+        .unwrap();
+
+        let mut noise = vec![0.0; 64 * 64];
+        node.gen_uniform_grid_2d(&mut noise, 0.0, 0.0, 64, 64, 0.1, 0.1, 1337);
+        assert_eq!(node.get_active_feature_set(), minimum);
+        assert!(noise.iter().all(|value| value.is_finite()));
+    }
+
+    #[test]
+    fn test_with_max_feature_set_lowers_to_detected() {
+        let highest = FeatureSet::ALL
+            .into_iter()
+            .rfind(|feature_set| feature_set.is_compiled_up_to(FeatureSet::detected()))
+            .unwrap();
+
+        let feature_set = with_max_feature_set(highest, perlin_feature_set).unwrap();
+        assert_eq!(feature_set, FeatureSet::detected());
+    }
+
+    #[test]
+    fn test_with_max_feature_set_not_available() {
+        let result = with_max_feature_set(FeatureSet::Scalar, perlin_feature_set);
+        assert!(matches!(
+            result,
+            Err(FastNoiseError::FeatureSetNotAvailable {
+                requested: FeatureSet::Scalar,
+                ..
+            })
+        ));
     }
 
     #[test]
