@@ -87,6 +87,14 @@
 //!
 //! Take a look at [examples](https://github.com/Lemonzyy/fastnoise2-rs/tree/main/fastnoise2-rs/examples) to find out more.
 //!
+//! ## Encoding node trees
+//!
+//! `Node::encode` exports a node tree in the format of the FastNoise2 Node Editor. It needs the `encode` feature, disabled by default as every node then keeps the values it was built with:
+//!
+//! ```sh
+//! cargo add fastnoise2 --features encode
+//! ```
+//!
 //! ## Setup
 //!
 //! fastnoise2-sys, the underlying bindings for fastnoise2, uses a build script that follows a specific order of preference for compiling and/or linking the FastNoise2 library:
@@ -110,6 +118,7 @@
 //! - The `FASTNOISE2_SOURCE_DIR` environment variable is generally not needed as fastnoise2-sys includes the FastNoise2 source code as a Git submodule. If you need to use a different source directory, set `FASTNOISE2_SOURCE_DIR` to point to the root of the FastNoise2 source code. FastSIMD, the FastNoise2 dependency, is also included as a Git submodule and used when `FASTNOISE2_SOURCE_DIR` is not set, so building does not need network access.
 //!
 #![allow(clippy::too_many_arguments)]
+#[cfg(feature = "encode")]
 mod encode;
 mod error;
 mod metadata;

@@ -55,7 +55,7 @@ jobs:
         run: cargo build --release --workspace
 
       - name: Run tests
-        run: cargo test --release --workspace
+        run: cargo test --release --workspace --features fastnoise2/encode
 
   build-wasm:
     name: Build (WASM/Emscripten)

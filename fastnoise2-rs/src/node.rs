@@ -14,7 +14,7 @@ use std::{
 use fastnoise2_sys::*;
 
 use crate::{
-    FastNoiseError, MemberType, OutputMinMax, encode,
+    FastNoiseError, MemberType, OutputMinMax,
     metadata::{METADATA_NAME_LOOKUP, Member, Metadata, NODE_METADATA, format_lookup},
 };
 
@@ -25,6 +25,7 @@ pub(crate) struct NodeHandle {
 }
 
 /// What is known about a node to encode it: FastNoise2 nodes can't be read back.
+#[cfg(feature = "encode")]
 pub(crate) enum Description {
     /// Built with a [`NodeBuilder`], from the values it set.
     Built(NodeData),
@@ -33,6 +34,7 @@ pub(crate) enum Description {
 }
 
 /// Values set on a node, like FastNoise2's `NodeData`, `None` for a member left at its default.
+#[cfg(feature = "encode")]
 pub(crate) struct NodeData {
     /// By variable index: the bits of a float, an int or an enum index.
     pub(crate) variables: Vec<Option<i32>>,
@@ -42,6 +44,7 @@ pub(crate) struct NodeData {
     pub(crate) hybrids: Vec<Option<Hybrid>>,
 }
 
+#[cfg(feature = "encode")]
 impl NodeData {
     fn new(metadata: &Metadata) -> Self {
         let count = |member_types: &[MemberType]| {
@@ -75,6 +78,7 @@ impl NodeHandle {
         Some(Self { ptr, metadata_id })
     }
 
+    #[cfg(feature = "encode")]
     #[inline]
     pub(crate) fn metadata_id(&self) -> i32 {
         self.metadata_id
@@ -101,6 +105,7 @@ pub struct Node(pub(crate) Arc<NodeInner>);
 
 pub(crate) struct NodeInner {
     pub(crate) handle: NodeHandle,
+    #[cfg(feature = "encode")]
     pub(crate) description: Description,
 }
 
@@ -118,6 +123,7 @@ impl Node {
     /// # Errors
     /// Returns an error if the encoded node tree is invalid.
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
+        #[cfg(feature = "encode")]
         let description = Description::Encoded(encoded_node_tree.to_string());
         let encoded_node_tree = CString::new(encoded_node_tree)?;
 
@@ -128,6 +134,7 @@ impl Node {
             .map(|handle| {
                 Self(Arc::new(NodeInner {
                     handle,
+                    #[cfg(feature = "encode")]
                     description,
                 }))
             })
@@ -150,8 +157,9 @@ impl Node {
     /// # Errors
     /// Returns an error if the tree contains a node created from an encoded node tree, unless it
     /// is the node itself, or if a node is shared after more than 65536 distinct nodes.
+    #[cfg(feature = "encode")]
     pub fn encode(&self) -> Result<String, FastNoiseError> {
-        encode::encode(self)
+        crate::encode::encode(self)
     }
 
     /// The FastNoise2 node name (e.g. "Perlin").
@@ -571,6 +579,9 @@ impl<G: Generator> From<G> for MemberValue {
 /// ```
 pub struct NodeBuilder {
     handle: NodeHandle,
+    /// Whether each node lookup member is set, by node lookup index.
+    inputs_set: Vec<bool>,
+    #[cfg(feature = "encode")]
     data: NodeData,
 }
 
@@ -588,9 +599,20 @@ impl NodeBuilder {
         // u32::MAX (~0u in C++) auto-detects the feature set
         let ptr = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
         let handle = unsafe { NodeHandle::new(ptr) }.ok_or(FastNoiseError::NodeCreationFailed)?;
-        let data = NodeData::new(handle.metadata());
 
-        Ok(Self { handle, data })
+        let input_count = handle
+            .metadata()
+            .members
+            .iter()
+            .filter(|member| matches!(member.member_type, MemberType::NodeLookup))
+            .count();
+
+        Ok(Self {
+            inputs_set: vec![false; input_count],
+            #[cfg(feature = "encode")]
+            data: NodeData::new(handle.metadata()),
+            handle,
+        })
     }
 
     /// Sets a member by name, ignoring case and spaces (e.g. "Feature Scale" or "featurescale").
@@ -614,16 +636,23 @@ impl NodeBuilder {
                 })?;
 
         let ptr = self.handle.ptr.as_ptr();
-        let data = &mut self.data;
         let index = member.index as usize;
+        #[cfg(feature = "encode")]
+        let data = &mut self.data;
 
         let is_set = match (member.member_type, value.into()) {
             (MemberType::Float, MemberValue::Float(value)) => {
-                data.variables[index] = Some(value.to_bits() as i32);
+                #[cfg(feature = "encode")]
+                {
+                    data.variables[index] = Some(value.to_bits() as i32);
+                }
                 unsafe { fnSetVariableFloat(ptr, member.index, value) }
             }
             (MemberType::Int, MemberValue::Int(value)) => {
-                data.variables[index] = Some(value);
+                #[cfg(feature = "encode")]
+                {
+                    data.variables[index] = Some(value);
+                }
                 unsafe { fnSetVariableIntEnum(ptr, member.index, value) }
             }
             (MemberType::Enum, MemberValue::Enum(value)) => {
@@ -637,7 +666,10 @@ impl NodeBuilder {
                             found: value,
                         })?;
 
-                data.variables[index] = Some(enum_index);
+                #[cfg(feature = "encode")]
+                {
+                    data.variables[index] = Some(enum_index);
+                }
                 unsafe { fnSetVariableIntEnum(ptr, member.index, enum_index) }
             }
             (MemberType::NodeLookup, MemberValue::Node(node)) => {
@@ -645,11 +677,18 @@ impl NodeBuilder {
                     return Err(input_not_accepted(metadata, member, &node));
                 }
 
-                data.inputs[index] = Some(node);
+                self.inputs_set[index] = true;
+                #[cfg(feature = "encode")]
+                {
+                    data.inputs[index] = Some(node);
+                }
                 true
             }
             (MemberType::Hybrid, MemberValue::Float(value)) => {
-                data.hybrids[index] = Some(Hybrid::Value(value));
+                #[cfg(feature = "encode")]
+                {
+                    data.hybrids[index] = Some(Hybrid::Value(value));
+                }
                 unsafe { fnSetHybridFloat(ptr, member.index, value) }
             }
             (MemberType::Hybrid, MemberValue::Node(node)) => {
@@ -657,7 +696,10 @@ impl NodeBuilder {
                     return Err(input_not_accepted(metadata, member, &node));
                 }
 
-                data.hybrids[index] = Some(Hybrid::Node(node));
+                #[cfg(feature = "encode")]
+                {
+                    data.hybrids[index] = Some(Hybrid::Node(node));
+                }
                 true
             }
             (_, value) => return Err(invalid_member_type(metadata, member, &value)),
@@ -682,7 +724,7 @@ impl NodeBuilder {
             .members
             .iter()
             .filter(|member| matches!(member.member_type, MemberType::NodeLookup))
-            .find(|member| self.data.inputs[member.index as usize].is_none());
+            .find(|member| !self.inputs_set[member.index as usize]);
 
         if let Some(member) = missing_input {
             return Err(FastNoiseError::MissingInput {
@@ -693,6 +735,7 @@ impl NodeBuilder {
 
         Ok(Node(Arc::new(NodeInner {
             handle: self.handle,
+            #[cfg(feature = "encode")]
             description: Description::Built(self.data),
         })))
     }

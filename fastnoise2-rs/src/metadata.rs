@@ -37,6 +37,7 @@ pub struct Member {
     pub enum_values: Vec<String>,
     /// Default value: the bits of the float for float and hybrid members, the value for int and
     /// enum members, 0 for node lookups.
+    #[cfg_attr(not(feature = "encode"), allow(dead_code))]
     pub default_bits: i32,
 }
 
