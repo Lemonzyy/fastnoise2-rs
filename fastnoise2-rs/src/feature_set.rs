@@ -277,6 +277,44 @@ mod tests {
         assert!(noise.iter().all(|value| value.is_finite()));
     }
 
+    /// Generating noise with an input of another feature set crashes FastNoise2.
+    #[test]
+    fn test_input_feature_set_mismatch() {
+        use crate::{Hybrid, NodeBuilder};
+
+        let minimum = FeatureSet::ALL
+            .into_iter()
+            .find(|feature_set| feature_set.is_compiled_up_to(FeatureSet::detected()))
+            .unwrap();
+        if minimum == FeatureSet::detected() {
+            return;
+        }
+
+        let source = NodeBuilder::new("Perlin").unwrap().build().unwrap();
+        let (fbm, abs) = with_max_feature_set(minimum, || {
+            (
+                NodeBuilder::new("FractalFBm")
+                    .unwrap()
+                    .set("Source", &source),
+                NodeBuilder::new("Add")
+                    .unwrap()
+                    .set("RHS", Hybrid::from(&source)),
+            )
+        })
+        .unwrap();
+
+        for result in [fbm, abs] {
+            let Err(FastNoiseError::FeatureSetMismatch {
+                expected, found, ..
+            }) = result
+            else {
+                panic!("expected FeatureSetMismatch");
+            };
+            assert_eq!(expected, minimum);
+            assert_eq!(found, FeatureSet::detected());
+        }
+    }
+
     #[test]
     fn test_with_max_feature_set_lowers_to_detected() {
         let highest = FeatureSet::ALL

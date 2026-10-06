@@ -679,6 +679,7 @@ impl NodeBuilder {
                 unsafe { fnSetVariableIntEnum(ptr, member.index, enum_index) }
             }
             (MemberType::NodeLookup, MemberValue::Node(node)) => {
+                check_feature_set(ptr, metadata, member, &node)?;
                 if !unsafe { fnSetNodeLookup(ptr, member.index, node.as_ptr()) } {
                     return Err(input_not_accepted(metadata, member, &node));
                 }
@@ -698,6 +699,7 @@ impl NodeBuilder {
                 unsafe { fnSetHybridFloat(ptr, member.index, value) }
             }
             (MemberType::Hybrid, MemberValue::Node(node)) => {
+                check_feature_set(ptr, metadata, member, &node)?;
                 if !unsafe { fnSetHybridNodeLookup(ptr, member.index, node.as_ptr()) } {
                     return Err(input_not_accepted(metadata, member, &node));
                 }
@@ -769,6 +771,29 @@ pub(crate) fn check_position_arrays(noise_out: &[f32], pos_arrays: &[&[f32]]) {
         pos_arrays.iter().all(|pos_array| pos_array.len() == len),
         "noise_out and position arrays must have the same length"
     );
+}
+
+/// FastNoise2 only asserts that an input has the feature set of its node, generating noise with
+/// another one crashes.
+#[inline]
+fn check_feature_set(
+    ptr: *mut c_void,
+    metadata: &Metadata,
+    member: &Member,
+    input: &Node,
+) -> Result<(), FastNoiseError> {
+    let feature_set = unsafe { fnGetActiveFeatureSet(ptr) };
+    if feature_set == unsafe { fnGetActiveFeatureSet(input.as_ptr()) } {
+        return Ok(());
+    }
+
+    Err(FastNoiseError::FeatureSetMismatch {
+        node: metadata.name.clone(),
+        member: member.name.clone(),
+        expected: FeatureSet::from_bits(feature_set)
+            .expect("FastNoise2 nodes have a known feature set"),
+        found: input.get_active_feature_set(),
+    })
 }
 
 #[cold]

@@ -24,6 +24,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 - `Node`: a built node, `Send + Sync`, cloning shares the same FastNoise2 node
 - `Metadata` and `Member`: FastNoise2 metadata of every node type (`Metadata::all`, `Metadata::by_name`, `Node::metadata`), with names, descriptions, groups, member types, enum values and default values
 - `FeatureSet` and `with_max_feature_set`: creates nodes with at most a SIMD feature set on the current thread (lowered to `FeatureSet::detected`), returning `FastNoiseError::FeatureSetNotAvailable` for a feature set FastNoise2 is not compiled for instead of crashing
+- `FastNoiseError::FeatureSetMismatch`: an input with another SIMD feature set than its node is rejected, FastNoise2 only asserts it and generating noise crashed
 - `Generator` trait, implemented by `Node`, typed nodes and references to them
 - `Hybrid` and `MemberValue` value types
 - `NodeBuilder`: nodes by FastNoise2 name, rejecting a missing input (`FastNoiseError::MissingInput`) or an input not accepting a node (`FastNoiseError::InputNotAccepted`)

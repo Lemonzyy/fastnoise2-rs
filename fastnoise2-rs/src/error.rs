@@ -88,6 +88,20 @@ pub enum FastNoiseError {
         input: String,
     },
 
+    /// Indicates that an input has another SIMD feature set than its node, see
+    /// [`with_max_feature_set`](crate::with_max_feature_set).
+    #[error(
+        "input '{member}' of node '{node}' has the {found} feature set, expected {expected} like the node"
+    )]
+    FeatureSetMismatch {
+        /// The name of the node.
+        node: String,
+        /// The name of the input member.
+        member: String,
+        expected: FeatureSet,
+        found: FeatureSet,
+    },
+
     /// Indicates that a node tree can't be encoded because it contains a node created from an
     /// encoded node tree, whose values are unknown.
     #[error(
