@@ -3,6 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use bindgen::RustEdition;
 use cmake::Config;
 
 const SOURCE_DIR_KEY: &str = "FASTNOISE2_SOURCE_DIR";
@@ -244,6 +245,7 @@ fn generate_bindings(source_path: PathBuf) {
     // because bindgen/libclang fails when targeting WASM (produces empty output).
     // This is safe because the C ABI for these declarations is identical across platforms.
     let mut builder = bindgen::Builder::default()
+        .rust_edition(RustEdition::Edition2024)
         .header(header_path.to_str().unwrap())
         .clang_arg(format!("-I{}", include_path.to_str().unwrap()))
         .clang_arg("-xc++")
