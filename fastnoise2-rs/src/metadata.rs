@@ -2,6 +2,7 @@ use std::{
     collections::HashMap,
     ffi::{CStr, c_char},
     fmt,
+    ops::RangeInclusive,
     sync::LazyLock,
 };
 
@@ -89,6 +90,16 @@ pub struct Member {
     /// Default value: the bits of the float for float and hybrid members, the value for int and
     /// enum members, 0 for node lookups.
     pub(crate) default_bits: i32,
+    /// Range bounds of variables, as bits like `default_bits`, 0 for the other members.
+    pub(crate) min_bits: i32,
+    pub(crate) max_bits: i32,
+}
+
+/// Range of a numeric member, see [`Member::range`].
+#[derive(Clone, Debug, PartialEq)]
+pub enum MemberRange {
+    Float(RangeInclusive<f32>),
+    Int(RangeInclusive<i32>),
 }
 
 impl Member {
@@ -123,6 +134,22 @@ impl Member {
                 self.enum_values[self.default_bits as usize].clone(),
             )),
             MemberType::NodeLookup => None,
+        }
+    }
+
+    /// Range the FastNoise2 Node Editor clamps the member to, `None` if it has none. FastNoise2
+    /// doesn't check it, a value out of range is set as is.
+    pub fn range(&self) -> Option<MemberRange> {
+        // Like the Node Editor (ImGui), bounds only apply if min < max
+        match self.member_type {
+            MemberType::Float => {
+                let min = f32::from_bits(self.min_bits as u32);
+                let max = f32::from_bits(self.max_bits as u32);
+                (min < max).then_some(MemberRange::Float(min..=max))
+            }
+            MemberType::Int => (self.min_bits < self.max_bits)
+                .then_some(MemberRange::Int(self.min_bits..=self.max_bits)),
+            _ => None,
         }
     }
 
@@ -203,6 +230,10 @@ fn load_metadata(id: i32) -> Metadata {
             description: to_string(unsafe { fnGetMetadataVariableDescription(id, variable_idx) }),
             // The raw bits of the value union, whatever the variable type
             default_bits: unsafe { fnGetMetadataVariableDefaultIntEnum(id, variable_idx) },
+            // The C API only returns the float of the value union, its bits are the int of int
+            // members
+            min_bits: unsafe { fnGetMetadataVariableMinFloat(id, variable_idx) }.to_bits() as i32,
+            max_bits: unsafe { fnGetMetadataVariableMaxFloat(id, variable_idx) }.to_bits() as i32,
             member_type,
             index: variable_idx,
             enum_values,
@@ -222,6 +253,8 @@ fn load_metadata(id: i32) -> Metadata {
             index: node_lookup_idx,
             enum_values: Vec::new(),
             default_bits: 0,
+            min_bits: 0,
+            max_bits: 0,
         });
     }
 
@@ -236,6 +269,8 @@ fn load_metadata(id: i32) -> Metadata {
             index: hybrid_idx,
             enum_values: Vec::new(),
             default_bits: unsafe { fnGetMetadataHybridDefault(id, hybrid_idx) }.to_bits() as i32,
+            min_bits: 0,
+            max_bits: 0,
         });
     }
 
@@ -325,6 +360,31 @@ mod tests {
             distance_function.default_value(),
             Some(MemberValue::Enum(value)) if value == "Euclidean Squared"
         ));
+    }
+
+    #[test]
+    fn test_member_ranges() {
+        let range = |node: &str, member: &str| {
+            Metadata::by_name(node)
+                .unwrap()
+                .member(member)
+                .unwrap()
+                .range()
+        };
+
+        assert_eq!(
+            range("FractalFBm", "Octaves"),
+            Some(MemberRange::Int(2..=16))
+        );
+        assert_eq!(
+            range("CellularDistance", "Distance Index 1"),
+            Some(MemberRange::Int(0..=3))
+        );
+
+        // A minimum without maximum isn't clamped by the Node Editor
+        assert_eq!(range("PowInt", "Pow"), None);
+        assert_eq!(range("Perlin", "Feature Scale"), None);
+        assert_eq!(range("FractalFBm", "Gain"), None);
     }
 
     #[test]

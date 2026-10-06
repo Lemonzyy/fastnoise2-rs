@@ -22,7 +22,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
   - Operators `+`, `-`, `*`, `/`, `%` and negation, with constants on either side (`0.5 - &node`)
   - Every FastNoise2 member is available, including the ones missing before (e.g. cellular feature scale, domain warp seed offset and amplitude scaling), and hybrid members accept nodes (e.g. `Remap` bounds, `Gradient` offsets)
 - `Node`: a built node, `Send + Sync`, cloning shares the same FastNoise2 node
-- `Metadata` and `Member`: FastNoise2 metadata of every node type (`Metadata::all`, `Metadata::by_name`, `Node::metadata`), with names, descriptions, groups, member types, enum values and default values
+- `Metadata` and `Member`: FastNoise2 metadata of every node type (`Metadata::all`, `Metadata::by_name`, `Node::metadata`), with names, descriptions, groups, member types, enum values, default values and the ranges the Node Editor clamps members to (`MemberRange`, not enforced by FastNoise2)
 - `FeatureSet` and `with_max_feature_set`: creates nodes with at most a SIMD feature set on the current thread (lowered to `FeatureSet::detected`), returning `FastNoiseError::FeatureSetNotAvailable` for a feature set FastNoise2 is not compiled for instead of crashing
 - `FastNoiseError::FeatureSetMismatch`: an input with another SIMD feature set than its node is rejected, FastNoise2 only asserts it and generating noise crashed
 - `Generator` trait, implemented by `Node`, typed nodes and references to them
