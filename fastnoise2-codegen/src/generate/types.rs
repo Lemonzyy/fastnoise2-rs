@@ -53,8 +53,8 @@ impl Generator<'_> {
     /// Rust expression of the default value, `None` for inputs.
     pub(super) fn default_value(&self, member: &Member) -> Option<TokenStream> {
         Some(match (&member.kind, self.field_type(member)) {
-            (MemberKind::Float { default }, _) => float_literal(*default),
-            (MemberKind::Int { default }, _) => int_literal(*default),
+            (MemberKind::Float { default, .. }, _) => float_literal(*default),
+            (MemberKind::Int { default, .. }, _) => int_literal(*default),
             (MemberKind::Enum { default, .. }, FieldType::Bool) => {
                 let default = *default == 1;
                 quote! { #default }
@@ -74,10 +74,10 @@ impl Generator<'_> {
 
     pub(super) fn default_doc(&self, member: &Member) -> String {
         match (&member.kind, self.field_type(member)) {
-            (MemberKind::Float { default } | MemberKind::Hybrid { default }, _) => {
+            (MemberKind::Float { default, .. } | MemberKind::Hybrid { default }, _) => {
                 format!("{default:?}")
             }
-            (MemberKind::Int { default }, _) => default.to_string(),
+            (MemberKind::Int { default, .. }, _) => default.to_string(),
             (MemberKind::Enum { default, .. }, FieldType::Bool) => (*default == 1).to_string(),
             (MemberKind::Enum { values, default }, FieldType::Enum(enum_type)) => {
                 format!(
@@ -88,6 +88,19 @@ impl Generator<'_> {
             }
             _ => unreachable!("inputs have no default"),
         }
+    }
+}
+
+/// Range the Node Editor clamps the member to, `None` if it has none.
+pub(super) fn range_doc(member: &Member) -> Option<String> {
+    match &member.kind {
+        MemberKind::Float {
+            range: Some(range), ..
+        } => Some(format!("{range:?}")),
+        MemberKind::Int {
+            range: Some(range), ..
+        } => Some(format!("{range:?}")),
+        _ => None,
     }
 }
 

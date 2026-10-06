@@ -1,5 +1,8 @@
 //! Loads FastNoise2 metadata through the C API.
-use std::ffi::{CStr, c_char, c_void};
+use std::{
+    ffi::{CStr, c_char, c_void},
+    ops::RangeInclusive,
+};
 
 use fastnoise2_sys::*;
 
@@ -27,11 +30,23 @@ pub struct Member {
 }
 
 pub enum MemberKind {
-    Float { default: f32 },
-    Int { default: i32 },
-    Enum { values: Vec<String>, default: usize },
+    /// `range` is the range the Node Editor clamps the member to.
+    Float {
+        default: f32,
+        range: Option<RangeInclusive<f32>>,
+    },
+    Int {
+        default: i32,
+        range: Option<RangeInclusive<i32>>,
+    },
+    Enum {
+        values: Vec<String>,
+        default: usize,
+    },
     Input(Input),
-    Hybrid { default: f32 },
+    Hybrid {
+        default: f32,
+    },
 }
 
 pub struct Input {
@@ -65,13 +80,23 @@ fn load_node(id: i32, names: &[String], instances: &[*mut c_void]) -> Node {
     let mut members = Vec::new();
 
     for index in 0..unsafe { fnGetMetadataVariableCount(id) } {
+        // The C API only returns the float of the value union, its bits are the int of int
+        // members. Like the Node Editor (ImGui), bounds only apply if min < max.
+        let min = unsafe { fnGetMetadataVariableMinFloat(id, index) };
+        let max = unsafe { fnGetMetadataVariableMaxFloat(id, index) };
+
         let kind = match unsafe { fnGetMetadataVariableType(id, index) } {
             0 => MemberKind::Float {
                 default: unsafe { fnGetMetadataVariableDefaultFloat(id, index) },
+                range: (min < max).then_some(min..=max),
             },
-            1 => MemberKind::Int {
-                default: unsafe { fnGetMetadataVariableDefaultIntEnum(id, index) },
-            },
+            1 => {
+                let (min, max) = (min.to_bits() as i32, max.to_bits() as i32);
+                MemberKind::Int {
+                    default: unsafe { fnGetMetadataVariableDefaultIntEnum(id, index) },
+                    range: (min < max).then_some(min..=max),
+                }
+            }
             2 => MemberKind::Enum {
                 values: (0..unsafe { fnGetMetadataEnumCount(id, index) })
                     .map(|value| to_string(unsafe { fnGetMetadataEnumName(id, index, value) }))

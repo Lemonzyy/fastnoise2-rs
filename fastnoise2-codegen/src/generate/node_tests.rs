@@ -129,11 +129,11 @@ impl Generator<'_> {
     /// `MemberValue` of the default value of a member.
     fn member_value(&self, member: &Member) -> TokenStream {
         match (&member.kind, self.field_type(member)) {
-            (MemberKind::Float { default } | MemberKind::Hybrid { default }, _) => {
+            (MemberKind::Float { default, .. } | MemberKind::Hybrid { default }, _) => {
                 let default = float_literal(*default);
                 quote! { MemberValue::Float(#default) }
             }
-            (MemberKind::Int { default }, _) => {
+            (MemberKind::Int { default, .. }, _) => {
                 let default = int_literal(*default);
                 quote! { MemberValue::Int(#default) }
             }
@@ -152,11 +152,11 @@ impl Generator<'_> {
     /// A non default test value, as (typed builder argument, `MemberValue`).
     fn test_value(&self, member: &Member) -> (TokenStream, TokenStream) {
         match (&member.kind, self.field_type(member)) {
-            (MemberKind::Float { default }, _) => {
+            (MemberKind::Float { default, .. }, _) => {
                 let value = float_literal(default + 1.5);
                 (quote! { #value }, quote! { MemberValue::Float(#value) })
             }
-            (MemberKind::Int { default }, _) => {
+            (MemberKind::Int { default, .. }, _) => {
                 let value = int_literal(default + 1);
                 (quote! { #value }, quote! { MemberValue::Int(#value) })
             }

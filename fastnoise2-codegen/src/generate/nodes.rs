@@ -8,7 +8,7 @@ use quote::{format_ident, quote};
 use super::{
     Generator,
     tokens::{doc_lines, field_ident},
-    types::FieldType,
+    types::{FieldType, range_doc},
 };
 use crate::metadata::{Member, MemberKind, Node};
 
@@ -164,6 +164,12 @@ impl Generator<'_> {
             doc.push(String::new());
         }
         doc.push(format!(" Default: `{}`", self.default_doc(member)));
+        if let Some(range) = range_doc(member) {
+            doc.push(String::new());
+            doc.push(format!(
+                " Node Editor range: `{range}`, not enforced by FastNoise2"
+            ));
+        }
 
         match self.field_type(member) {
             FieldType::Hybrid => quote! {

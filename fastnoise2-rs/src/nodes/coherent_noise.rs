@@ -386,6 +386,8 @@ impl CellularValue {
     /// Nth closest cell
     ///
     /// Default: `0`
+    ///
+    /// Node Editor range: `0..=3`, not enforced by FastNoise2
     pub fn with_value_index(mut self, value_index: i32) -> Self {
         self.value_index = value_index;
         self
@@ -532,6 +534,8 @@ impl CellularDistance {
     /// Nth closest cell
     ///
     /// Default: `0`
+    ///
+    /// Node Editor range: `0..=3`, not enforced by FastNoise2
     pub fn with_distance_index_0(mut self, distance_index_0: i32) -> Self {
         self.distance_index_0 = distance_index_0;
         self
@@ -540,6 +544,8 @@ impl CellularDistance {
     /// Nth closest cell
     ///
     /// Default: `1`
+    ///
+    /// Node Editor range: `0..=3`, not enforced by FastNoise2
     pub fn with_distance_index_1(mut self, distance_index_1: i32) -> Self {
         self.distance_index_1 = distance_index_1;
         self

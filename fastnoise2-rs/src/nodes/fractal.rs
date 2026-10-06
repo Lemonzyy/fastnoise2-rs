@@ -32,6 +32,8 @@ impl FractalFBm {
     /// Each octave adds finer detail at higher frequencies
     ///
     /// Default: `3`
+    ///
+    /// Node Editor range: `2..=16`, not enforced by FastNoise2
     pub fn with_octaves(mut self, octaves: i32) -> Self {
         self.octaves = octaves;
         self
@@ -115,6 +117,8 @@ impl FractalRidged {
     /// Each octave adds finer detail at higher frequencies
     ///
     /// Default: `3`
+    ///
+    /// Node Editor range: `2..=16`, not enforced by FastNoise2
     pub fn with_octaves(mut self, octaves: i32) -> Self {
         self.octaves = octaves;
         self
