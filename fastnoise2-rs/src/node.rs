@@ -5,7 +5,7 @@
 //! into a [`Node`]. A [`NodeBuilder`] creates nodes from FastNoise2 metadata names and checks
 //! that every input is set before building.
 use std::{
-    ffi::{c_void, CString},
+    ffi::{CString, c_void},
     fmt,
     ptr::NonNull,
     sync::Arc,
@@ -14,8 +14,8 @@ use std::{
 use fastnoise2_sys::*;
 
 use crate::{
-    metadata::{format_lookup, Member, Metadata, METADATA_NAME_LOOKUP, NODE_METADATA},
     FastNoiseError, MemberType, OutputMinMax,
+    metadata::{METADATA_NAME_LOOKUP, Member, Metadata, NODE_METADATA, format_lookup},
 };
 
 /// Owner of a FastNoise2 node reference, released on drop.
@@ -677,8 +677,7 @@ fn invalid_member_type(
 mod tests {
     use super::*;
 
-    const ENCODED_NODE_TREE: &str =
-        "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
+    const ENCODED_NODE_TREE: &str = "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
 
     fn perlin() -> Node {
         NodeBuilder::new("Perlin").unwrap().build().unwrap()

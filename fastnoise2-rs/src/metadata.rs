@@ -1,6 +1,6 @@
 use std::{
     collections::HashMap,
-    ffi::{c_char, CStr},
+    ffi::{CStr, c_char},
     fmt,
     sync::LazyLock,
 };
@@ -179,7 +179,7 @@ fn dimension_member_name(name: String, dim_idx: i32) -> String {
 
 #[cfg(test)]
 mod tests {
-    use crate::{node::NodeBuilder, FastNoiseError};
+    use crate::{FastNoiseError, node::NodeBuilder};
 
     #[test]
     fn test_member_name_not_found_lists_display_names_in_order() {

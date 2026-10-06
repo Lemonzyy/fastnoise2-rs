@@ -5,8 +5,7 @@ use fastnoise2::Node;
 use image::{GrayImage, Luma};
 
 // "Mountain Terrain" tree integrated into FastNoise2 Node Editor.
-const DEFAULT_ENCODED_NODE_TREE: &str =
-    "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
+const DEFAULT_ENCODED_NODE_TREE: &str = "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 

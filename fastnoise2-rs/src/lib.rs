@@ -122,7 +122,7 @@ pub use node::{Generator, Hybrid, MemberValue, Node, NodeBuilder};
 
 /// Everything needed to build node trees: `use fastnoise2::prelude::*;`
 pub mod prelude {
-    pub use crate::{nodes::*, Generator, Hybrid, Node, NodeBuilder};
+    pub use crate::{Generator, Hybrid, Node, NodeBuilder, nodes::*};
 }
 
 /// Holds the minimum and maximum values from noise generation.

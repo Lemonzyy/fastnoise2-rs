@@ -5,7 +5,7 @@ use std::slice;
 use fastnoise2::prelude::*;
 
 /// Generate 2D noise and write grayscale values (0-255) to output buffer
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn generate_noise(output: *mut u8, width: i32, height: i32) {
     let size = (width * height) as usize;
     let node: Node = simplex().fractal_f_bm().with_octaves(4).build();

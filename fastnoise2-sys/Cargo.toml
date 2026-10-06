@@ -1,7 +1,7 @@
 [package]
 name = "fastnoise2-sys"
 version = "0.2.0"
-edition = "2021"
+edition.workspace = true
 description = "Rust bindings for FastNoise2."
 keywords = ["noise", "simd", "procedural", "perlin", "bindings"]
 build = "build/main.rs"

@@ -1,7 +1,7 @@
 [package]
 name = "fastnoise2-codegen"
 version = "0.0.0"
-edition = "2021"
+edition.workspace = true
 description = "Generates the typed node API of fastnoise2 from FastNoise2 metadata."
 publish = false
 repository.workspace = true

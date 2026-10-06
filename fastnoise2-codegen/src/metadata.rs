@@ -1,5 +1,5 @@
 //! Loads FastNoise2 metadata through the C API.
-use std::ffi::{c_char, c_void, CStr};
+use std::ffi::{CStr, c_char, c_void};
 
 use fastnoise2_sys::*;
 

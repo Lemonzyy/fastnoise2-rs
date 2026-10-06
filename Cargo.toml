@@ -6,4 +6,5 @@ members = ["fastnoise2-codegen", "fastnoise2-rs", "fastnoise2-sys"]
 readme = "README.md"
 repository = "https://github.com/Lemonzyy/fastnoise2-rs"
 license = "MIT"
+edition = "2024"
 rust-version = "1.85"
