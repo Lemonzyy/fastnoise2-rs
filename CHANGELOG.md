@@ -29,7 +29,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 - `Hybrid` and `MemberValue` value types
 - `NodeBuilder`: nodes by FastNoise2 name, rejecting a missing input (`FastNoiseError::MissingInput`) or an input not accepting a node (`FastNoiseError::InputNotAccepted`)
 - `encode` feature, disabled by default: `Node::encode` encodes a node tree in the format of the FastNoise2 Node Editor, a node shared in the tree is encoded once
-- `editor-ipc` feature, disabled by default: `NodeEditorIpc` receives the node tree selected in the FastNoise2 Node Editor and sends it node trees to import, implementing the shared memory protocol of FastNoise2's `NodeEditorIpc` library in Rust (closing it doesn't disconnect the Node Editor from the processes opening it afterwards, and polling can't lose a message)
+- `editor-ipc` feature, disabled by default: `NodeEditorIpc` receives the node tree selected in the FastNoise2 Node Editor and sends it node trees to import, implementing the shared memory protocol of FastNoise2's `NodeEditorIpc` library in Rust (closing it doesn't disconnect the Node Editor from the processes opening it afterwards, and polling can't lose a message), and `node_editor_command` starts the Node Editor
 - `fastnoise2-codegen` crate (not published), generating `fastnoise2-rs/src/nodes`, with `--check` to verify it is up to date
 - `nodes`, `node_builder`, `encode` and `metadata` examples
 - `rust-version = "1.85"` and edition 2024

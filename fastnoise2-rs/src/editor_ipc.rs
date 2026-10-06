@@ -6,8 +6,9 @@
 //! remove the region, which would disconnect the processes opening it afterwards from a running
 //! Node Editor, and polling can't lose a message.
 use std::{
-    ffi::CStr,
+    ffi::{CStr, OsStr},
     io,
+    process::Command,
     ptr::{self, NonNull},
     sync::atomic::{AtomicU8, Ordering},
 };
@@ -176,6 +177,27 @@ impl NodeEditorIpc {
 
         Ok(())
     }
+}
+
+/// Command starting the Node Editor executable at `path`, as FastNoise2's `NodeEditorIpc` does.
+/// `encoded_node_tree` is imported at startup, and the `detached` Node Editor only shows the node
+/// graph (no preview).
+///
+/// The Node Editor keeps running when the returned [`Child`](std::process::Child) is dropped,
+/// [`kill`](std::process::Child::kill) it to close it.
+pub fn node_editor_command(
+    path: impl AsRef<OsStr>,
+    encoded_node_tree: Option<&str>,
+    detached: bool,
+) -> Command {
+    let mut command = Command::new(path);
+    if detached {
+        command.arg("--detached");
+    }
+    if let Some(encoded_node_tree) = encoded_node_tree.filter(|encoded| !encoded.is_empty()) {
+        command.args(["--import-ent", encoded_node_tree]);
+    }
+    command
 }
 
 /// The mapped shared memory region, unmapped on drop.
@@ -386,5 +408,18 @@ mod tests {
         let largest = SHARED_MEMORY_SIZE - HEADER_SIZE - 2;
         assert!(ipc.send_selected_node(&"A".repeat(largest)).is_ok());
         assert!(ipc.send_selected_node(&"A".repeat(largest + 1)).is_err());
+    }
+
+    #[test]
+    fn test_node_editor_command() {
+        let command = node_editor_command("NodeEditor", Some("DQkGDA=="), true);
+        assert_eq!(command.get_program(), "NodeEditor");
+        assert_eq!(
+            command.get_args().collect::<Vec<_>>(),
+            ["--detached", "--import-ent", "DQkGDA=="]
+        );
+
+        let command = node_editor_command("NodeEditor", Some(""), false);
+        assert_eq!(command.get_args().count(), 0);
     }
 }

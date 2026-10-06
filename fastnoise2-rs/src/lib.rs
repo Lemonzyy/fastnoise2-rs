@@ -136,7 +136,7 @@ pub mod nodes;
     feature = "editor-ipc",
     any(windows, all(unix, not(target_os = "emscripten")))
 ))]
-pub use editor_ipc::{EditorMessage, NodeEditorIpc};
+pub use editor_ipc::{EditorMessage, NodeEditorIpc, node_editor_command};
 pub use error::FastNoiseError;
 pub use feature_set::{FeatureSet, with_max_feature_set};
 pub use metadata::{Member, MemberRange, MemberType, Metadata};
