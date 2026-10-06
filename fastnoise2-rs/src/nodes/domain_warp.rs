@@ -121,7 +121,7 @@ impl Generator for DomainWarpSimplex {
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(|builder| builder.set("Warp Amplitude", &self.warp_amplitude))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -242,7 +242,7 @@ impl Generator for DomainWarpSuperSimplex {
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(|builder| builder.set("Warp Amplitude", &self.warp_amplitude))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -346,7 +346,7 @@ impl Generator for DomainWarpGradient {
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(|builder| builder.set("Warp Amplitude", &self.warp_amplitude))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -431,7 +431,7 @@ impl Generator for DomainWarpFractalProgressive {
                 builder.set("Weighted Strength", &self.weighted_strength)
             })
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -516,6 +516,6 @@ impl Generator for DomainWarpFractalIndependent {
                 builder.set("Weighted Strength", &self.weighted_strength)
             })
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }

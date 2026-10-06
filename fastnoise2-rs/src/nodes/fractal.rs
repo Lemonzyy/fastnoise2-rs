@@ -82,7 +82,7 @@ impl Generator for FractalFBm {
                 builder.set("Weighted Strength", &self.weighted_strength)
             })
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -165,6 +165,6 @@ impl Generator for FractalRidged {
                 builder.set("Weighted Strength", &self.weighted_strength)
             })
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }

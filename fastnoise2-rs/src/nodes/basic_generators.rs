@@ -36,7 +36,7 @@ impl Generator for Constant {
         NodeBuilder::new("Constant")
             .and_then(|builder| builder.set("Value", self.value))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -98,7 +98,7 @@ impl Generator for White {
             .and_then(|builder| builder.set("Output Min", self.output_min))
             .and_then(|builder| builder.set("Output Max", self.output_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -159,7 +159,7 @@ impl Generator for Checkerboard {
             .and_then(|builder| builder.set("Output Min", self.output_min))
             .and_then(|builder| builder.set("Output Max", self.output_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -219,7 +219,7 @@ impl Generator for SineWave {
             .and_then(|builder| builder.set("Output Min", self.output_min))
             .and_then(|builder| builder.set("Output Max", self.output_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -336,7 +336,7 @@ impl Generator for Gradient {
             .and_then(|builder| builder.set("Offset Z", &self.offset_z))
             .and_then(|builder| builder.set("Offset W", &self.offset_w))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -436,6 +436,6 @@ impl Generator for DistanceToPoint {
             .and_then(|builder| builder.set("Point W", &self.point_w))
             .and_then(|builder| builder.set("Minkowski P", &self.minkowski_p))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }

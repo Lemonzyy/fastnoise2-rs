@@ -32,7 +32,7 @@ impl Generator for Min {
             .and_then(|builder| builder.set("LHS", &self.lhs))
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -64,7 +64,7 @@ impl Generator for Max {
             .and_then(|builder| builder.set("LHS", &self.lhs))
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -108,7 +108,7 @@ impl Generator for MinSmooth {
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(|builder| builder.set("Smoothness", &self.smoothness))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -152,7 +152,7 @@ impl Generator for MaxSmooth {
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(|builder| builder.set("Smoothness", &self.smoothness))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -197,7 +197,7 @@ impl Generator for PowFloat {
             .and_then(|builder| builder.set("Value", &self.value))
             .and_then(|builder| builder.set("Pow", &self.pow))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -226,7 +226,7 @@ impl Generator for PowInt {
             .and_then(|builder| builder.set("Pow", self.pow))
             .and_then(|builder| builder.set("Value", &self.value))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -292,6 +292,6 @@ impl Generator for Fade {
             .and_then(|builder| builder.set("Fade Min", &self.fade_min))
             .and_then(|builder| builder.set("Fade Max", &self.fade_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }

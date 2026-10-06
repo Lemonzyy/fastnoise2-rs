@@ -42,7 +42,7 @@ impl Generator for PingPong {
                 builder.set("Ping Pong Strength", &self.ping_pong_strength)
             })
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -63,7 +63,7 @@ impl Generator for Abs {
         NodeBuilder::new("Abs")
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -85,7 +85,7 @@ impl Generator for SignedSquareRoot {
         NodeBuilder::new("SignedSquareRoot")
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -114,7 +114,7 @@ impl Generator for SeedOffset {
             .and_then(|builder| builder.set("Seed Offset", self.seed_offset))
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -157,7 +157,7 @@ impl Generator for ConvertRGBA8 {
             .and_then(|builder| builder.set("Max", self.max))
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -179,7 +179,7 @@ impl Generator for GeneratorCache {
         NodeBuilder::new("GeneratorCache")
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -256,7 +256,7 @@ impl Generator for Remap {
             .and_then(|builder| builder.set("To Min", &self.to_min))
             .and_then(|builder| builder.set("To Max", &self.to_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -301,6 +301,6 @@ impl Generator for Terrace {
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(|builder| builder.set("Smoothness", &self.smoothness))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }

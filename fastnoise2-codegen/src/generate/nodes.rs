@@ -148,7 +148,7 @@ impl Generator<'_> {
                     NodeBuilder::new(#node_name)
                         #(#sets)*
                         .and_then(NodeBuilder::build)
-                        .expect("generated from FastNoise2 metadata")
+                        .unwrap_or_else(|error| panic!("{error}"))
                 }
             }
         }

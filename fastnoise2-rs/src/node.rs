@@ -466,6 +466,9 @@ impl Node {
 
 /// Anything that can be built into a [`Node`].
 pub trait Generator {
+    /// # Panics
+    /// Typed nodes panic if an input has another SIMD feature set, built outside of the same
+    /// [`with_max_feature_set`](crate::with_max_feature_set) scope.
     fn build(&self) -> Node;
 }
 
@@ -625,7 +628,7 @@ impl NodeBuilder {
     ///
     /// # Errors
     /// Returns an error if the member doesn't exist, if the value type doesn't match the member
-    /// type, or if an enum value doesn't exist.
+    /// type, if an enum value doesn't exist, or if an input has another SIMD feature set.
     pub fn set(
         mut self,
         member_name: &str,

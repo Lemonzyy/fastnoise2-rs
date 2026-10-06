@@ -315,6 +315,38 @@ mod tests {
         }
     }
 
+    /// Typed nodes can't return the error, they panic with it.
+    #[test]
+    fn test_typed_input_feature_set_mismatch_panics() {
+        use std::panic;
+
+        use crate::{Generator, nodes::*};
+
+        let minimum = FeatureSet::ALL
+            .into_iter()
+            .find(|feature_set| feature_set.is_compiled_up_to(FeatureSet::detected()))
+            .unwrap();
+        if minimum == FeatureSet::detected() {
+            return;
+        }
+
+        let source = perlin().build();
+        let panic = panic::catch_unwind(|| {
+            with_max_feature_set(minimum, || source.fractal_f_bm().build()).unwrap()
+        })
+        .unwrap_err();
+
+        let message = panic.downcast_ref::<String>().unwrap();
+        assert_eq!(
+            *message,
+            format!(
+                "input 'Source' of node 'FractalFBm' has the {} feature set, expected {minimum} \
+                 like the node",
+                FeatureSet::detected()
+            )
+        );
+    }
+
     #[test]
     fn test_with_max_feature_set_lowers_to_detected() {
         let highest = FeatureSet::ALL

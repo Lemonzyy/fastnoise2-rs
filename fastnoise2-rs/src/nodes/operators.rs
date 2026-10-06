@@ -31,7 +31,7 @@ impl Generator for Add {
             .and_then(|builder| builder.set("LHS", &self.lhs))
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -76,7 +76,7 @@ impl Generator for Subtract {
             .and_then(|builder| builder.set("LHS", &self.lhs))
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -108,7 +108,7 @@ impl Generator for Multiply {
             .and_then(|builder| builder.set("LHS", &self.lhs))
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -153,7 +153,7 @@ impl Generator for Divide {
             .and_then(|builder| builder.set("LHS", &self.lhs))
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -198,6 +198,6 @@ impl Generator for Modulus {
             .and_then(|builder| builder.set("LHS", &self.lhs))
             .and_then(|builder| builder.set("RHS", &self.rhs))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }

@@ -29,7 +29,7 @@ impl Generator for DomainScale {
             .and_then(|builder| builder.set("Scaling", self.scaling))
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -89,7 +89,7 @@ impl Generator for DomainOffset {
             .and_then(|builder| builder.set("Offset Z", &self.offset_z))
             .and_then(|builder| builder.set("Offset W", &self.offset_w))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -142,7 +142,7 @@ impl Generator for DomainRotate {
             .and_then(|builder| builder.set("Roll", self.roll))
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -201,7 +201,7 @@ impl Generator for DomainAxisScale {
             .and_then(|builder| builder.set("Scaling W", self.scaling_w))
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -241,7 +241,7 @@ impl Generator for AddDimension {
                 builder.set("New Dimension Position", &self.new_dimension_position)
             })
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -278,7 +278,7 @@ impl Generator for RemoveDimension {
             })
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -313,6 +313,6 @@ impl Generator for DomainRotatePlane {
             .and_then(|builder| builder.set("Rotation Type", self.rotation_type.name()))
             .and_then(|builder| builder.set("Source", &self.source))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }

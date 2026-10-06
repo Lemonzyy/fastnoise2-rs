@@ -74,7 +74,7 @@ impl Generator for Simplex {
             .and_then(|builder| builder.set("Output Min", self.output_min))
             .and_then(|builder| builder.set("Output Max", self.output_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -149,7 +149,7 @@ impl Generator for SuperSimplex {
             .and_then(|builder| builder.set("Output Min", self.output_min))
             .and_then(|builder| builder.set("Output Max", self.output_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -223,7 +223,7 @@ impl Generator for Perlin {
             .and_then(|builder| builder.set("Output Min", self.output_min))
             .and_then(|builder| builder.set("Output Max", self.output_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -296,7 +296,7 @@ impl Generator for Value {
             .and_then(|builder| builder.set("Output Min", self.output_min))
             .and_then(|builder| builder.set("Output Max", self.output_max))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -437,7 +437,7 @@ impl Generator for CellularValue {
             .and_then(|builder| builder.set("Grid Jitter", &self.grid_jitter))
             .and_then(|builder| builder.set("Size Jitter", &self.size_jitter))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -601,7 +601,7 @@ impl Generator for CellularDistance {
             .and_then(|builder| builder.set("Grid Jitter", &self.grid_jitter))
             .and_then(|builder| builder.set("Size Jitter", &self.size_jitter))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
 
@@ -705,6 +705,6 @@ impl Generator for CellularLookup {
             .and_then(|builder| builder.set("Grid Jitter", &self.grid_jitter))
             .and_then(|builder| builder.set("Size Jitter", &self.size_jitter))
             .and_then(NodeBuilder::build)
-            .expect("generated from FastNoise2 metadata")
+            .unwrap_or_else(|error| panic!("{error}"))
     }
 }
