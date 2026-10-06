@@ -296,6 +296,7 @@ fn new_cmake_config(source_path: &Path) -> Config {
 
     if env::var(SOURCE_DIR_KEY).is_err() {
         let fastsimd_path = default_fastsimd_path();
+        check_submodule("FastSIMD", &fastsimd_path);
         println!("cargo:rerun-if-changed={}", fastsimd_path.display());
         config.define("CPM_FastSIMD_SOURCE", &fastsimd_path);
     }
@@ -306,7 +307,21 @@ fn new_cmake_config(source_path: &Path) -> Config {
 fn source_path() -> PathBuf {
     env::var(SOURCE_DIR_KEY)
         .map(PathBuf::from)
-        .unwrap_or_else(|_| default_source_path())
+        .unwrap_or_else(|_| {
+            let path = default_source_path();
+            check_submodule("FastNoise2", &path);
+            path
+        })
+}
+
+/// Panics with the command to run if a bundled submodule is not checked out, e.g. after
+/// switching to a branch that added it.
+fn check_submodule(name: &str, path: &Path) {
+    assert!(
+        path.join("CMakeLists.txt").exists(),
+        "the {name} Git submodule is missing in '{}', run `git submodule update --init --recursive`",
+        path.display()
+    );
 }
 
 fn default_source_path() -> PathBuf {
