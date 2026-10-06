@@ -1,6 +1,7 @@
 //! SIMD feature sets FastNoise2 nodes are compiled for.
 use std::{cell::Cell, fmt, sync::LazyLock};
 
+use bitflags::bitflags;
 use fastnoise2_sys::*;
 
 use crate::FastNoiseError;
@@ -96,23 +97,29 @@ pub enum FeatureSet {
     Wasm,
 }
 
-/// `FastSIMD::FeatureFlag`, a bit of a feature set.
-mod flag {
-    pub const SCALAR: u32 = 1 << 0;
-    pub const X86: u32 = 1 << 1;
-    pub const SSE: u32 = 1 << 2;
-    pub const SSE2: u32 = 1 << 3;
-    pub const SSE3: u32 = 1 << 4;
-    pub const SSSE3: u32 = 1 << 5;
-    pub const SSE41: u32 = 1 << 6;
-    pub const SSE42: u32 = 1 << 7;
-    pub const AVX: u32 = 1 << 8;
-    pub const AVX2: u32 = 1 << 9;
-    pub const AVX512: u32 = 0b1111 << 10;
-    pub const ARM: u32 = 1 << 14;
-    pub const NEON: u32 = 1 << 15;
-    pub const AARCH64: u32 = 1 << 16;
-    pub const WASM: u32 = 1 << 17;
+bitflags! {
+    /// `FastSIMD::FeatureFlag`, the flags a feature set is made of.
+    #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+    struct FeatureFlags: u32 {
+        const SCALAR = 1 << 0;
+        const X86 = 1 << 1;
+        const SSE = 1 << 2;
+        const SSE2 = 1 << 3;
+        const SSE3 = 1 << 4;
+        const SSSE3 = 1 << 5;
+        const SSE41 = 1 << 6;
+        const SSE42 = 1 << 7;
+        const AVX = 1 << 8;
+        const AVX2 = 1 << 9;
+        const AVX512_F = 1 << 10;
+        const AVX512_VL = 1 << 11;
+        const AVX512_DQ = 1 << 12;
+        const AVX512_BW = 1 << 13;
+        const ARM = 1 << 14;
+        const NEON = 1 << 15;
+        const AARCH64 = 1 << 16;
+        const WASM = 1 << 17;
+    }
 }
 
 impl FeatureSet {
@@ -132,35 +139,32 @@ impl FeatureSet {
         Self::Wasm,
     ];
 
-    /// The `FastSIMD::FeatureSet` value: every flag of the feature set and of the ones it extends.
-    pub(crate) const fn bits(self) -> u32 {
-        use flag::*;
-
-        const SSE_BITS: u32 = X86 | SSE;
-        const SSE2_BITS: u32 = SSE_BITS | SSE2;
-        const SSE3_BITS: u32 = SSE2_BITS | SSE3;
-        const SSSE3_BITS: u32 = SSE3_BITS | SSSE3;
-        const SSE41_BITS: u32 = SSSE3_BITS | SSE41;
-        const SSE42_BITS: u32 = SSE41_BITS | SSE42;
-        const AVX_BITS: u32 = SSE42_BITS | AVX;
-        const AVX2_BITS: u32 = AVX_BITS | AVX2;
-        const NEON_BITS: u32 = ARM | NEON;
+    /// Every flag of the feature set and of the ones it extends, like `FastSIMD::FeatureSet`.
+    fn flags(self) -> FeatureFlags {
+        type F = FeatureFlags;
 
         match self {
-            Self::Scalar => SCALAR,
-            Self::Sse => SSE_BITS,
-            Self::Sse2 => SSE2_BITS,
-            Self::Sse3 => SSE3_BITS,
-            Self::Ssse3 => SSSE3_BITS,
-            Self::Sse41 => SSE41_BITS,
-            Self::Sse42 => SSE42_BITS,
-            Self::Avx => AVX_BITS,
-            Self::Avx2 => AVX2_BITS,
-            Self::Avx512 => AVX2_BITS | AVX512,
-            Self::Neon => NEON_BITS,
-            Self::Aarch64 => NEON_BITS | AARCH64,
-            Self::Wasm => WASM,
+            Self::Scalar => F::SCALAR,
+            Self::Sse => F::X86 | F::SSE,
+            Self::Sse2 => Self::Sse.flags() | F::SSE2,
+            Self::Sse3 => Self::Sse2.flags() | F::SSE3,
+            Self::Ssse3 => Self::Sse3.flags() | F::SSSE3,
+            Self::Sse41 => Self::Ssse3.flags() | F::SSE41,
+            Self::Sse42 => Self::Sse41.flags() | F::SSE42,
+            Self::Avx => Self::Sse42.flags() | F::AVX,
+            Self::Avx2 => Self::Avx.flags() | F::AVX2,
+            Self::Avx512 => {
+                Self::Avx2.flags() | F::AVX512_F | F::AVX512_VL | F::AVX512_DQ | F::AVX512_BW
+            }
+            Self::Neon => F::ARM | F::NEON,
+            Self::Aarch64 => Self::Neon.flags() | F::AARCH64,
+            Self::Wasm => F::WASM,
         }
+    }
+
+    /// The `FastSIMD::FeatureSet` value.
+    pub(crate) fn bits(self) -> u32 {
+        self.flags().bits()
     }
 
     /// The best feature set FastNoise2 is compiled for and the CPU supports, used by default.
@@ -172,15 +176,17 @@ impl FeatureSet {
     /// architecture as `detected`, so creating a node with it as maximum succeeds.
     fn is_compiled_up_to(self, detected: Self) -> bool {
         // The lowest feature set FastSIMD compiles by default for each architecture
-        let minimum = match detected.bits() {
-            bits if bits & flag::X86 != 0 => Self::Sse2,
-            bits if bits & flag::ARM != 0 => Self::Neon,
-            _ => Self::Wasm,
+        let detected = detected.flags();
+        let minimum = if detected.contains(FeatureFlags::X86) {
+            Self::Sse2
+        } else if detected.contains(FeatureFlags::ARM) {
+            Self::Neon
+        } else {
+            Self::Wasm
         };
-        let architecture = flag::X86 | flag::ARM | flag::WASM;
+        let architecture = FeatureFlags::X86 | FeatureFlags::ARM | FeatureFlags::WASM;
 
-        self.bits() & architecture == detected.bits() & architecture
-            && self.bits() >= minimum.bits()
+        self.flags() & architecture == detected & architecture && self.bits() >= minimum.bits()
     }
 
     pub(crate) fn from_bits(bits: u32) -> Option<Self> {
