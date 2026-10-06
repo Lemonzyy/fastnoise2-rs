@@ -17,8 +17,18 @@ fastnoise2-sys = { version = "0.2", path = "../fastnoise2-sys" }
 thiserror = "2"
 tracing = { version = "0.1", optional = true }
 
+[target.'cfg(unix)'.dependencies]
+rustix = { version = "1", optional = true, features = ["fs", "mm", "shm"] }
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", optional = true, features = [
+    "Win32_Foundation",
+    "Win32_Security",
+    "Win32_System_Memory",
+] }
+
 [package.metadata.docs.rs]
-features = ["encode"]
+features = ["encode", "editor-ipc"]
 
 [[example]]
 name = "encode"
@@ -30,4 +40,5 @@ image = "0.25"
 [features]
 build-from-source = ["fastnoise2-sys/build-from-source"]
 encode = ["dep:base64"]
+editor-ipc = ["dep:rustix", "dep:windows-sys"]
 trace = ["dep:tracing"]
