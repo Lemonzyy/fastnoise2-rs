@@ -27,7 +27,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 - `NodeBuilder`: nodes by FastNoise2 name, rejecting a missing input (`FastNoiseError::MissingInput`) or an input not accepting a node (`FastNoiseError::InputNotAccepted`)
 - `fastnoise2-codegen` crate (not published), generating `fastnoise2-rs/src/nodes`, with `--check` to verify it is up to date
 - `nodes` and `node_builder` examples
-- `rust-version = "1.80"`
+- `rust-version = "1.85"` and edition 2024
 - fastnoise2-sys: FastSIMD is bundled as a Git submodule, building no longer needs network access
 - fastnoise2-sys: a precompiled library in `FASTNOISE2_LIB_DIR` is rejected if it misses functions of the C header
 
@@ -44,7 +44,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8176c3f` (v1.1.1):
 - fastnoise2-sys: cached bindings in `FASTNOISE2_BINDINGS_DIR` are stored per crate version and only reused with an identical C header
 - fastnoise2-sys: WASM builds only need Emscripten in `PATH`, `EMSDK` is no longer required
 - fastnoise2-sys: `FASTNOISE2_SOURCE_DIR` is used to generate bindings when `FASTNOISE2_LIB_DIR` is set
-- fastnoise2-sys: bindgen 0.73
+- fastnoise2-sys: bindgen 0.73, bindings are generated for edition 2024 (`unsafe extern "C"`)
 - Example images are no longer included in the package
 
 ### Removed
