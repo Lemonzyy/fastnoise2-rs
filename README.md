@@ -94,6 +94,10 @@ Take a look at [examples](https://github.com/Lemonzyy/fastnoise2-rs/tree/main/fa
 cargo add fastnoise2 --features encode
 ```
 
+## Live editing with the Node Editor
+
+With the `editor-ipc` feature, `NodeEditorIpc` talks to a running [FastNoise2 Node Editor](https://github.com/Auburn/FastNoise2/releases/latest) through shared memory: it receives the node tree selected in the Node Editor every time it changes, and sends node trees to import in it. `node_editor_command` starts the Node Editor, see the `editor_ipc` example. It isn't available on WASM and Android, which has no POSIX shared memory.
+
 ## Setup
 
 fastnoise2-sys, the underlying bindings for fastnoise2, uses a build script that follows a specific order of preference for compiling and/or linking the FastNoise2 library:

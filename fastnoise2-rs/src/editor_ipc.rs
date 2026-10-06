@@ -208,7 +208,7 @@ struct SharedMemory {
 }
 
 impl SharedMemory {
-    #[cfg(all(unix, not(target_os = "emscripten")))]
+    #[cfg(unix)]
     fn open(name: &CStr) -> io::Result<Self> {
         use rustix::{
             fs::ftruncate,
@@ -296,7 +296,7 @@ impl SharedMemory {
 
 impl Drop for SharedMemory {
     /// Unmaps the region without removing it, the Node Editor and other processes keep using it.
-    #[cfg(all(unix, not(target_os = "emscripten")))]
+    #[cfg(unix)]
     fn drop(&mut self) {
         // Can't fail with a region mapped by `open`
         let _ = unsafe { rustix::mm::munmap(self.ptr.as_ptr().cast(), SHARED_MEMORY_SIZE) };
