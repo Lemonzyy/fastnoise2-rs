@@ -4,7 +4,7 @@
 //! [![Crates.io Version](https://img.shields.io/crates/v/fastnoise2)](https://crates.io/crates/fastnoise2)
 //! [![docs.rs](https://docs.rs/fastnoise2/badge.svg)](https://docs.rs/fastnoise2/latest/fastnoise2/)
 //!
-//! fastnoise2 provides an easy-to-use and mostly safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
+//! fastnoise2 provides an easy-to-use and safe interface for the [FastNoise2](https://github.com/Auburn/FastNoise2) C++ library, which provides modular node graph-based noise generation using SIMD.
 //!
 //! ![Node Editor Node Tree](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/nodeeditor.png)
 //! ![Node Editor Node Tree Output](https://raw.githubusercontent.com/Lemonzyy/fastnoise2-rs/main/fastnoise2-rs/examples/nodeeditor_output.bmp)
@@ -13,15 +13,47 @@
 //!
 //! ## Examples
 //!
-//! Here is an example of a encoded node tree, exported by FastNoise2's Node Editor.
+//! ### Typed nodes
+//!
+//! Every FastNoise2 node is a type generated from FastNoise2 metadata, configured with builder methods.
+//! Nodes are chained from their first input, and operators work with constants on either side.
 //!
 //! ```rust
-//! use fastnoise2::SafeNode;
+//! use fastnoise2::prelude::*;
+//!
+//! let terrain = perlin()
+//!     .with_feature_scale(150.0)
+//!     .fractal_f_bm()
+//!     .with_octaves(5)
+//!     .domain_warp_gradient()
+//!     .with_warp_amplitude(30.0);
+//! let node = (0.5 + terrain * 0.5).build();
+//!
+//! let (x_count, y_count) = (512, 512);
+//! let mut noise_out = vec![0.0; (x_count * y_count) as usize];
+//! let min_max = node.gen_uniform_grid_2d(&mut noise_out, 0.0, 0.0, x_count, y_count, 1.0, 1.0, 1337);
+//! ```
+//!
+//! A built `Node` can be shared without cloning: every use evaluates the same FastNoise2 node, which is what makes the `GeneratorCache` node effective.
+//!
+//! ```rust
+//! use fastnoise2::prelude::*;
+//!
+//! let shared = perlin().fractal_f_bm().build();
+//! let node = (&shared + &shared.domain_scale().with_scaling(2.0)).build();
+//! ```
+//!
+//! ### Encoded node trees
+//!
+//! Node trees exported by the FastNoise2 Node Editor can be used directly.
+//!
+//! ```rust
+//! use fastnoise2::Node;
 //!
 //! let (x_count, y_count) = (1000, 1000);
 //! let step_size = 3.0;
 //! let encoded_node_tree = "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
-//! let node = SafeNode::from_encoded_node_tree(encoded_node_tree).unwrap();
+//! let node = Node::from_encoded_node_tree(encoded_node_tree).unwrap();
 //!
 //! // Allocate a buffer of enough size to hold all output data.
 //! let mut noise_out = vec![0.0; (x_count * y_count) as usize];
@@ -30,19 +62,42 @@
 //!     &mut noise_out,
 //!     -x_count as f32 / 2.0 * step_size, // x_offset
 //!     -y_count as f32 / 2.0 * step_size, // y_offset
-//!     x_count,                            // x_count
-//!     y_count,                            // y_count
-//!     step_size,                          // x_step_size
-//!     step_size,                          // y_step_size
-//!     1337,                               // seed
+//!     x_count,                           // x_count
+//!     y_count,                           // y_count
+//!     step_size,                         // x_step_size
+//!     step_size,                         // y_step_size
+//!     1337,                              // seed
 //! );
-//!
-//! // use `noise_out`!
 //! ```
 //!
-//! You can also manually code a node tree using FastNoise2's metadata system, either with [`Node`], or by combining generators, see [`SafeNode`].
+//! ### Nodes by name
+//!
+//! `NodeBuilder` creates nodes from their FastNoise2 names, and checks that every input is set before building.
+//!
+//! ```rust
+//! use fastnoise2::NodeBuilder;
+//!
+//! let perlin = NodeBuilder::new("Perlin")?.set("Feature Scale", 50.0)?.build()?;
+//! let fbm = NodeBuilder::new("FractalFBm")?
+//!     .set("Source", &perlin)?
+//!     .set("Octaves", 5)?
+//!     .build()?;
+//! # Ok::<(), fastnoise2::FastNoiseError>(())
+//! ```
 //!
 //! Take a look at [examples](https://github.com/Lemonzyy/fastnoise2-rs/tree/main/fastnoise2-rs/examples) to find out more.
+//!
+//! ## Encoding node trees
+//!
+//! `Node::encode` exports a node tree in the format of the FastNoise2 Node Editor. It needs the `encode` feature, disabled by default as every node then keeps the values it was built with:
+//!
+//! ```sh
+//! cargo add fastnoise2 --features encode
+//! ```
+//!
+//! ## Live editing with the Node Editor
+//!
+//! With the `editor-ipc` feature, `NodeEditorIpc` talks to a running [FastNoise2 Node Editor](https://github.com/Auburn/FastNoise2/releases/latest) through shared memory: it receives the node tree selected in the Node Editor every time it changes, and sends node trees to import in it. `node_editor_command` starts the Node Editor, see the `editor_ipc` example. It isn't available on WASM and Android, which has no POSIX shared memory.
 //!
 //! ## Setup
 //!
@@ -57,417 +112,69 @@
 //! To build FastNoise2 from source using fastnoise2-sys, ensure you have:
 //!
 //! - [CMake](https://cmake.org/)
-//! - a C++17 compiler
+//! - a C++17 compiler, Clang on non x86 targets (e.g. aarch64) as FastNoise2 doesn't support GCC there
 //!
 //! ## Notes
 //!
 //! - If you prefer not to build from source, precompiled binaries are available for download from the [FastNoise2 Releases](https://github.com/Auburn/FastNoise2/releases).
 //! - For a web-based Node Editor experience, check out the [official Web WASM Node Editor](https://auburn.github.io/fastnoise2nodeeditor/).
 //! - For desktop platforms, you can download compiled Node Editor binaries from the [FastNoise2 Releases](https://github.com/Auburn/FastNoise2/releases/latest).
-//! - The `FASTNOISE2_SOURCE_DIR` environment variable is generally not needed as fastnoise2-sys includes the FastNoise2 source code as a Git submodule. If you need to use a different source directory, set `FASTNOISE2_SOURCE_DIR` to point to the root of the FastNoise2 source code.
+//! - The `FASTNOISE2_SOURCE_DIR` environment variable is generally not needed as fastnoise2-sys includes the FastNoise2 source code as a Git submodule. If you need to use a different source directory, set `FASTNOISE2_SOURCE_DIR` to point to the root of the FastNoise2 source code. FastSIMD, the FastNoise2 dependency, is also included as a Git submodule and used when `FASTNOISE2_SOURCE_DIR` is not set, so building does not need network access.
 //!
 #![allow(clippy::too_many_arguments)]
+#[cfg(all(
+    feature = "editor-ipc",
+    // Platforms with POSIX shared memory (not Android) or Windows file mappings
+    any(
+        windows,
+        all(
+            unix,
+            not(any(
+                target_os = "android",
+                target_os = "emscripten",
+                target_os = "espidf",
+                target_os = "horizon",
+                target_os = "vita"
+            ))
+        )
+    )
+))]
+mod editor_ipc;
+#[cfg(feature = "encode")]
+mod encode;
 mod error;
-pub mod generator;
+mod feature_set;
 mod metadata;
-mod safe;
+mod node;
+#[rustfmt::skip]
+pub mod nodes;
 
+#[cfg(all(
+    feature = "editor-ipc",
+    // Platforms with POSIX shared memory (not Android) or Windows file mappings
+    any(
+        windows,
+        all(
+            unix,
+            not(any(
+                target_os = "android",
+                target_os = "emscripten",
+                target_os = "espidf",
+                target_os = "horizon",
+                target_os = "vita"
+            ))
+        )
+    )
+))]
+pub use editor_ipc::{EditorMessage, NodeEditorIpc, node_editor_command};
 pub use error::FastNoiseError;
-pub use metadata::MemberType;
-use metadata::{format_lookup, MemberValue, METADATA_NAME_LOOKUP, NODE_METADATA};
-pub use safe::SafeNode;
+pub use feature_set::{FeatureSet, with_max_feature_set};
+pub use metadata::{Member, MemberRange, MemberType, Metadata};
+pub use node::{Generator, Hybrid, MemberValue, Node, NodeBuilder};
 
-use fastnoise2_sys::*;
-use std::{ffi::CString, fmt::Debug};
-
-/// Represents a node in the FastNoise2 C++ library.
-///
-/// This struct interfaces with the library, which uses metadata to dynamically manage node names and parameters.
-/// For details on available metadata, see the [library documentation](https://github.com/Auburn/FastNoise2/wiki).
-///
-/// # Safety
-///
-/// Generating noise with this structure is not safe for various reasons.
-/// One of them is the fact that nodes such as [`FractalFBm`][crate::generator::fractal::FractalFBm] need a `Source` member to generate noise.
-/// With the metadata-based API, it's not possible to enforce this, which will result in a crash if not specified.
-///
-/// Refer to the specific method documentation for safety details.
-///
-/// You can use [`SafeNode`] to get rid of `unsafe` blocks in exchange for easy node updating.
-#[derive(Debug)]
-pub struct Node {
-    handle: *mut core::ffi::c_void,
-    metadata_id: i32,
-}
-
-impl Node {
-    /// Creates a [`Node`] instance using a metadata name.
-    ///
-    /// # Errors
-    /// Returns an error if the metadata name is not found in the FastNoise2 metadata system.
-    #[cfg_attr(feature = "trace", tracing::instrument(level = "debug"))]
-    pub fn from_name(metadata_name: &str) -> Result<Self, FastNoiseError> {
-        let metadata_name = format_lookup(metadata_name);
-        let metadata_id = *METADATA_NAME_LOOKUP.get(&metadata_name).ok_or_else(|| {
-            FastNoiseError::MetadataNameNotFound {
-                expected: METADATA_NAME_LOOKUP.keys().cloned().collect(),
-                found: metadata_name,
-            }
-        })?;
-        // Pass u32::MAX (~0u in C++) for auto-detect SIMD level
-        let handle = unsafe { fnNewFromMetadata(metadata_id, u32::MAX) };
-        Ok(Self {
-            handle,
-            metadata_id,
-        })
-    }
-
-    /// Creates a `Node` instance from an encoded node tree.
-    ///
-    /// # Errors
-    /// Returns an error if the encoded node tree is invalid or if creation fails.
-    #[cfg_attr(feature = "trace", tracing::instrument(level = "debug"))]
-    pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
-        let cstring =
-            CString::new(encoded_node_tree).map_err(FastNoiseError::CStringCreationFailed)?;
-        // Pass u32::MAX (~0u in C++) for auto-detect SIMD level
-        let node_ptr = unsafe { fnNewFromEncodedNodeTree(cstring.as_ptr(), u32::MAX) };
-        if node_ptr.is_null() {
-            Err(FastNoiseError::NodeCreationFailed)
-        } else {
-            Ok(Self {
-                handle: node_ptr,
-                metadata_id: unsafe { fnGetMetadataID(node_ptr) },
-            })
-        }
-    }
-
-    pub fn get_simd_level(&self) -> u32 {
-        unsafe { fnGetSIMDLevel(self.handle) }
-    }
-
-    /// Sets a value for a member.
-    ///
-    /// The `member_name` is looked up in the metadata, and the `value` is applied based on its type.
-    /// The type of `value` must match the member's expected type as defined in the metadata.
-    ///
-    /// # Errors
-    /// Returns an error if the member name is not found which includes a list of valid member names.
-    /// Also returns an error if `value`'s type does not match the expected type for the member. The error provides the expected and actual types to assist in debugging.
-    #[allow(private_bounds)]
-    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
-    pub fn set<V>(&mut self, member_name: &str, value: V) -> Result<(), FastNoiseError>
-    where
-        V: MemberValue + Debug,
-    {
-        let metadata = &NODE_METADATA[self.metadata_id as usize];
-        let member_name = format_lookup(member_name);
-        let member = metadata.members.get(&member_name).ok_or_else(|| {
-            FastNoiseError::MemberNameNotFound {
-                expected: metadata.members.values().map(|m| m.name.clone()).collect(),
-                found: member_name,
-            }
-        })?;
-
-        value.apply(self, member)
-    }
-
-    /// # Safety
-    /// - The caller must ensure that `noise_out` has enough space to hold `x_count * y_count` values.
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(
-        feature = "trace",
-        tracing::instrument(level = "trace", skip(noise_out))
-    )]
-    pub unsafe fn gen_uniform_grid_2d_unchecked(
-        &self,
-        noise_out: &mut [f32],
-        x_offset: f32,
-        y_offset: f32,
-        x_count: i32,
-        y_count: i32,
-        x_step_size: f32,
-        y_step_size: f32,
-        seed: i32,
-    ) -> OutputMinMax {
-        let mut min_max = [0.0; 2];
-
-        fnGenUniformGrid2D(
-            self.handle,
-            noise_out.as_mut_ptr(),
-            x_offset,
-            y_offset,
-            x_count,
-            y_count,
-            x_step_size,
-            y_step_size,
-            seed,
-            min_max.as_mut_ptr(),
-        );
-
-        OutputMinMax::new(min_max)
-    }
-
-    /// # Safety
-    /// - The caller must ensure that `noise_out` has enough space to hold `x_count * y_count * z_count` values.
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(
-        feature = "trace",
-        tracing::instrument(level = "trace", skip(noise_out))
-    )]
-    pub unsafe fn gen_uniform_grid_3d_unchecked(
-        &self,
-        noise_out: &mut [f32],
-        x_offset: f32,
-        y_offset: f32,
-        z_offset: f32,
-        x_count: i32,
-        y_count: i32,
-        z_count: i32,
-        x_step_size: f32,
-        y_step_size: f32,
-        z_step_size: f32,
-        seed: i32,
-    ) -> OutputMinMax {
-        let mut min_max = [0.0; 2];
-
-        fnGenUniformGrid3D(
-            self.handle,
-            noise_out.as_mut_ptr(),
-            x_offset,
-            y_offset,
-            z_offset,
-            x_count,
-            y_count,
-            z_count,
-            x_step_size,
-            y_step_size,
-            z_step_size,
-            seed,
-            min_max.as_mut_ptr(),
-        );
-
-        OutputMinMax::new(min_max)
-    }
-
-    /// # Safety
-    /// - The caller must ensure that `noise_out` has enough space to hold `x_count * y_count * z_count * w_count` values.
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(
-        feature = "trace",
-        tracing::instrument(level = "trace", skip(noise_out))
-    )]
-    pub unsafe fn gen_uniform_grid_4d_unchecked(
-        &self,
-        noise_out: &mut [f32],
-        x_offset: f32,
-        y_offset: f32,
-        z_offset: f32,
-        w_offset: f32,
-        x_count: i32,
-        y_count: i32,
-        z_count: i32,
-        w_count: i32,
-        x_step_size: f32,
-        y_step_size: f32,
-        z_step_size: f32,
-        w_step_size: f32,
-        seed: i32,
-    ) -> OutputMinMax {
-        let mut min_max = [0.0; 2];
-
-        fnGenUniformGrid4D(
-            self.handle,
-            noise_out.as_mut_ptr(),
-            x_offset,
-            y_offset,
-            z_offset,
-            w_offset,
-            x_count,
-            y_count,
-            z_count,
-            w_count,
-            x_step_size,
-            y_step_size,
-            z_step_size,
-            w_step_size,
-            seed,
-            min_max.as_mut_ptr(),
-        );
-
-        OutputMinMax::new(min_max)
-    }
-
-    /// # Safety
-    /// - The caller must ensure that `noise_out`, `x_pos_array`, and `y_pos_array` all have the same length.
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(
-        feature = "trace",
-        tracing::instrument(level = "trace", skip(noise_out))
-    )]
-    pub unsafe fn gen_position_array_2d_unchecked(
-        &self,
-        noise_out: &mut [f32],
-        x_pos_array: &[f32],
-        y_pos_array: &[f32],
-        x_offset: f32,
-        y_offset: f32,
-        seed: i32,
-    ) -> OutputMinMax {
-        let mut min_max = [0.0; 2];
-
-        fnGenPositionArray2D(
-            self.handle,
-            noise_out.as_mut_ptr(),
-            x_pos_array.len() as i32,
-            x_pos_array.as_ptr(),
-            y_pos_array.as_ptr(),
-            x_offset,
-            y_offset,
-            seed,
-            min_max.as_mut_ptr(),
-        );
-
-        OutputMinMax::new(min_max)
-    }
-
-    /// # Safety
-    /// - The caller must ensure that `noise_out`, `x_pos_array`, `y_pos_array`, and `z_pos_array` all have the same length.
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(
-        feature = "trace",
-        tracing::instrument(level = "trace", skip(noise_out))
-    )]
-    pub unsafe fn gen_position_array_3d_unchecked(
-        &self,
-        noise_out: &mut [f32],
-        x_pos_array: &[f32],
-        y_pos_array: &[f32],
-        z_pos_array: &[f32],
-        x_offset: f32,
-        y_offset: f32,
-        z_offset: f32,
-        seed: i32,
-    ) -> OutputMinMax {
-        let mut min_max = [0.0; 2];
-
-        fnGenPositionArray3D(
-            self.handle,
-            noise_out.as_mut_ptr(),
-            x_pos_array.len() as i32,
-            x_pos_array.as_ptr(),
-            y_pos_array.as_ptr(),
-            z_pos_array.as_ptr(),
-            x_offset,
-            y_offset,
-            z_offset,
-            seed,
-            min_max.as_mut_ptr(),
-        );
-
-        OutputMinMax::new(min_max)
-    }
-
-    /// # Safety
-    /// - The caller must ensure that `noise_out`, `x_pos_array`, `y_pos_array`, `z_pos_array`, and `w_pos_array` all have the same length.
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(
-        feature = "trace",
-        tracing::instrument(level = "trace", skip(noise_out))
-    )]
-    pub unsafe fn gen_position_array_4d_unchecked(
-        &self,
-        noise_out: &mut [f32],
-        x_pos_array: &[f32],
-        y_pos_array: &[f32],
-        z_pos_array: &[f32],
-        w_pos_array: &[f32],
-        x_offset: f32,
-        y_offset: f32,
-        z_offset: f32,
-        w_offset: f32,
-        seed: i32,
-    ) -> OutputMinMax {
-        let mut min_max = [0.0; 2];
-
-        fnGenPositionArray4D(
-            self.handle,
-            noise_out.as_mut_ptr(),
-            x_pos_array.len() as i32,
-            x_pos_array.as_ptr(),
-            y_pos_array.as_ptr(),
-            z_pos_array.as_ptr(),
-            w_pos_array.as_ptr(),
-            x_offset,
-            y_offset,
-            z_offset,
-            w_offset,
-            seed,
-            min_max.as_mut_ptr(),
-        );
-
-        OutputMinMax::new(min_max)
-    }
-
-    /// # Safety
-    /// - The caller must ensure that `noise_out` has enough space to hold `x_size * y_size` values.
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(
-        feature = "trace",
-        tracing::instrument(level = "trace", skip(noise_out))
-    )]
-    pub unsafe fn gen_tileable_2d_unchecked(
-        &self,
-        noise_out: &mut [f32],
-        x_size: i32,
-        y_size: i32,
-        x_step_size: f32,
-        y_step_size: f32,
-        seed: i32,
-    ) -> OutputMinMax {
-        let mut min_max = [0.0; 2];
-
-        fnGenTileable2D(
-            self.handle,
-            noise_out.as_mut_ptr(),
-            x_size,
-            y_size,
-            x_step_size,
-            y_step_size,
-            seed,
-            min_max.as_mut_ptr(),
-        );
-
-        OutputMinMax::new(min_max)
-    }
-
-    /// # Safety
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
-    pub unsafe fn gen_single_2d_unchecked(&self, x: f32, y: f32, seed: i32) -> f32 {
-        unsafe { fnGenSingle2D(self.handle, x, y, seed) }
-    }
-
-    /// # Safety
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
-    pub unsafe fn gen_single_3d_unchecked(&self, x: f32, y: f32, z: f32, seed: i32) -> f32 {
-        unsafe { fnGenSingle3D(self.handle, x, y, z, seed) }
-    }
-
-    /// # Safety
-    /// - The internal state of the node must be correctly configured before calling this method.
-    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
-    pub unsafe fn gen_single_4d_unchecked(&self, x: f32, y: f32, z: f32, w: f32, seed: i32) -> f32 {
-        unsafe { fnGenSingle4D(self.handle, x, y, z, w, seed) }
-    }
-}
-
-impl Drop for Node {
-    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace"))]
-    fn drop(&mut self) {
-        unsafe { fnDeleteNodeRef(self.handle) };
-    }
+/// Everything needed to build node trees: `use fastnoise2::prelude::*;`
+pub mod prelude {
+    pub use crate::{Generator, Hybrid, Node, NodeBuilder, nodes::*};
 }
 
 /// Holds the minimum and maximum values from noise generation.
@@ -480,10 +187,7 @@ pub struct OutputMinMax {
 }
 
 impl OutputMinMax {
-    fn new([min, max]: [f32; 2]) -> Self {
+    pub(crate) fn new([min, max]: [f32; 2]) -> Self {
         Self { min, max }
     }
 }
-
-#[cfg(test)]
-pub mod test_utils;

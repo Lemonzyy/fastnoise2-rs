@@ -1,4 +1,10 @@
-use std::{env, path::PathBuf};
+use std::{
+    env, fs,
+    path::{Path, PathBuf},
+};
+
+use bindgen::RustEdition;
+use cmake::Config;
 
 const SOURCE_DIR_KEY: &str = "FASTNOISE2_SOURCE_DIR";
 const LIB_DIR_KEY: &str = "FASTNOISE2_LIB_DIR";
@@ -16,14 +22,14 @@ fn main() {
     println!("cargo:rerun-if-env-changed={SOURCE_DIR_KEY}");
     println!("cargo:rerun-if-env-changed={LIB_DIR_KEY}");
     println!("cargo:rerun-if-env-changed={BINDINGS_CACHE_KEY}");
-    println!("cargo:rerun-if-env-changed=EMSDK");
 
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
 
     // WASM builds use pure WASM with SIMD128
     if target_arch == "wasm32" {
         build_wasm();
-        return; // WASM doesn't need C++ stdlib linking
+        emit_std_cpp_link();
+        return;
     }
 
     // Native builds follow existing logic
@@ -38,8 +44,15 @@ fn main() {
         println!("cargo:warning=using precompiled library located in '{lib_dir}'");
         println!("cargo:rustc-link-search=native={lib_dir}");
         println!("cargo:rustc-link-lib=static={LIB_NAME}");
+        println!("cargo:rerun-if-changed={lib_dir}");
 
-        generate_bindings(default_source_path());
+        let source_path = source_path();
+        println!(
+            "cargo:rerun-if-changed={}",
+            source_path.join("include").join("FastNoise").display()
+        );
+        check_precompiled_library(Path::new(&lib_dir), &source_path);
+        generate_bindings(source_path);
     } else {
         println!("cargo:warning={LIB_DIR_KEY} is not set; falling back to building from source");
         build_from_source();
@@ -49,38 +62,20 @@ fn main() {
 }
 
 fn build_wasm() {
-    let source_path = env::var(SOURCE_DIR_KEY)
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| default_source_path());
+    let source_path = source_path();
 
     println!("cargo:warning=Building FastNoise2 for WASM with SIMD128 support");
 
-    // Log the EMSDK path if set (for debugging)
-    if let Ok(emsdk) = env::var("EMSDK") {
-        println!("cargo:warning=EMSDK path: {}", emsdk);
-    }
-    println!(
-        "cargo:rerun-if-changed={}",
-        source_path.join("include").join("FastNoise").display()
-    );
+    // Watch the whole source tree, not only headers, so C++ and CMake changes rebuild the library
+    println!("cargo:rerun-if-changed={}", source_path.display());
 
-    // Get Emscripten SDK path from environment
-    let emsdk_path = env::var("EMSDK").expect(
-        "EMSDK environment variable required for WASM builds. Install from https://emscripten.org",
-    );
-
-    // Use Emscripten's CMake toolchain file - this properly configures compilers and sysroot
-    let toolchain_file = format!(
-        "{}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake",
-        emsdk_path
-    );
-
-    // Build FastNoise2 for WASM as a pure static library using Emscripten toolchain
+    // Build FastNoise2 for WASM as a pure static library. cmake-rs runs CMake through
+    // emcmake for Emscripten targets, which sets up the Emscripten toolchain, so only
+    // Emscripten in PATH is needed (e.g. from emsdk_env.sh or a Nix shell)
     // FastSIMD has native WASM SIMD128 support - we just need to enable it
-    let mut config = cmake::Config::new(&source_path);
+    let mut config = new_cmake_config(&source_path);
     config
         .profile("Release")
-        .define("CMAKE_TOOLCHAIN_FILE", &toolchain_file)
         .define("FASTNOISE2_TOOLS", "OFF")
         .define("FASTNOISE2_TESTS", "OFF")
         .define("FASTNOISE2_UTILITY", "OFF") // Disable utility to avoid Corrade dependency
@@ -101,45 +96,28 @@ fn build_wasm() {
     println!("cargo:rustc-link-search=native={}", lib64_path.display());
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
-    // Copy Utility headers that cmake doesn't install
-    let src_utility = source_path
-        .join("include")
-        .join("FastNoise")
-        .join("Utility");
-    let dst_utility = out_path.join("include").join("FastNoise").join("Utility");
-    if src_utility.exists() && !dst_utility.exists() {
-        std::fs::create_dir_all(&dst_utility).expect("Failed to create Utility dir");
-        for entry in std::fs::read_dir(&src_utility).expect("Failed to read Utility dir") {
-            let entry = entry.expect("Failed to read entry");
-            let dst = dst_utility.join(entry.file_name());
-            std::fs::copy(entry.path(), &dst).expect("Failed to copy header");
-        }
-    }
-
     generate_bindings(out_path);
 }
 
 fn build_from_source() {
-    let source_path = env::var(SOURCE_DIR_KEY)
-        .map(PathBuf::from)
-        .unwrap_or_else(|_| default_source_path());
+    let source_path = source_path();
 
     println!(
         "cargo:warning=building from source files located in '{}'",
         source_path.display()
     );
-    println!(
-        "cargo:rerun-if-changed={}",
-        source_path.join("include").join("FastNoise").display()
-    );
+    // Watch the whole source tree, not only headers, so C++ and CMake changes rebuild the library
+    println!("cargo:rerun-if-changed={}", source_path.display());
+
+    check_compiler_supported();
 
     // Pre-create pdb-files directory structure to prevent CMake install failure on Windows
     // FastNoise2's CMakeLists.txt tries to install PDB files that may not exist in Release builds
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let pdb_dir = out_dir.join("build").join("pdb-files").join("Release");
-    std::fs::create_dir_all(&pdb_dir).ok();
+    fs::create_dir_all(&pdb_dir).ok();
 
-    let mut config = cmake::Config::new(&source_path);
+    let mut config = new_cmake_config(&source_path);
     config
         .profile("Release")
         .define("FASTNOISE2_TOOLS", "OFF")
@@ -184,38 +162,76 @@ fn build_from_source() {
     println!("cargo:rustc-link-search=native={}", lib64_path.display());
     println!("cargo:rustc-link-lib=static={LIB_NAME}");
 
-    // Copy Utility headers that cmake doesn't install
-    let src_utility = source_path
+    generate_bindings(out_path);
+}
+
+/// Checks that the precompiled library exports every function of the C header, to reject
+/// a library built from another FastNoise2 version instead of linking mismatched functions.
+fn check_precompiled_library(lib_dir: &Path, source_path: &Path) {
+    let lib_path = [format!("lib{LIB_NAME}.a"), format!("{LIB_NAME}.lib")]
+        .iter()
+        .map(|file_name| lib_dir.join(file_name))
+        .find(|path| path.exists())
+        .unwrap_or_else(|| {
+            panic!(
+                "no {LIB_NAME} static library found in '{}'",
+                lib_dir.display()
+            )
+        });
+
+    let lib = fs::read(&lib_path).expect("Failed to read precompiled library");
+
+    let header_path = source_path
         .join("include")
         .join("FastNoise")
-        .join("Utility");
-    let dst_utility = out_path.join("include").join("FastNoise").join("Utility");
-    if src_utility.exists() && !dst_utility.exists() {
-        std::fs::create_dir_all(&dst_utility).expect("Failed to create Utility dir");
-        for entry in std::fs::read_dir(&src_utility).expect("Failed to read Utility dir") {
-            let entry = entry.expect("Failed to read entry");
-            let dst = dst_utility.join(entry.file_name());
-            std::fs::copy(entry.path(), &dst).expect("Failed to copy header");
-        }
-    }
+        .join(HEADER_NAME);
+    let header = fs::read_to_string(&header_path).expect("Failed to read FastNoise C header");
 
-    generate_bindings(out_path);
+    let missing = header
+        .split("FASTNOISE_API")
+        .skip(1)
+        .filter_map(|declaration| declaration.split('(').next()?.split_whitespace().last())
+        .map(|name| name.trim_start_matches('*'))
+        .filter(|name| {
+            !lib.windows(name.len())
+                .any(|window| window == name.as_bytes())
+        })
+        .collect::<Vec<_>>();
+
+    assert!(
+        missing.is_empty(),
+        "'{}' does not match the FastNoise2 version of '{}', missing functions: {}",
+        lib_path.display(),
+        header_path.display(),
+        missing.join(", ")
+    );
 }
 
 fn generate_bindings(source_path: PathBuf) {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     let bindings_path = out_path.join("bindings.rs");
 
+    let include_path = source_path.join("include").join("FastNoise");
+    let header_path = include_path.join(HEADER_NAME);
+
+    let header = fs::read(&header_path).expect("Failed to read FastNoise C header");
+
+    // Cached bindings are stored per crate version along with the header they were
+    // generated from, and only reused if that header is identical to the current one
+    let cache_path = env::var(BINDINGS_CACHE_KEY)
+        .ok()
+        .map(|cache_dir| PathBuf::from(cache_dir).join(env!("CARGO_PKG_VERSION")));
+
     // Check for cached bindings first
-    if let Ok(cache_dir) = env::var(BINDINGS_CACHE_KEY) {
-        let cached_bindings = PathBuf::from(&cache_dir).join("bindings.rs");
-        if cached_bindings.exists() {
+    if let Some(cache_path) = &cache_path {
+        let cached_bindings = cache_path.join("bindings.rs");
+        let cached_header = fs::read(cache_path.join(HEADER_NAME)).ok();
+        if cached_bindings.exists() && cached_header.as_ref() == Some(&header) {
             println!(
                 "cargo:warning=using cached bindings from '{}'",
                 cached_bindings.display()
             );
-            std::fs::copy(&cached_bindings, &bindings_path)
-                .expect("Failed to copy cached bindings");
+            fs::copy(&cached_bindings, &bindings_path).expect("Failed to copy cached bindings");
             return;
         }
     }
@@ -225,15 +241,13 @@ fn generate_bindings(source_path: PathBuf) {
      FASTNOISE2_BINDINGS_DIR to cache)"
     );
 
-    let include_path = source_path.join("include").join("FastNoise");
-    let header_path = include_path.join(HEADER_NAME);
-
     // FastNoise C API bindings are target-agnostic (pure extern "C" declarations
     // with only primitive types like c_int, c_void, f32, bool).
     // We explicitly generate for the HOST system, not the cross-compile target,
     // because bindgen/libclang fails when targeting WASM (produces empty output).
     // This is safe because the C ABI for these declarations is identical across platforms.
     let mut builder = bindgen::Builder::default()
+        .rust_edition(RustEdition::Edition2024)
         .header(header_path.to_str().unwrap())
         .clang_arg(format!("-I{}", include_path.to_str().unwrap()))
         .clang_arg("-xc++")
@@ -265,16 +279,75 @@ fn generate_bindings(source_path: PathBuf) {
     );
 
     // Save to cache if dir is set
-    if let Ok(cache_dir) = env::var(BINDINGS_CACHE_KEY) {
-        let cache_path = PathBuf::from(&cache_dir);
-        std::fs::create_dir_all(&cache_path).ok();
+    if let Some(cache_path) = &cache_path {
+        fs::create_dir_all(cache_path).ok();
         let cached_bindings = cache_path.join("bindings.rs");
-        std::fs::copy(&bindings_path, &cached_bindings).ok();
+        fs::copy(&bindings_path, &cached_bindings).ok();
+        fs::write(cache_path.join(HEADER_NAME), &header).ok();
         println!(
             "cargo:warning=bindings cached to '{}'",
             cached_bindings.display()
         );
     }
+}
+
+/// Creates the CMake config, using the bundled FastSIMD with the bundled FastNoise2 so the
+/// build doesn't download it
+fn new_cmake_config(source_path: &Path) -> Config {
+    let mut config = Config::new(source_path);
+
+    if env::var(SOURCE_DIR_KEY).is_err() {
+        let fastsimd_path = default_fastsimd_path();
+        check_submodule("FastSIMD", &fastsimd_path);
+        println!("cargo:rerun-if-changed={}", fastsimd_path.display());
+        // CMake reads backslashes of Windows paths as escapes ("Invalid character escape '\a'")
+        config.define(
+            "CPM_FastSIMD_SOURCE",
+            fastsimd_path.to_string_lossy().replace('\\', "/"),
+        );
+    }
+
+    config
+}
+
+fn source_path() -> PathBuf {
+    env::var(SOURCE_DIR_KEY)
+        .map(PathBuf::from)
+        .unwrap_or_else(|_| {
+            let path = default_source_path();
+            check_submodule("FastNoise2", &path);
+            path
+        })
+}
+
+/// Panics if the C++ compiler can't build FastNoise2 for the target.
+///
+/// FastNoise2 adds the x86 only `-mno-vzeroupper` option for every GCC build, and FastSIMD's NEON
+/// code doesn't compile with GCC, only Clang is supported on other architectures.
+fn check_compiler_supported() {
+    let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+    if matches!(target_arch.as_str(), "x86" | "x86_64") {
+        return;
+    }
+
+    let compiler = cc::Build::new().cpp(true).get_compiler();
+    let is_gcc = compiler.is_like_gnu() && !compiler.is_like_clang();
+    assert!(
+        !is_gcc,
+        "FastNoise2 doesn't support GCC when targeting {target_arch} ('{}'), build with Clang: run \
+         `cargo clean -p fastnoise2-sys`, then set `CC=clang CXX=clang++`",
+        compiler.path().display()
+    );
+}
+
+/// Panics with the command to run if a bundled submodule is not checked out, e.g. after
+/// switching to a branch that added it.
+fn check_submodule(name: &str, path: &Path) {
+    assert!(
+        path.join("CMakeLists.txt").exists(),
+        "the {name} Git submodule is missing in '{}', run `git submodule update --init --recursive`",
+        path.display()
+    );
 }
 
 fn default_source_path() -> PathBuf {
@@ -284,13 +357,28 @@ fn default_source_path() -> PathBuf {
     path
 }
 
+fn default_fastsimd_path() -> PathBuf {
+    let mut path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    path.push("build");
+    path.push("FastSIMD");
+    path
+}
+
 fn emit_std_cpp_link() {
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let target_env = env::var("CARGO_CFG_TARGET_ENV").unwrap();
 
     match (target_os.as_str(), target_env.as_str()) {
-        ("linux", _) | ("windows", "gnu") => println!("cargo:rustc-link-lib=dylib=stdc++"),
-        ("macos" | "freebsd", _) => println!("cargo:rustc-link-lib=dylib=c++"),
+        ("linux" | "netbsd", _) | ("windows", "gnu") => {
+            println!("cargo:rustc-link-lib=dylib=stdc++")
+        }
+        ("macos" | "ios" | "tvos" | "watchos" | "visionos" | "freebsd" | "openbsd", _)
+        | ("windows", "gnullvm") => println!("cargo:rustc-link-lib=dylib=c++"),
+        ("android", _) => println!("cargo:rustc-link-lib=dylib=c++_shared"),
+        ("emscripten", _) => {
+            println!("cargo:rustc-link-lib=c++");
+            println!("cargo:rustc-link-lib=c++abi");
+        }
         ("windows", "msvc") => {} // MSVC links C++ stdlib automatically
         _ => println!("cargo:warning=Unknown target for C++ stdlib linking"),
     }

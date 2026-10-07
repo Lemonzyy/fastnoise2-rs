@@ -1,35 +1,27 @@
-// This example illustrates the use of "SafeNode::from_encoded_node_tree" to build a safe tree from an encoded node tree exported by the Node Editor.
-use std::time::Instant;
+// This example illustrates the use of "Node::from_encoded_node_tree" to build a node tree exported by the Node Editor.
+use std::{env, fs, path::PathBuf, time::Instant};
 
-use fastnoise2::SafeNode;
+use fastnoise2::Node;
 use image::{GrayImage, Luma};
 
 // "Mountain Terrain" tree integrated into FastNoise2 Node Editor.
-const DEFAULT_ENCODED_NODE_TREE: &str =
-    "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
+const DEFAULT_ENCODED_NODE_TREE: &str = "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
 const X_SIZE: i32 = 1024;
 const Y_SIZE: i32 = 1024;
 
 fn main() {
-    let encoded_node_tree = std::env::args().nth(1).unwrap_or_else(|| {
+    let encoded_node_tree = env::args().nth(1).unwrap_or_else(|| {
         println!(
             "Invalid or unspecified encoded node tree, defaulting to '{DEFAULT_ENCODED_NODE_TREE}'"
         );
         DEFAULT_ENCODED_NODE_TREE.to_string()
     });
 
-    let node = SafeNode::from_encoded_node_tree(&encoded_node_tree).unwrap();
+    let node = Node::from_encoded_node_tree(&encoded_node_tree).unwrap();
 
     let mut noise = vec![0.0; (X_SIZE * Y_SIZE) as usize];
 
     let start = Instant::now();
-    // SAFETY:
-    // Using `SafeNode::from_encoded_node_tree` is safe unlike manually constructing the node tree with
-    // `Node::from_name` and `Node::set`, as it ensures the nodes and parameters are correctly set by the C++ library's
-    // tools. However, once the node is created, you cannot modify its parameters.
-    // Modifying parameters directly using `Node::set` can introduce the same risks as manually building the node tree.
-    // Issues might arise due to incorrect parameter types, missing members, or other configuration errors.
-    // Ensure that all modifications are valid and consult the FastNoise2 documentation for guidance on parameter types and expected values.
     let step_size = 3.0;
     let min_max = node.gen_uniform_grid_2d(
         &mut noise,
@@ -67,9 +59,8 @@ fn main() {
 
 fn save(img: GrayImage, filename: &str) {
     let output_dir =
-        std::path::PathBuf::from(std::env::var("CARGO_MANIFEST_DIR").unwrap_or_default())
-            .join("examples_output");
-    std::fs::create_dir_all(&output_dir).expect("Failed to create directories");
+        PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap_or_default()).join("examples_output");
+    fs::create_dir_all(&output_dir).expect("Failed to create directories");
     let output_path = output_dir.join(filename);
     img.save(&output_path).expect("Failed to save image");
     println!("Image successfully saved as {}", output_path.display());
