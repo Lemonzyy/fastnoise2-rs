@@ -300,7 +300,11 @@ fn new_cmake_config(source_path: &Path) -> Config {
         let fastsimd_path = default_fastsimd_path();
         check_submodule("FastSIMD", &fastsimd_path);
         println!("cargo:rerun-if-changed={}", fastsimd_path.display());
-        config.define("CPM_FastSIMD_SOURCE", &fastsimd_path);
+        // CMake reads backslashes of Windows paths as escapes ("Invalid character escape '\a'")
+        config.define(
+            "CPM_FastSIMD_SOURCE",
+            fastsimd_path.to_string_lossy().replace('\\', "/"),
+        );
     }
 
     config
