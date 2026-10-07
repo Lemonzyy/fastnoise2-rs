@@ -23,7 +23,12 @@ fn outdated_files(files: &[(String, String)]) -> Vec<String> {
     let mut outdated = files
         .iter()
         .filter(|(file_name, content)| {
-            fs::read_to_string(output_dir.join(file_name)).ok().as_ref() != Some(content)
+            // Git may check files out with CRLF line endings on Windows
+            fs::read_to_string(output_dir.join(file_name))
+                .map(|existing| existing.replace("\r\n", "\n"))
+                .ok()
+                .as_ref()
+                != Some(content)
         })
         .map(|(file_name, _)| file_name.clone())
         .collect::<Vec<_>>();
