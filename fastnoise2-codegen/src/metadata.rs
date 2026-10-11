@@ -1,0 +1,174 @@
+//! Loads FastNoise2 metadata through the C API.
+use std::{
+    ffi::{CStr, c_char, c_void},
+    ops::RangeInclusive,
+};
+
+use fastnoise2_sys::*;
+
+pub struct Node {
+    pub name: String,
+    pub description: String,
+    pub group: String,
+    pub members: Vec<Member>,
+}
+
+impl Node {
+    pub fn inputs(&self) -> impl Iterator<Item = (&Member, &Input)> {
+        self.members.iter().filter_map(|member| match &member.kind {
+            MemberKind::Input(input) => Some((member, input)),
+            _ => None,
+        })
+    }
+}
+
+pub struct Member {
+    /// Name as displayed by FastNoise2, with the dimension (e.g. "Feature Scale", "Offset X").
+    pub name: String,
+    pub description: String,
+    pub kind: MemberKind,
+}
+
+pub enum MemberKind {
+    /// `range` is the range the Node Editor clamps the member to.
+    Float {
+        default: f32,
+        range: Option<RangeInclusive<f32>>,
+    },
+    Int {
+        default: i32,
+        range: Option<RangeInclusive<i32>>,
+    },
+    Enum {
+        values: Vec<String>,
+        default: usize,
+    },
+    Input(Input),
+    Hybrid {
+        default: f32,
+    },
+}
+
+pub struct Input {
+    /// Node names accepted by this input, `None` if it accepts every node.
+    pub accepted: Option<Vec<String>>,
+}
+
+pub fn load() -> Vec<Node> {
+    let count = unsafe { fnGetMetadataCount() };
+    let names = (0..count)
+        .map(|id| to_string(unsafe { fnGetMetadataName(id) }))
+        .collect::<Vec<_>>();
+
+    // Unconfigured instances of every node, only used to probe which nodes an input accepts
+    let instances = (0..count)
+        .map(|id| unsafe { fnNewFromMetadata(id, u32::MAX) })
+        .collect::<Vec<_>>();
+
+    let nodes = (0..count)
+        .map(|id| load_node(id, &names, &instances))
+        .collect();
+
+    for instance in instances {
+        unsafe { fnDeleteNodeRef(instance) };
+    }
+
+    nodes
+}
+
+fn load_node(id: i32, names: &[String], instances: &[*mut c_void]) -> Node {
+    let mut members = Vec::new();
+
+    for index in 0..unsafe { fnGetMetadataVariableCount(id) } {
+        // The C API only returns the float of the value union, its bits are the int of int
+        // members. Like the Node Editor (ImGui), bounds only apply if min < max.
+        let min = unsafe { fnGetMetadataVariableMinFloat(id, index) };
+        let max = unsafe { fnGetMetadataVariableMaxFloat(id, index) };
+
+        let kind = match unsafe { fnGetMetadataVariableType(id, index) } {
+            0 => MemberKind::Float {
+                default: unsafe { fnGetMetadataVariableDefaultFloat(id, index) },
+                range: (min < max).then_some(min..=max),
+            },
+            1 => {
+                let (min, max) = (min.to_bits() as i32, max.to_bits() as i32);
+                MemberKind::Int {
+                    default: unsafe { fnGetMetadataVariableDefaultIntEnum(id, index) },
+                    range: (min < max).then_some(min..=max),
+                }
+            }
+            2 => MemberKind::Enum {
+                values: (0..unsafe { fnGetMetadataEnumCount(id, index) })
+                    .map(|value| to_string(unsafe { fnGetMetadataEnumName(id, index, value) }))
+                    .collect(),
+                default: unsafe { fnGetMetadataVariableDefaultIntEnum(id, index) } as usize,
+            },
+            variable_type => panic!("unknown variable type {variable_type}"),
+        };
+
+        members.push(Member {
+            name: dimension_name(
+                to_string(unsafe { fnGetMetadataVariableName(id, index) }),
+                unsafe { fnGetMetadataVariableDimensionIdx(id, index) },
+            ),
+            description: to_string(unsafe { fnGetMetadataVariableDescription(id, index) }),
+            kind,
+        });
+    }
+
+    for index in 0..unsafe { fnGetMetadataNodeLookupCount(id) } {
+        let accepted = (0..names.len())
+            .filter(|&candidate| unsafe {
+                let node = fnNewFromMetadata(id, u32::MAX);
+                let is_accepted = fnSetNodeLookup(node, index, instances[candidate]);
+                fnDeleteNodeRef(node);
+                is_accepted
+            })
+            .map(|candidate| names[candidate].clone())
+            .collect::<Vec<_>>();
+
+        members.push(Member {
+            name: dimension_name(
+                to_string(unsafe { fnGetMetadataNodeLookupName(id, index) }),
+                unsafe { fnGetMetadataNodeLookupDimensionIdx(id, index) },
+            ),
+            description: to_string(unsafe { fnGetMetadataNodeLookupDescription(id, index) }),
+            kind: MemberKind::Input(Input {
+                accepted: (accepted.len() != names.len()).then_some(accepted),
+            }),
+        });
+    }
+
+    for index in 0..unsafe { fnGetMetadataHybridCount(id) } {
+        members.push(Member {
+            name: dimension_name(
+                to_string(unsafe { fnGetMetadataHybridName(id, index) }),
+                unsafe { fnGetMetadataHybridDimensionIdx(id, index) },
+            ),
+            description: to_string(unsafe { fnGetMetadataHybridDescription(id, index) }),
+            kind: MemberKind::Hybrid {
+                default: unsafe { fnGetMetadataHybridDefault(id, index) },
+            },
+        });
+    }
+
+    Node {
+        name: names[id as usize].clone(),
+        description: to_string(unsafe { fnGetMetadataDescription(id) }),
+        group: to_string(unsafe { fnGetMetadataGroupName(id, 0) }),
+        members,
+    }
+}
+
+fn dimension_name(name: String, dimension: i32) -> String {
+    match dimension {
+        0..=3 => format!("{name} {}", ['X', 'Y', 'Z', 'W'][dimension as usize]),
+        _ => name,
+    }
+}
+
+fn to_string(c_str: *const c_char) -> String {
+    unsafe { CStr::from_ptr(c_str) }
+        .to_string_lossy()
+        .into_owned()
+}

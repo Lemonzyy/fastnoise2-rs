@@ -1,7 +1,7 @@
 # FastNoise2 WASM Demo - Emscripten Build
 #
 # Requires:
-#   - Emscripten SDK (source ~/emsdk/emsdk_env.sh)
+#   - Emscripten in PATH (source ~/emsdk/emsdk_env.sh, or nix shell nixpkgs#emscripten)
 #   - rustup target add wasm32-unknown-emscripten
 #
 # Usage:
@@ -23,7 +23,7 @@ EMCC_CFLAGS = \
 
 build:
 	@echo "Building FastNoise2 WASM with Emscripten target..."
-	@echo "Make sure you have sourced emsdk_env.sh first!"
+	@echo "Make sure Emscripten is in PATH first!"
 	EMCC_CFLAGS="$(EMCC_CFLAGS)" cargo build --release --target wasm32-unknown-emscripten
 	@echo ""
 	@echo "Copying output files to ./dist/"

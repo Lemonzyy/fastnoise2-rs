@@ -1,6 +1,8 @@
+use std::ffi::NulError;
+
 use thiserror::Error;
 
-use crate::metadata::MemberType;
+use crate::{FeatureSet, metadata::MemberType};
 
 /// Errors that can occur when interacting with [`Node`][`crate::Node`].
 ///
@@ -10,10 +12,7 @@ pub enum FastNoiseError {
     /// Indicates that the provided metadata name was not found.
     ///
     /// FastNoise2 uses metadata to manage node names and parameters. This error occurs if the given metadata name is not recognized.
-    #[error(
-        "metadata name not found (expected one of {}, found '{found}')",
-        format_slice(expected)
-    )]
+    #[error("unknown node '{found}' (expected one of {})", format_slice(expected))]
     MetadataNameNotFound {
         /// A list of valid metadata names.
         expected: Vec<String>,
@@ -23,7 +22,7 @@ pub enum FastNoiseError {
 
     /// Indicates a failure to create a [`CString`][`std::ffi::CString`] from the provided encoded node tree string.
     #[error("failed to create CString from encoded node tree")]
-    CStringCreationFailed(#[from] std::ffi::NulError),
+    CStringCreationFailed(#[from] NulError),
 
     /// Indicates a failure to create a node from the encoded node tree.
     #[error("failed to create noise node from the encoded node tree")]
@@ -33,10 +32,12 @@ pub enum FastNoiseError {
     ///
     /// This error occurs if the member name specified is not available for the node.
     #[error(
-        "member name not found (expected one of {}, found '{found}')",
+        "unknown member '{found}' on node '{node}' (expected one of {})",
         format_slice(expected)
     )]
     MemberNameNotFound {
+        /// The name of the node.
+        node: String,
         /// A list of valid member names.
         expected: Vec<String>,
         /// The member name that was not found.
@@ -46,53 +47,111 @@ pub enum FastNoiseError {
     /// Indicates that the member type does not match the expected type.
     ///
     /// This error occurs when there is a mismatch between the expected member type and the provided value type.
-    #[error("invalid member type for '{member_name}' (expected {expected}, found {found})")]
+    #[error(
+        "invalid type for member '{member}' of node '{node}' (expected {expected}, found {found}){}",
+        format_description(description)
+    )]
     InvalidMemberType {
+        /// The name of the node.
+        node: String,
         /// The name of the member with the type mismatch.
-        member_name: String,
+        member: String,
+        /// The description of the member from FastNoise2, may be empty.
+        description: String,
         /// The expected member type.
         expected: MemberType,
         /// The actual member type found.
         found: MemberType,
     },
 
-    /// Indicates a failure to set a float value for a member.
-    #[error("failed to set float value")]
-    SetFloatFailed,
+    /// Indicates that an input (node lookup member) of a node is not set.
+    ///
+    /// Generating noise with a missing input would crash FastNoise2.
+    #[error("missing input '{member}' of node '{node}'")]
+    MissingInput {
+        /// The name of the node.
+        node: String,
+        /// The name of the input member.
+        member: String,
+    },
 
-    /// Indicates a failure to set a hybrid float value for a member.
-    #[error("failed to set hybrid float value")]
-    SetHybridFloatFailed,
+    /// Indicates that an input of a node doesn't accept the given node type.
+    ///
+    /// For example, a "Domain Warp Source" input only accepts domain warp nodes.
+    #[error("node '{input}' is not accepted by input '{member}' of node '{node}'")]
+    InputNotAccepted {
+        /// The name of the node.
+        node: String,
+        /// The name of the input member.
+        member: String,
+        /// The name of the rejected node.
+        input: String,
+    },
 
-    /// Indicates a failure to set an integer value for a member.
-    #[error("failed to set integer value")]
-    SetIntFailed,
+    /// Indicates that an input has another SIMD feature set than its node, see
+    /// [`with_max_feature_set`](crate::with_max_feature_set).
+    #[error(
+        "input '{member}' of node '{node}' has the {found} feature set, expected {expected} like the node"
+    )]
+    FeatureSetMismatch {
+        /// The name of the node.
+        node: String,
+        /// The name of the input member.
+        member: String,
+        expected: FeatureSet,
+        found: FeatureSet,
+    },
+
+    /// Indicates that a node tree can't be encoded because it contains a node created from an
+    /// encoded node tree, whose values are unknown.
+    #[error(
+        "node '{node}' was created from an encoded node tree, it can only be encoded on its own"
+    )]
+    NotEncodable {
+        /// The name of the node.
+        node: String,
+    },
+
+    /// Indicates that a node tree can't be encoded because it has more distinct nodes than the
+    /// format can reference (65536).
+    #[error("node tree has too many distinct nodes to be encoded, the maximum is 65536")]
+    TooManyNodes,
+
+    /// Indicates that FastNoise2 isn't compiled for a feature set on this target.
+    #[error(
+        "feature set {requested} is not available on this target, FastNoise2 detected {detected}"
+    )]
+    FeatureSetNotAvailable {
+        requested: FeatureSet,
+        detected: FeatureSet,
+    },
+
+    /// Indicates that FastNoise2 failed to set the value of a member.
+    #[error("failed to set member '{member}' of node '{node}'")]
+    SetMemberFailed {
+        /// The name of the node.
+        node: String,
+        /// The name of the member.
+        member: String,
+    },
 
     /// Indicates that the specified enum value was not found.
     ///
     /// This error occurs if the provided enum value does not match any of the expected enum values.
     #[error(
-        "enum value not found (expected one of {}, found '{found}')",
+        "unknown value '{found}' for member '{member}' of node '{node}' (expected one of {})",
         format_slice(expected)
     )]
     EnumValueNotFound {
+        /// The name of the node.
+        node: String,
+        /// The name of the enum member.
+        member: String,
         /// A list of valid enum values.
         expected: Vec<String>,
         /// The enum value that was not found.
         found: String,
     },
-
-    /// Indicates a failure to set an enum value for a member.
-    #[error("failed to set enum value")]
-    SetEnumFailed,
-
-    /// Indicates a failure to set a node lookup for a member.
-    #[error("failed to set node lookup")]
-    SetNodeLookupFailed,
-
-    /// Indicates a failure to set a hybrid node lookup for a member.
-    #[error("failed to set hybrid node lookup")]
-    SetHybridNodeLookupFailed,
 }
 
 fn format_slice(slice: &[String]) -> String {
@@ -101,4 +160,12 @@ fn format_slice(slice: &[String]) -> String {
         .map(|s| format!("'{s}'"))
         .collect::<Vec<String>>()
         .join(", ")
+}
+
+fn format_description(description: &str) -> String {
+    if description.is_empty() {
+        String::new()
+    } else {
+        format!("\n{description}")
+    }
 }
