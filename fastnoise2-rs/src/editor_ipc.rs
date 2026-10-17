@@ -6,7 +6,7 @@
 //! remove the region, which would disconnect the processes opening it afterwards from a running
 //! Node Editor, and polling can't lose a message.
 use std::{
-    ffi::{CStr, OsStr},
+    ffi::{CStr, CString, OsStr},
     io,
     process::Command,
     ptr::{self, NonNull},
@@ -49,6 +49,7 @@ pub enum EditorMessage {
 /// # Ok::<(), std::io::Error>(())
 /// ```
 pub struct NodeEditorIpc {
+    name: CString,
     shared_memory: SharedMemory,
     /// Counter of the last message read or sent.
     last_counter: u8,
@@ -76,15 +77,50 @@ impl NodeEditorIpc {
         let last_counter = shared_memory.counter().load(Ordering::Acquire);
 
         Ok(Self {
+            name: name.to_owned(),
             shared_memory,
             last_counter,
         })
+    }
+
+    /// Reopens the shared memory if its name refers to another region or to none: the Node
+    /// Editor removes the name when it exits, and the next one creates a new region.
+    fn reconnect(&mut self) {
+        if self.shared_memory.is_current(&self.name) {
+            return;
+        }
+
+        match SharedMemory::open(&self.name) {
+            Ok(shared_memory) => {
+                #[cfg(feature = "trace")]
+                tracing::debug!("reopened the Node Editor shared memory");
+
+                // The current message is polled, e.g. the selection of a restarted Node Editor
+                let counter = shared_memory.counter().load(Ordering::Acquire);
+                self.last_counter = counter.wrapping_sub(1);
+                self.shared_memory = shared_memory;
+            }
+            Err(_error) => {
+                #[cfg(feature = "trace")]
+                tracing::debug!(error = %_error, "failed to reopen the Node Editor shared memory");
+            }
+        }
     }
 
     /// Returns the next message, `None` if there is no new message. Only the last message is
     /// kept, a message sent before the previous one is read is lost.
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, ret))]
     pub fn poll(&mut self) -> Option<EditorMessage> {
+        // A message written before the name was removed is still read from the old region
+        if let Some(message) = self.next_message() {
+            return Some(message);
+        }
+
+        self.reconnect();
+        self.next_message()
+    }
+
+    fn next_message(&mut self) -> Option<EditorMessage> {
         let counter = self.shared_memory.counter().load(Ordering::Acquire);
         if counter == self.last_counter {
             return None;
@@ -97,7 +133,9 @@ impl NodeEditorIpc {
     /// The encoded node tree currently selected in the Node Editor, if the last message is a
     /// selected node.
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, ret))]
-    pub fn selected_node(&self) -> Option<String> {
+    pub fn selected_node(&mut self) -> Option<String> {
+        self.reconnect();
+
         match self.read_message()? {
             EditorMessage::SelectedNode(encoded) => Some(encoded),
             EditorMessage::ImportRequest(_) => None,
@@ -151,6 +189,8 @@ impl NodeEditorIpc {
     }
 
     fn send(&mut self, message_type: u8, encoded_node_tree: &str) -> io::Result<()> {
+        self.reconnect();
+
         let bytes = encoded_node_tree.as_bytes();
         if bytes.contains(&0) {
             return Err(io::Error::new(
@@ -211,6 +251,9 @@ pub fn node_editor_command(
 /// The mapped shared memory region, unmapped on drop.
 struct SharedMemory {
     ptr: NonNull<u8>,
+    /// Identifies the region, its name may later refer to another one.
+    #[cfg(unix)]
+    inode: u64,
     #[cfg(windows)]
     handle: windows_sys::Win32::Foundation::HANDLE,
 }
@@ -219,7 +262,7 @@ impl SharedMemory {
     #[cfg(unix)]
     fn open(name: &CStr) -> io::Result<Self> {
         use rustix::{
-            fs::ftruncate,
+            fs::{fstat, ftruncate},
             io::Errno,
             mm::{MapFlags, ProtFlags, mmap},
             shm::{self, Mode, OFlags},
@@ -236,6 +279,7 @@ impl SharedMemory {
             Ok(()) | Err(Errno::INVAL) => {}
             Err(error) => return Err(error.into()),
         }
+        let inode = fstat(&fd)?.st_ino;
 
         let ptr = unsafe {
             mmap(
@@ -250,7 +294,31 @@ impl SharedMemory {
 
         Ok(Self {
             ptr: NonNull::new(ptr.cast()).expect("mmap doesn't return null on success"),
+            inode,
         })
+    }
+
+    /// Whether `name` still refers to this region.
+    #[cfg(unix)]
+    fn is_current(&self, name: &CStr) -> bool {
+        use rustix::{
+            fs::fstat,
+            io::Errno,
+            shm::{self, Mode, OFlags},
+        };
+
+        match shm::open(name, OFlags::RDWR, Mode::empty()) {
+            Ok(fd) => fstat(&fd).is_ok_and(|stat| stat.st_ino == self.inode),
+            Err(Errno::NOENT) => false,
+            // Keeps using the region if the name can't be checked
+            Err(_) => true,
+        }
+    }
+
+    /// A named file mapping exists as long as a process has it open, Node Editors share it.
+    #[cfg(windows)]
+    fn is_current(&self, _name: &CStr) -> bool {
+        true
     }
 
     #[cfg(windows)]
@@ -389,6 +457,42 @@ mod tests {
 
         editor.send_import_request("GQ==").unwrap();
         assert_eq!(game.selected_node(), None);
+    }
+
+    /// The Node Editor removes the name when it exits, the next one creates a new region.
+    #[cfg(unix)]
+    #[test]
+    fn test_reconnects_to_a_new_region() {
+        let region = TestRegion::new("reconnect");
+        let mut game = region.open();
+
+        // A message sent just before the Node Editor exits is still read
+        let mut editor = region.open();
+        editor.send_selected_node("GQ==").unwrap();
+        drop(editor);
+        rustix::shm::unlink(region.0.as_c_str()).unwrap();
+        assert_eq!(
+            game.poll(),
+            Some(EditorMessage::SelectedNode("GQ==".to_string()))
+        );
+        let mut editor = region.open();
+        editor.send_selected_node("DQkGDA==").unwrap();
+
+        assert_eq!(
+            game.poll(),
+            Some(EditorMessage::SelectedNode("DQkGDA==".to_string()))
+        );
+        assert_eq!(game.poll(), None);
+
+        // Sending after the name is removed creates a region the next Node Editor opens
+        rustix::shm::unlink(region.0.as_c_str()).unwrap();
+        game.send_import_request("GQ==").unwrap();
+        let mut next_editor = region.open();
+        game.send_import_request("GQ==").unwrap();
+        assert_eq!(
+            next_editor.poll(),
+            Some(EditorMessage::ImportRequest("GQ==".to_string()))
+        );
     }
 
     #[test]
