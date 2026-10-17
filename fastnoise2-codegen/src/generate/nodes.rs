@@ -155,8 +155,9 @@ impl Generator<'_> {
     }
 
     fn builder(&self, member: &Member) -> TokenStream {
+        // Named like the field, a raw identifier for a Rust keyword
         let field = field_ident(member);
-        let parameter = format_ident!("{}", member.name.to_snake_case());
+        let parameter = &field;
         let method = format_ident!("with_{}", member.name.to_snake_case());
 
         let mut doc = doc_lines(&member.description);
@@ -190,5 +191,27 @@ impl Generator<'_> {
                 }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// A member named like a Rust keyword gets a raw identifier, for the field and the parameter.
+    #[test]
+    fn test_builder_of_keyword_member() {
+        let member = Member {
+            name: "Type".to_string(),
+            description: String::new(),
+            kind: MemberKind::Int {
+                default: 0,
+                range: None,
+            },
+        };
+
+        let builder = Generator::new(&[]).builder(&member);
+        let item = quote! { impl Node { #builder } };
+        syn::parse2::<syn::ItemImpl>(item).expect("builder is valid Rust");
     }
 }
