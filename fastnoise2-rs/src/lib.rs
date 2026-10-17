@@ -146,6 +146,8 @@ mod error;
 mod feature_set;
 mod metadata;
 mod node;
+#[cfg(feature = "encode")]
+mod node_tree;
 #[rustfmt::skip]
 pub mod nodes;
 
@@ -171,6 +173,8 @@ pub use error::FastNoiseError;
 pub use feature_set::{FeatureSet, with_max_feature_set};
 pub use metadata::{Member, MemberRange, MemberType, Metadata};
 pub use node::{Generator, Hybrid, MemberValue, Node, NodeBuilder};
+#[cfg(feature = "encode")]
+pub use node_tree::{NodeTree, TreeNode, TreeValue};
 
 /// Everything needed to build node trees: `use fastnoise2::prelude::*;`
 pub mod prelude {

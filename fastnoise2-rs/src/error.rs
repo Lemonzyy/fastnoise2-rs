@@ -129,6 +129,14 @@ pub enum FastNoiseError {
         node: String,
     },
 
+    /// Indicates that an encoded node tree can't be decoded into a
+    /// [`NodeTree`](crate::NodeTree).
+    #[error("invalid encoded node tree: {reason}")]
+    InvalidNodeTree {
+        /// What is wrong with it.
+        reason: &'static str,
+    },
+
     /// Indicates that a node tree can't be encoded because it has more distinct nodes than the
     /// format can reference (65536).
     #[error("node tree has too many distinct nodes to be encoded, the maximum is 65536")]

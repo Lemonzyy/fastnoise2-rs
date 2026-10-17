@@ -17,6 +17,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8c2d080` (v1.1.1 and later f
 
 ### Added
 
+- `NodeTree::decode` (feature `encode`): the node types and member values of an encoded node tree, as data to show or edit (`TreeNode`, `TreeValue`), built back into a `Node` with `NodeTree::build`. A port of FastNoise2's `Metadata::DeserialiseNodeData`, with the new `FastNoiseError::InvalidNodeTree`
 - Typed node API generated from FastNoise2 metadata, in `fastnoise2::nodes` and `fastnoise2::prelude`:
   - A type per FastNoise2 node, with documented `with_*` builder methods and FastNoise2 default values; constructors, builder and chaining methods are `#[must_use]`, so a discarded `node.with_octaves(5);` warns
   - Nodes without inputs are created by functions (`perlin()`), nodes with inputs are chained from their first input (`perlin().fractal_f_bm()`, `GeneratorExt`)
