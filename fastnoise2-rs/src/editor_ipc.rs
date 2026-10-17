@@ -220,6 +220,8 @@ impl NodeEditorIpc {
             let len = CHUNK_SIZE.min(PAYLOAD_SIZE - start);
 
             bytes.reserve(len);
+            // SAFETY: `start + len` bytes fit in the payload (see the loop condition) and in
+            // `bytes` (reserved above), and the copied bytes initialize `bytes` up to that length
             unsafe {
                 ptr::copy_nonoverlapping(payload.add(start), bytes.as_mut_ptr().add(start), len);
                 bytes.set_len(start + len);
@@ -252,6 +254,7 @@ impl NodeEditorIpc {
             ));
         }
 
+        // SAFETY: the message and its null terminator fit in the payload (checked above)
         unsafe {
             let payload = self.shared_memory.payload();
             ptr::copy_nonoverlapping(bytes.as_ptr(), payload, bytes.len());
@@ -295,6 +298,10 @@ pub fn node_editor_command(
 }
 
 /// The mapped shared memory region, unmapped on drop.
+///
+/// `ptr` maps `SHARED_MEMORY_SIZE` readable and writable bytes from `open` until drop, the
+/// invariant every access relies on. Other processes write the region concurrently, so it is only
+/// accessed through raw pointers and atomics, never through references.
 struct SharedMemory {
     ptr: NonNull<u8>,
     /// Identifies the region, its name may later refer to another one.
@@ -327,6 +334,7 @@ impl SharedMemory {
         }
         let inode = fstat(&fd)?.st_ino;
 
+        // SAFETY: a new mapping of the whole region, which has `SHARED_MEMORY_SIZE` bytes
         let ptr = unsafe {
             mmap(
                 ptr::null_mut(),
@@ -373,6 +381,7 @@ impl SharedMemory {
     fn is_mapped_by(&self, fd: &rustix::fd::OwnedFd) -> bool {
         use rustix::mm::{MapFlags, ProtFlags, mmap, munmap};
 
+        // SAFETY: a new read only mapping of the region of `fd`, unmapped below
         let Ok(other) = (unsafe {
             mmap(
                 ptr::null_mut(),
@@ -387,6 +396,7 @@ impl SharedMemory {
         };
 
         let probe = self.probe();
+        // SAFETY: the last byte of the mapping above, only accessed atomically
         let other_probe =
             unsafe { AtomicU8::from_ptr(other.cast::<u8>().add(SHARED_MEMORY_SIZE - 1)) };
         let is_same = (0..2).all(|_| {
@@ -395,7 +405,7 @@ impl SharedMemory {
             other_probe.load(Ordering::SeqCst) == value
         });
 
-        // Can't fail with a region mapped above
+        // SAFETY: the mapping above, `other_probe` isn't used afterwards. Can't fail with it.
         let _ = unsafe { munmap(other, SHARED_MEMORY_SIZE) };
         is_same
     }
@@ -415,6 +425,7 @@ impl SharedMemory {
             },
         };
 
+        // SAFETY: a mapping of the paging file named by the null terminated `name`
         let handle = unsafe {
             CreateFileMappingA(
                 INVALID_HANDLE_VALUE,
@@ -429,9 +440,11 @@ impl SharedMemory {
             return Err(io::Error::last_os_error());
         }
 
+        // SAFETY: a view of the whole mapping created above
         let view = unsafe { MapViewOfFile(handle, FILE_MAP_ALL_ACCESS, 0, 0, SHARED_MEMORY_SIZE) };
         let Some(ptr) = NonNull::new(view.Value.cast()) else {
             let error = io::Error::last_os_error();
+            // SAFETY: the handle created above, not used afterwards
             unsafe { CloseHandle(handle) };
             return Err(error);
         };
@@ -441,11 +454,13 @@ impl SharedMemory {
 
     #[inline]
     fn counter(&self) -> &AtomicU8 {
+        // SAFETY: byte 0 of the mapping, only accessed atomically
         unsafe { AtomicU8::from_ptr(self.ptr.as_ptr()) }
     }
 
     #[inline]
     fn message_type(&self) -> &AtomicU8 {
+        // SAFETY: byte 1 of the mapping, only accessed atomically
         unsafe { AtomicU8::from_ptr(self.ptr.as_ptr().add(1)) }
     }
 
@@ -453,11 +468,13 @@ impl SharedMemory {
     #[cfg(unix)]
     #[inline]
     fn probe(&self) -> &AtomicU8 {
+        // SAFETY: the last byte of the mapping, only accessed atomically
         unsafe { AtomicU8::from_ptr(self.ptr.as_ptr().add(SHARED_MEMORY_SIZE - 1)) }
     }
 
     #[inline]
     fn payload(&self) -> *mut u8 {
+        // SAFETY: within the mapping
         unsafe { self.ptr.as_ptr().add(HEADER_SIZE) }
     }
 }
@@ -466,7 +483,7 @@ impl Drop for SharedMemory {
     /// Unmaps the region without removing it, the Node Editor and other processes keep using it.
     #[cfg(unix)]
     fn drop(&mut self) {
-        // Can't fail with a region mapped by `open`
+        // SAFETY: the mapping of `open`, unmapped once. Can't fail with it.
         let _ = unsafe { rustix::mm::munmap(self.ptr.as_ptr().cast(), SHARED_MEMORY_SIZE) };
     }
 
@@ -477,6 +494,7 @@ impl Drop for SharedMemory {
             System::Memory::{MEMORY_MAPPED_VIEW_ADDRESS, UnmapViewOfFile},
         };
 
+        // SAFETY: the view and handle of `open`, released once
         unsafe {
             UnmapViewOfFile(MEMORY_MAPPED_VIEW_ADDRESS {
                 Value: self.ptr.as_ptr().cast(),
