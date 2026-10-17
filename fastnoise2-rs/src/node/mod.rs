@@ -5,6 +5,8 @@
 //! into a [`Node`]. A [`NodeBuilder`] creates nodes from FastNoise2 metadata names and checks
 //! that every input is set before building.
 mod generation;
+#[cfg(test)]
+mod test_utils;
 mod value;
 
 pub use value::{Hybrid, MemberValue};
@@ -465,19 +467,9 @@ fn invalid_member_type(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    use super::{test_utils::*, *};
 
     const ENCODED_NODE_TREE: &str = "E@BBZEG@BD8JFgIECArXIzwECiQIw/UoPwkuAAE@BJDQAH@BC@AIEAJBw@ABZEED0KV78YZmZmPwQDmpkZPwsAAIA/HAMAAHBCBA==";
-
-    fn perlin() -> Node {
-        NodeBuilder::new("Perlin").unwrap().build().unwrap()
-    }
-
-    fn grid(node: &Node) -> Vec<f32> {
-        let mut output = vec![0.0; 64];
-        node.gen_uniform_grid_2d(&mut output, -40.0, -40.0, 8, 8, 10.0, 10.0, 1337);
-        output
-    }
 
     #[test]
     fn test_node_is_send_and_sync() {

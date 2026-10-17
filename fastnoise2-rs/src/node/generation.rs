@@ -336,12 +336,7 @@ pub(crate) fn check_position_arrays(noise_out: &[f32], pos_arrays: &[&[f32]]) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::NodeBuilder;
-
-    fn perlin() -> Node {
-        NodeBuilder::new("Perlin").unwrap().build().unwrap()
-    }
+    use super::super::test_utils::perlin;
 
     #[test]
     #[should_panic(expected = "grid counts must be positive")]

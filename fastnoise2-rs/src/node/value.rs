@@ -94,12 +94,7 @@ impl<G: Generator> From<G> for MemberValue {
 mod tests {
     use std::sync::Arc;
 
-    use super::*;
-    use crate::NodeBuilder;
-
-    fn perlin() -> Node {
-        NodeBuilder::new("Perlin").unwrap().build().unwrap()
-    }
+    use super::{super::test_utils::perlin, *};
 
     #[test]
     fn test_member_value_from_hybrid_reference() {
