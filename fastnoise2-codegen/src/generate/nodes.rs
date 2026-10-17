@@ -97,6 +97,7 @@ impl Generator<'_> {
                 }
 
                 #[doc = #function_doc]
+                #[must_use]
                 pub fn #function() -> #name {
                     #name::default()
                 }
@@ -175,6 +176,7 @@ impl Generator<'_> {
         match self.field_type(member) {
             FieldType::Hybrid => quote! {
                 #(#[doc = #doc])*
+                #[must_use]
                 pub fn #method(mut self, #parameter: impl Into<Hybrid>) -> Self {
                     self.#field = #parameter.into();
                     self
@@ -184,6 +186,7 @@ impl Generator<'_> {
                 let rust_type = self.rust_type(member);
                 quote! {
                     #(#[doc = #doc])*
+                    #[must_use]
                     pub fn #method(mut self, #parameter: #rust_type) -> Self {
                         self.#field = #parameter;
                         self

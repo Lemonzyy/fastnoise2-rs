@@ -19,6 +19,7 @@ impl Add {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
@@ -52,18 +53,21 @@ impl Default for Subtract {
 }
 
 /// Creates a [`Subtract`] node with its default values.
+#[must_use]
 pub fn subtract() -> Subtract {
     Subtract::default()
 }
 
 impl Subtract {
     /// Default: `0.0`
+    #[must_use]
     pub fn with_lhs(mut self, lhs: impl Into<Hybrid>) -> Self {
         self.lhs = lhs.into();
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
@@ -96,6 +100,7 @@ impl Multiply {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
@@ -129,18 +134,21 @@ impl Default for Divide {
 }
 
 /// Creates a [`Divide`] node with its default values.
+#[must_use]
 pub fn divide() -> Divide {
     Divide::default()
 }
 
 impl Divide {
     /// Default: `0.0`
+    #[must_use]
     pub fn with_lhs(mut self, lhs: impl Into<Hybrid>) -> Self {
         self.lhs = lhs.into();
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
@@ -174,18 +182,21 @@ impl Default for Modulus {
 }
 
 /// Creates a [`Modulus`] node with its default values.
+#[must_use]
 pub fn modulus() -> Modulus {
     Modulus::default()
 }
 
 impl Modulus {
     /// Default: `0.0`
+    #[must_use]
     pub fn with_lhs(mut self, lhs: impl Into<Hybrid>) -> Self {
         self.lhs = lhs.into();
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self

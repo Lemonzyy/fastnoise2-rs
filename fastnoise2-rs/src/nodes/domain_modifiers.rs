@@ -17,6 +17,7 @@ impl DomainScale {
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_scaling(mut self, scaling: f32) -> Self {
         self.scaling = scaling;
         self
@@ -56,24 +57,28 @@ impl DomainOffset {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_x(mut self, offset_x: impl Into<Hybrid>) -> Self {
         self.offset_x = offset_x.into();
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_y(mut self, offset_y: impl Into<Hybrid>) -> Self {
         self.offset_y = offset_y.into();
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_z(mut self, offset_z: impl Into<Hybrid>) -> Self {
         self.offset_z = offset_z.into();
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_w(mut self, offset_w: impl Into<Hybrid>) -> Self {
         self.offset_w = offset_w.into();
         self
@@ -116,18 +121,21 @@ impl DomainRotate {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_yaw(mut self, yaw: f32) -> Self {
         self.yaw = yaw;
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_pitch(mut self, pitch: f32) -> Self {
         self.pitch = pitch;
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_roll(mut self, roll: f32) -> Self {
         self.roll = roll;
         self
@@ -168,24 +176,28 @@ impl DomainAxisScale {
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_scaling_x(mut self, scaling_x: f32) -> Self {
         self.scaling_x = scaling_x;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_scaling_y(mut self, scaling_y: f32) -> Self {
         self.scaling_y = scaling_y;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_scaling_z(mut self, scaling_z: f32) -> Self {
         self.scaling_z = scaling_z;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_scaling_w(mut self, scaling_w: f32) -> Self {
         self.scaling_w = scaling_w;
         self
@@ -224,6 +236,7 @@ impl AddDimension {
     /// The position of the new dimension
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_new_dimension_position(
         mut self,
         new_dimension_position: impl Into<Hybrid>,
@@ -261,6 +274,7 @@ impl RemoveDimension {
     }
 
     /// Default: `RemoveDimensionType::Y`
+    #[must_use]
     pub fn with_remove_dimension(
         mut self,
         remove_dimension: RemoveDimensionType,
@@ -301,6 +315,7 @@ impl DomainRotatePlane {
     }
 
     /// Default: `RotationType::ImproveXyPlanes`
+    #[must_use]
     pub fn with_rotation_type(mut self, rotation_type: RotationType) -> Self {
         self.rotation_type = rotation_type;
         self

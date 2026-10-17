@@ -39,6 +39,7 @@ impl DomainWarpSimplex {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -49,30 +50,35 @@ impl DomainWarpSimplex {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_x(mut self, amplitude_scaling_x: f32) -> Self {
         self.amplitude_scaling_x = amplitude_scaling_x;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_y(mut self, amplitude_scaling_y: f32) -> Self {
         self.amplitude_scaling_y = amplitude_scaling_y;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_z(mut self, amplitude_scaling_z: f32) -> Self {
         self.amplitude_scaling_z = amplitude_scaling_z;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_w(mut self, amplitude_scaling_w: f32) -> Self {
         self.amplitude_scaling_w = amplitude_scaling_w;
         self
@@ -81,6 +87,7 @@ impl DomainWarpSimplex {
     /// Construction used by the noise to produce a vector output
     ///
     /// Default: `VectorizationScheme::OrthogonalGradientMatrix`
+    #[must_use]
     pub fn with_vectorization_scheme(
         mut self,
         vectorization_scheme: VectorizationScheme,
@@ -92,6 +99,7 @@ impl DomainWarpSimplex {
     /// Maximum (euclidean) distance the position can be moved from it's original location
     ///
     /// Default: `50.0`
+    #[must_use]
     pub fn with_warp_amplitude(mut self, warp_amplitude: impl Into<Hybrid>) -> Self {
         self.warp_amplitude = warp_amplitude.into();
         self
@@ -160,6 +168,7 @@ impl DomainWarpSuperSimplex {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -170,30 +179,35 @@ impl DomainWarpSuperSimplex {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_x(mut self, amplitude_scaling_x: f32) -> Self {
         self.amplitude_scaling_x = amplitude_scaling_x;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_y(mut self, amplitude_scaling_y: f32) -> Self {
         self.amplitude_scaling_y = amplitude_scaling_y;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_z(mut self, amplitude_scaling_z: f32) -> Self {
         self.amplitude_scaling_z = amplitude_scaling_z;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_w(mut self, amplitude_scaling_w: f32) -> Self {
         self.amplitude_scaling_w = amplitude_scaling_w;
         self
@@ -202,6 +216,7 @@ impl DomainWarpSuperSimplex {
     /// Construction used by the noise to produce a vector output
     ///
     /// Default: `VectorizationScheme::OrthogonalGradientMatrix`
+    #[must_use]
     pub fn with_vectorization_scheme(
         mut self,
         vectorization_scheme: VectorizationScheme,
@@ -213,6 +228,7 @@ impl DomainWarpSuperSimplex {
     /// Maximum (euclidean) distance the position can be moved from it's original location
     ///
     /// Default: `50.0`
+    #[must_use]
     pub fn with_warp_amplitude(mut self, warp_amplitude: impl Into<Hybrid>) -> Self {
         self.warp_amplitude = warp_amplitude.into();
         self
@@ -278,6 +294,7 @@ impl DomainWarpGradient {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -288,30 +305,35 @@ impl DomainWarpGradient {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_x(mut self, amplitude_scaling_x: f32) -> Self {
         self.amplitude_scaling_x = amplitude_scaling_x;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_y(mut self, amplitude_scaling_y: f32) -> Self {
         self.amplitude_scaling_y = amplitude_scaling_y;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_z(mut self, amplitude_scaling_z: f32) -> Self {
         self.amplitude_scaling_z = amplitude_scaling_z;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_amplitude_scaling_w(mut self, amplitude_scaling_w: f32) -> Self {
         self.amplitude_scaling_w = amplitude_scaling_w;
         self
@@ -320,6 +342,7 @@ impl DomainWarpGradient {
     /// Maximum (euclidean) distance the position can be moved from it's original location
     ///
     /// Default: `50.0`
+    #[must_use]
     pub fn with_warp_amplitude(mut self, warp_amplitude: impl Into<Hybrid>) -> Self {
         self.warp_amplitude = warp_amplitude.into();
         self
@@ -381,6 +404,7 @@ impl DomainWarpFractalProgressive {
     /// Default: `3`
     ///
     /// Node Editor range: `2..=16`, not enforced by FastNoise2
+    #[must_use]
     pub fn with_octaves(mut self, octaves: i32) -> Self {
         self.octaves = octaves;
         self
@@ -391,6 +415,7 @@ impl DomainWarpFractalProgressive {
     /// Higher values create more contrast between large and small features
     ///
     /// Default: `2.0`
+    #[must_use]
     pub fn with_lacunarity(mut self, lacunarity: f32) -> Self {
         self.lacunarity = lacunarity;
         self
@@ -401,6 +426,7 @@ impl DomainWarpFractalProgressive {
     /// Higher values preserve more detail from smaller octaves
     ///
     /// Default: `0.5`
+    #[must_use]
     pub fn with_gain(mut self, gain: impl Into<Hybrid>) -> Self {
         self.gain = gain.into();
         self
@@ -411,6 +437,7 @@ impl DomainWarpFractalProgressive {
     /// Setting this higher creates smoother output in low areas while retaining octave details in high areas
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_weighted_strength(
         mut self,
         weighted_strength: impl Into<Hybrid>,
@@ -468,6 +495,7 @@ impl DomainWarpFractalIndependent {
     /// Default: `3`
     ///
     /// Node Editor range: `2..=16`, not enforced by FastNoise2
+    #[must_use]
     pub fn with_octaves(mut self, octaves: i32) -> Self {
         self.octaves = octaves;
         self
@@ -478,6 +506,7 @@ impl DomainWarpFractalIndependent {
     /// Higher values create more contrast between large and small features
     ///
     /// Default: `2.0`
+    #[must_use]
     pub fn with_lacunarity(mut self, lacunarity: f32) -> Self {
         self.lacunarity = lacunarity;
         self
@@ -488,6 +517,7 @@ impl DomainWarpFractalIndependent {
     /// Higher values preserve more detail from smaller octaves
     ///
     /// Default: `0.5`
+    #[must_use]
     pub fn with_gain(mut self, gain: impl Into<Hybrid>) -> Self {
         self.gain = gain.into();
         self
@@ -498,6 +528,7 @@ impl DomainWarpFractalIndependent {
     /// Setting this higher creates smoother output in low areas while retaining octave details in high areas
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_weighted_strength(
         mut self,
         weighted_strength: impl Into<Hybrid>,

@@ -17,6 +17,7 @@ impl Default for Constant {
 }
 
 /// Creates a [`Constant`] node with its default values.
+#[must_use]
 pub fn constant() -> Constant {
     Constant::default()
 }
@@ -25,6 +26,7 @@ impl Constant {
     /// Constant output
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_value(mut self, value: f32) -> Self {
         self.value = value;
         self
@@ -59,6 +61,7 @@ impl Default for White {
 }
 
 /// Creates a [`White`] node with its default values.
+#[must_use]
 pub fn white() -> White {
     White::default()
 }
@@ -69,6 +72,7 @@ impl White {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -77,6 +81,7 @@ impl White {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -85,6 +90,7 @@ impl White {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -122,6 +128,7 @@ impl Default for Checkerboard {
 }
 
 /// Creates a [`Checkerboard`] node with its default values.
+#[must_use]
 pub fn checkerboard() -> Checkerboard {
     Checkerboard::default()
 }
@@ -130,6 +137,7 @@ impl Checkerboard {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -138,6 +146,7 @@ impl Checkerboard {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -146,6 +155,7 @@ impl Checkerboard {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -182,6 +192,7 @@ impl Default for SineWave {
 }
 
 /// Creates a [`SineWave`] node with its default values.
+#[must_use]
 pub fn sine_wave() -> SineWave {
     SineWave::default()
 }
@@ -190,6 +201,7 @@ impl SineWave {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -198,6 +210,7 @@ impl SineWave {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -206,6 +219,7 @@ impl SineWave {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -254,6 +268,7 @@ impl Default for Gradient {
 }
 
 /// Creates a [`Gradient`] node with its default values.
+#[must_use]
 pub fn gradient() -> Gradient {
     Gradient::default()
 }
@@ -262,6 +277,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_multiplier_x(mut self, multiplier_x: f32) -> Self {
         self.multiplier_x = multiplier_x;
         self
@@ -270,6 +286,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_multiplier_y(mut self, multiplier_y: f32) -> Self {
         self.multiplier_y = multiplier_y;
         self
@@ -278,6 +295,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_multiplier_z(mut self, multiplier_z: f32) -> Self {
         self.multiplier_z = multiplier_z;
         self
@@ -286,6 +304,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_multiplier_w(mut self, multiplier_w: f32) -> Self {
         self.multiplier_w = multiplier_w;
         self
@@ -294,6 +313,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_x(mut self, offset_x: impl Into<Hybrid>) -> Self {
         self.offset_x = offset_x.into();
         self
@@ -302,6 +322,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_y(mut self, offset_y: impl Into<Hybrid>) -> Self {
         self.offset_y = offset_y.into();
         self
@@ -310,6 +331,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_z(mut self, offset_z: impl Into<Hybrid>) -> Self {
         self.offset_z = offset_z.into();
         self
@@ -318,6 +340,7 @@ impl Gradient {
     /// Read node description
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_offset_w(mut self, offset_w: impl Into<Hybrid>) -> Self {
         self.offset_w = offset_w.into();
         self
@@ -367,12 +390,14 @@ impl Default for DistanceToPoint {
 }
 
 /// Creates a [`DistanceToPoint`] node with its default values.
+#[must_use]
 pub fn distance_to_point() -> DistanceToPoint {
     DistanceToPoint::default()
 }
 
 impl DistanceToPoint {
     /// Default: `DistanceFunction::EuclideanSquared`
+    #[must_use]
     pub fn with_distance_function(
         mut self,
         distance_function: DistanceFunction,
@@ -384,6 +409,7 @@ impl DistanceToPoint {
     /// Point in current domain space
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_point_x(mut self, point_x: impl Into<Hybrid>) -> Self {
         self.point_x = point_x.into();
         self
@@ -392,6 +418,7 @@ impl DistanceToPoint {
     /// Point in current domain space
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_point_y(mut self, point_y: impl Into<Hybrid>) -> Self {
         self.point_y = point_y.into();
         self
@@ -400,6 +427,7 @@ impl DistanceToPoint {
     /// Point in current domain space
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_point_z(mut self, point_z: impl Into<Hybrid>) -> Self {
         self.point_z = point_z.into();
         self
@@ -408,6 +436,7 @@ impl DistanceToPoint {
     /// Point in current domain space
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_point_w(mut self, point_w: impl Into<Hybrid>) -> Self {
         self.point_w = point_w.into();
         self
@@ -418,6 +447,7 @@ impl DistanceToPoint {
     /// 2 = Euclidean
     ///
     /// Default: `1.5`
+    #[must_use]
     pub fn with_minkowski_p(mut self, minkowski_p: impl Into<Hybrid>) -> Self {
         self.minkowski_p = minkowski_p.into();
         self

@@ -20,6 +20,7 @@ impl Min {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
@@ -52,6 +53,7 @@ impl Max {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
@@ -89,12 +91,14 @@ impl MinSmooth {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
     }
 
     /// Default: `0.1`
+    #[must_use]
     pub fn with_smoothness(mut self, smoothness: impl Into<Hybrid>) -> Self {
         self.smoothness = smoothness.into();
         self
@@ -133,12 +137,14 @@ impl MaxSmooth {
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_rhs(mut self, rhs: impl Into<Hybrid>) -> Self {
         self.rhs = rhs.into();
         self
     }
 
     /// Default: `0.1`
+    #[must_use]
     pub fn with_smoothness(mut self, smoothness: impl Into<Hybrid>) -> Self {
         self.smoothness = smoothness.into();
         self
@@ -173,18 +179,21 @@ impl Default for PowFloat {
 }
 
 /// Creates a [`PowFloat`] node with its default values.
+#[must_use]
 pub fn pow_float() -> PowFloat {
     PowFloat::default()
 }
 
 impl PowFloat {
     /// Default: `2.0`
+    #[must_use]
     pub fn with_value(mut self, value: impl Into<Hybrid>) -> Self {
         self.value = value.into();
         self
     }
 
     /// Default: `2.0`
+    #[must_use]
     pub fn with_pow(mut self, pow: impl Into<Hybrid>) -> Self {
         self.pow = pow.into();
         self
@@ -214,6 +223,7 @@ impl PowInt {
     }
 
     /// Default: `2`
+    #[must_use]
     pub fn with_pow(mut self, pow: i32) -> Self {
         self.pow = pow;
         self
@@ -258,24 +268,28 @@ impl Fade {
     /// Easing function
     ///
     /// Default: `Interpolation::Linear`
+    #[must_use]
     pub fn with_interpolation(mut self, interpolation: Interpolation) -> Self {
         self.interpolation = interpolation;
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_fade(mut self, fade: impl Into<Hybrid>) -> Self {
         self.fade = fade.into();
         self
     }
 
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_fade_min(mut self, fade_min: impl Into<Hybrid>) -> Self {
         self.fade_min = fade_min.into();
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_fade_max(mut self, fade_max: impl Into<Hybrid>) -> Self {
         self.fade_max = fade_max.into();
         self

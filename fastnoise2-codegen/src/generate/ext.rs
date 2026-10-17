@@ -56,6 +56,7 @@ impl Generator<'_> {
                 .map(|_| format!("{}Ext", first.name.to_upper_camel_case()));
             methods.entry(trait_name).or_default().push(quote! {
                 #[doc = #doc]
+                #[must_use]
                 fn #method(&self, #(#parameters),*) -> #name {
                     #name::new(self.build(), #(#arguments),*)
                 }

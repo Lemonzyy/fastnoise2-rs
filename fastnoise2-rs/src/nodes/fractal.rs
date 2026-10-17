@@ -34,6 +34,7 @@ impl FractalFBm {
     /// Default: `3`
     ///
     /// Node Editor range: `2..=16`, not enforced by FastNoise2
+    #[must_use]
     pub fn with_octaves(mut self, octaves: i32) -> Self {
         self.octaves = octaves;
         self
@@ -44,6 +45,7 @@ impl FractalFBm {
     /// Higher values create more contrast between large and small features
     ///
     /// Default: `2.0`
+    #[must_use]
     pub fn with_lacunarity(mut self, lacunarity: f32) -> Self {
         self.lacunarity = lacunarity;
         self
@@ -54,6 +56,7 @@ impl FractalFBm {
     /// Higher values preserve more detail from smaller octaves
     ///
     /// Default: `0.5`
+    #[must_use]
     pub fn with_gain(mut self, gain: impl Into<Hybrid>) -> Self {
         self.gain = gain.into();
         self
@@ -64,6 +67,7 @@ impl FractalFBm {
     /// Setting this higher creates smoother output in low areas while retaining octave details in high areas
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_weighted_strength(
         mut self,
         weighted_strength: impl Into<Hybrid>,
@@ -119,6 +123,7 @@ impl FractalRidged {
     /// Default: `3`
     ///
     /// Node Editor range: `2..=16`, not enforced by FastNoise2
+    #[must_use]
     pub fn with_octaves(mut self, octaves: i32) -> Self {
         self.octaves = octaves;
         self
@@ -129,6 +134,7 @@ impl FractalRidged {
     /// Higher values create more contrast between large and small features
     ///
     /// Default: `2.0`
+    #[must_use]
     pub fn with_lacunarity(mut self, lacunarity: f32) -> Self {
         self.lacunarity = lacunarity;
         self
@@ -139,6 +145,7 @@ impl FractalRidged {
     /// Higher values preserve more detail from smaller octaves
     ///
     /// Default: `0.5`
+    #[must_use]
     pub fn with_gain(mut self, gain: impl Into<Hybrid>) -> Self {
         self.gain = gain.into();
         self
@@ -149,6 +156,7 @@ impl FractalRidged {
     /// Setting this higher creates smoother output in low areas while retaining octave details in high areas
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_weighted_strength(
         mut self,
         weighted_strength: impl Into<Hybrid>,

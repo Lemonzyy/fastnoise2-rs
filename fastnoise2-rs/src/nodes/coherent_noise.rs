@@ -26,6 +26,7 @@ impl Default for Simplex {
 }
 
 /// Creates a [`Simplex`] node with its default values.
+#[must_use]
 pub fn simplex() -> Simplex {
     Simplex::default()
 }
@@ -34,6 +35,7 @@ impl Simplex {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -44,6 +46,7 @@ impl Simplex {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -52,6 +55,7 @@ impl Simplex {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -60,6 +64,7 @@ impl Simplex {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -101,6 +106,7 @@ impl Default for SuperSimplex {
 }
 
 /// Creates a [`SuperSimplex`] node with its default values.
+#[must_use]
 pub fn super_simplex() -> SuperSimplex {
     SuperSimplex::default()
 }
@@ -109,6 +115,7 @@ impl SuperSimplex {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -119,6 +126,7 @@ impl SuperSimplex {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -127,6 +135,7 @@ impl SuperSimplex {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -135,6 +144,7 @@ impl SuperSimplex {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -175,6 +185,7 @@ impl Default for Perlin {
 }
 
 /// Creates a [`Perlin`] node with its default values.
+#[must_use]
 pub fn perlin() -> Perlin {
     Perlin::default()
 }
@@ -183,6 +194,7 @@ impl Perlin {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -193,6 +205,7 @@ impl Perlin {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -201,6 +214,7 @@ impl Perlin {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -209,6 +223,7 @@ impl Perlin {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -248,6 +263,7 @@ impl Default for Value {
 }
 
 /// Creates a [`Value`] node with its default values.
+#[must_use]
 pub fn value() -> Value {
     Value::default()
 }
@@ -256,6 +272,7 @@ impl Value {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -266,6 +283,7 @@ impl Value {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -274,6 +292,7 @@ impl Value {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -282,6 +301,7 @@ impl Value {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -332,6 +352,7 @@ impl Default for CellularValue {
 }
 
 /// Creates a [`CellularValue`] node with its default values.
+#[must_use]
 pub fn cellular_value() -> CellularValue {
     CellularValue::default()
 }
@@ -340,6 +361,7 @@ impl CellularValue {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -350,6 +372,7 @@ impl CellularValue {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -358,6 +381,7 @@ impl CellularValue {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -366,6 +390,7 @@ impl CellularValue {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -375,6 +400,7 @@ impl CellularValue {
     /// Hybrid is EuclideanSquared + Manhattan
     ///
     /// Default: `DistanceFunction::EuclideanSquared`
+    #[must_use]
     pub fn with_distance_function(
         mut self,
         distance_function: DistanceFunction,
@@ -388,6 +414,7 @@ impl CellularValue {
     /// Default: `0`
     ///
     /// Node Editor range: `0..=3`, not enforced by FastNoise2
+    #[must_use]
     pub fn with_value_index(mut self, value_index: i32) -> Self {
         self.value_index = value_index;
         self
@@ -398,6 +425,7 @@ impl CellularValue {
     /// 2 = Euclidean
     ///
     /// Default: `1.5`
+    #[must_use]
     pub fn with_minkowski_p(mut self, minkowski_p: impl Into<Hybrid>) -> Self {
         self.minkowski_p = minkowski_p.into();
         self
@@ -408,6 +436,7 @@ impl CellularValue {
     /// Above 1.0 will cause grid artifacts
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_grid_jitter(mut self, grid_jitter: impl Into<Hybrid>) -> Self {
         self.grid_jitter = grid_jitter.into();
         self
@@ -418,6 +447,7 @@ impl CellularValue {
     /// Can cause grid artifacts
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_size_jitter(mut self, size_jitter: impl Into<Hybrid>) -> Self {
         self.size_jitter = size_jitter.into();
         self
@@ -480,6 +510,7 @@ impl Default for CellularDistance {
 }
 
 /// Creates a [`CellularDistance`] node with its default values.
+#[must_use]
 pub fn cellular_distance() -> CellularDistance {
     CellularDistance::default()
 }
@@ -488,6 +519,7 @@ impl CellularDistance {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -498,6 +530,7 @@ impl CellularDistance {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -506,6 +539,7 @@ impl CellularDistance {
     /// Minimum bound of output range
     ///
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_output_min(mut self, output_min: f32) -> Self {
         self.output_min = output_min;
         self
@@ -514,6 +548,7 @@ impl CellularDistance {
     /// Maximum bound of output range
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_output_max(mut self, output_max: f32) -> Self {
         self.output_max = output_max;
         self
@@ -523,6 +558,7 @@ impl CellularDistance {
     /// Hybrid is EuclideanSquared + Manhattan
     ///
     /// Default: `DistanceFunction::EuclideanSquared`
+    #[must_use]
     pub fn with_distance_function(
         mut self,
         distance_function: DistanceFunction,
@@ -536,6 +572,7 @@ impl CellularDistance {
     /// Default: `0`
     ///
     /// Node Editor range: `0..=3`, not enforced by FastNoise2
+    #[must_use]
     pub fn with_distance_index_0(mut self, distance_index_0: i32) -> Self {
         self.distance_index_0 = distance_index_0;
         self
@@ -546,6 +583,7 @@ impl CellularDistance {
     /// Default: `1`
     ///
     /// Node Editor range: `0..=3`, not enforced by FastNoise2
+    #[must_use]
     pub fn with_distance_index_1(mut self, distance_index_1: i32) -> Self {
         self.distance_index_1 = distance_index_1;
         self
@@ -554,6 +592,7 @@ impl CellularDistance {
     /// How to combine Index 0 & Index 1
     ///
     /// Default: `ReturnType::Index0`
+    #[must_use]
     pub fn with_return_type(mut self, return_type: ReturnType) -> Self {
         self.return_type = return_type;
         self
@@ -564,6 +603,7 @@ impl CellularDistance {
     /// 2 = Euclidean
     ///
     /// Default: `1.5`
+    #[must_use]
     pub fn with_minkowski_p(mut self, minkowski_p: impl Into<Hybrid>) -> Self {
         self.minkowski_p = minkowski_p.into();
         self
@@ -574,6 +614,7 @@ impl CellularDistance {
     /// Above 1.0 will cause grid artifacts
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_grid_jitter(mut self, grid_jitter: impl Into<Hybrid>) -> Self {
         self.grid_jitter = grid_jitter.into();
         self
@@ -584,6 +625,7 @@ impl CellularDistance {
     /// Can cause grid artifacts
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_size_jitter(mut self, size_jitter: impl Into<Hybrid>) -> Self {
         self.size_jitter = size_jitter.into();
         self
@@ -640,6 +682,7 @@ impl CellularLookup {
     /// Effectively `1.0 / frequency`
     ///
     /// Default: `100.0`
+    #[must_use]
     pub fn with_feature_scale(mut self, feature_scale: f32) -> Self {
         self.feature_scale = feature_scale;
         self
@@ -650,6 +693,7 @@ impl CellularLookup {
     /// Useful if you have multiple nodes of the same type and want them to give different outputs
     ///
     /// Default: `0`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -659,6 +703,7 @@ impl CellularLookup {
     /// Hybrid is EuclideanSquared + Manhattan
     ///
     /// Default: `DistanceFunction::EuclideanSquared`
+    #[must_use]
     pub fn with_distance_function(
         mut self,
         distance_function: DistanceFunction,
@@ -672,6 +717,7 @@ impl CellularLookup {
     /// 2 = Euclidean
     ///
     /// Default: `1.5`
+    #[must_use]
     pub fn with_minkowski_p(mut self, minkowski_p: impl Into<Hybrid>) -> Self {
         self.minkowski_p = minkowski_p.into();
         self
@@ -682,6 +728,7 @@ impl CellularLookup {
     /// Above 1.0 will cause grid artifacts
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_grid_jitter(mut self, grid_jitter: impl Into<Hybrid>) -> Self {
         self.grid_jitter = grid_jitter.into();
         self
@@ -692,6 +739,7 @@ impl CellularLookup {
     /// Can cause grid artifacts
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_size_jitter(mut self, size_jitter: impl Into<Hybrid>) -> Self {
         self.size_jitter = size_jitter.into();
         self

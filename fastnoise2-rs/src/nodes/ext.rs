@@ -64,146 +64,175 @@ impl DomainWarpSource for DomainWarpSourceNode {}
 /// Chaining methods available on every generator.
 pub trait GeneratorExt: Generator {
     /// Creates a [`CellularLookup`] node with this generator as its `Lookup` input.
+    #[must_use]
     fn cellular_lookup(&self) -> CellularLookup {
         CellularLookup::new(self.build())
     }
 
     /// Creates a [`FractalFBm`] node with this generator as its `Source` input.
+    #[must_use]
     fn fractal_f_bm(&self) -> FractalFBm {
         FractalFBm::new(self.build())
     }
 
     /// Creates a [`PingPong`] node with this generator as its `Source` input.
+    #[must_use]
     fn ping_pong(&self) -> PingPong {
         PingPong::new(self.build())
     }
 
     /// Creates a [`FractalRidged`] node with this generator as its `Source` input.
+    #[must_use]
     fn fractal_ridged(&self) -> FractalRidged {
         FractalRidged::new(self.build())
     }
 
     /// Creates a [`DomainWarpSimplex`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_warp_simplex(&self) -> DomainWarpSimplex {
         DomainWarpSimplex::new(self.build())
     }
 
     /// Creates a [`DomainWarpSuperSimplex`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_warp_super_simplex(&self) -> DomainWarpSuperSimplex {
         DomainWarpSuperSimplex::new(self.build())
     }
 
     /// Creates a [`DomainWarpGradient`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_warp_gradient(&self) -> DomainWarpGradient {
         DomainWarpGradient::new(self.build())
     }
 
     /// Creates a [`Add`] node with this generator as its `LHS` input.
+    #[must_use]
     fn add(&self) -> Add {
         Add::new(self.build())
     }
 
     /// Creates a [`Multiply`] node with this generator as its `LHS` input.
+    #[must_use]
     fn multiply(&self) -> Multiply {
         Multiply::new(self.build())
     }
 
     /// Creates a [`Abs`] node with this generator as its `Source` input.
+    #[must_use]
     fn abs(&self) -> Abs {
         Abs::new(self.build())
     }
 
     /// Creates a [`Min`] node with this generator as its `LHS` input.
+    #[must_use]
     fn min(&self) -> Min {
         Min::new(self.build())
     }
 
     /// Creates a [`Max`] node with this generator as its `LHS` input.
+    #[must_use]
     fn max(&self) -> Max {
         Max::new(self.build())
     }
 
     /// Creates a [`MinSmooth`] node with this generator as its `LHS` input.
+    #[must_use]
     fn min_smooth(&self) -> MinSmooth {
         MinSmooth::new(self.build())
     }
 
     /// Creates a [`MaxSmooth`] node with this generator as its `LHS` input.
+    #[must_use]
     fn max_smooth(&self) -> MaxSmooth {
         MaxSmooth::new(self.build())
     }
 
     /// Creates a [`SignedSquareRoot`] node with this generator as its `Source` input.
+    #[must_use]
     fn signed_square_root(&self) -> SignedSquareRoot {
         SignedSquareRoot::new(self.build())
     }
 
     /// Creates a [`PowInt`] node with this generator as its `Value` input.
+    #[must_use]
     fn pow_int(&self) -> PowInt {
         PowInt::new(self.build())
     }
 
     /// Creates a [`DomainScale`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_scale(&self) -> DomainScale {
         DomainScale::new(self.build())
     }
 
     /// Creates a [`DomainOffset`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_offset(&self) -> DomainOffset {
         DomainOffset::new(self.build())
     }
 
     /// Creates a [`DomainRotate`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_rotate(&self) -> DomainRotate {
         DomainRotate::new(self.build())
     }
 
     /// Creates a [`DomainAxisScale`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_axis_scale(&self) -> DomainAxisScale {
         DomainAxisScale::new(self.build())
     }
 
     /// Creates a [`SeedOffset`] node with this generator as its `Source` input.
+    #[must_use]
     fn seed_offset(&self) -> SeedOffset {
         SeedOffset::new(self.build())
     }
 
     /// Creates a [`ConvertRGBA8`] node with this generator as its `Source` input.
+    #[must_use]
     fn convert_rgba8(&self) -> ConvertRGBA8 {
         ConvertRGBA8::new(self.build())
     }
 
     /// Creates a [`GeneratorCache`] node with this generator as its `Source` input.
+    #[must_use]
     fn generator_cache(&self) -> GeneratorCache {
         GeneratorCache::new(self.build())
     }
 
     /// Creates a [`Fade`] node with this generator as its `A` input.
+    #[must_use]
     fn fade(&self, b: impl Generator) -> Fade {
         Fade::new(self.build(), b.build())
     }
 
     /// Creates a [`Remap`] node with this generator as its `Source` input.
+    #[must_use]
     fn remap(&self) -> Remap {
         Remap::new(self.build())
     }
 
     /// Creates a [`Terrace`] node with this generator as its `Source` input.
+    #[must_use]
     fn terrace(&self) -> Terrace {
         Terrace::new(self.build())
     }
 
     /// Creates a [`AddDimension`] node with this generator as its `Source` input.
+    #[must_use]
     fn add_dimension(&self) -> AddDimension {
         AddDimension::new(self.build())
     }
 
     /// Creates a [`RemoveDimension`] node with this generator as its `Source` input.
+    #[must_use]
     fn remove_dimension(&self) -> RemoveDimension {
         RemoveDimension::new(self.build())
     }
 
     /// Creates a [`DomainRotatePlane`] node with this generator as its `Source` input.
+    #[must_use]
     fn domain_rotate_plane(&self) -> DomainRotatePlane {
         DomainRotatePlane::new(self.build())
     }
@@ -214,11 +243,13 @@ impl<G: Generator + ?Sized> GeneratorExt for G {}
 /// Chaining methods available on [`DomainWarpSource`] generators.
 pub trait DomainWarpSourceExt: DomainWarpSource {
     /// Creates a [`DomainWarpFractalProgressive`] node with this generator as its `Domain Warp Source` input.
+    #[must_use]
     fn domain_warp_fractal_progressive(&self) -> DomainWarpFractalProgressive {
         DomainWarpFractalProgressive::new(self.build())
     }
 
     /// Creates a [`DomainWarpFractalIndependent`] node with this generator as its `Domain Warp Source` input.
+    #[must_use]
     fn domain_warp_fractal_independent(&self) -> DomainWarpFractalIndependent {
         DomainWarpFractalIndependent::new(self.build())
     }

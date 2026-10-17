@@ -25,6 +25,7 @@ impl PingPong {
     /// Higher values create more pronounced ping-pong effects
     ///
     /// Default: `2.0`
+    #[must_use]
     pub fn with_ping_pong_strength(
         mut self,
         ping_pong_strength: impl Into<Hybrid>,
@@ -102,6 +103,7 @@ impl SeedOffset {
     }
 
     /// Default: `1`
+    #[must_use]
     pub fn with_seed_offset(mut self, seed_offset: i32) -> Self {
         self.seed_offset = seed_offset;
         self
@@ -138,12 +140,14 @@ impl ConvertRGBA8 {
     }
 
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_min(mut self, min: f32) -> Self {
         self.min = min;
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_max(mut self, max: f32) -> Self {
         self.max = max;
         self
@@ -210,30 +214,35 @@ impl Remap {
     /// Clamp output between "To Min" & "To Max"
     ///
     /// Default: `false`
+    #[must_use]
     pub fn with_clamp_output(mut self, clamp_output: bool) -> Self {
         self.clamp_output = clamp_output;
         self
     }
 
     /// Default: `-1.0`
+    #[must_use]
     pub fn with_from_min(mut self, from_min: impl Into<Hybrid>) -> Self {
         self.from_min = from_min.into();
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_from_max(mut self, from_max: impl Into<Hybrid>) -> Self {
         self.from_max = from_max.into();
         self
     }
 
     /// Default: `0.0`
+    #[must_use]
     pub fn with_to_min(mut self, to_min: impl Into<Hybrid>) -> Self {
         self.to_min = to_min.into();
         self
     }
 
     /// Default: `1.0`
+    #[must_use]
     pub fn with_to_max(mut self, to_max: impl Into<Hybrid>) -> Self {
         self.to_max = to_max.into();
         self
@@ -280,6 +289,7 @@ impl Terrace {
     /// Increasing the step count reduces the size of each step
     ///
     /// Default: `1.0`
+    #[must_use]
     pub fn with_step_count(mut self, step_count: f32) -> Self {
         self.step_count = step_count;
         self
@@ -288,6 +298,7 @@ impl Terrace {
     /// How smooth the transitions between steps are
     ///
     /// Default: `0.0`
+    #[must_use]
     pub fn with_smoothness(mut self, smoothness: impl Into<Hybrid>) -> Self {
         self.smoothness = smoothness.into();
         self
