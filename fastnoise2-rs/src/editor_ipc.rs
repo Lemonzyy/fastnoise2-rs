@@ -10,7 +10,7 @@ use std::{
     io,
     process::Command,
     ptr::{self, NonNull},
-    sync::atomic::{AtomicU8, Ordering},
+    sync::atomic::{self, AtomicU8, Ordering},
 };
 
 const SHARED_MEMORY_NAME: &CStr = c"/FastNoise2NodeEditor";
@@ -18,6 +18,9 @@ const SHARED_MEMORY_SIZE: usize = 64 * 1024;
 
 /// Bytes before the encoded node tree: the message counter and type.
 const HEADER_SIZE: usize = 2;
+
+/// Times a message is read again when it changes while being read.
+const READ_ATTEMPTS: usize = 4;
 
 const MESSAGE_SELECTED_NODE: u8 = 1;
 const MESSAGE_IMPORT_REQUEST: u8 = 2;
@@ -121,13 +124,36 @@ impl NodeEditorIpc {
     }
 
     fn next_message(&mut self) -> Option<EditorMessage> {
-        let counter = self.shared_memory.counter().load(Ordering::Acquire);
-        if counter == self.last_counter {
+        if self.shared_memory.counter().load(Ordering::Acquire) == self.last_counter {
             return None;
         }
 
+        let (counter, message) = self.read_stable_message();
         self.last_counter = counter;
-        self.read_message()
+        message
+    }
+
+    /// Reads the current message and the counter it was written with. The protocol has no write
+    /// lock, so a message is read again if the counter changes while it is read. A write still
+    /// in progress when the counter is checked isn't detected, as the counter is only increased
+    /// after the message is written.
+    fn read_stable_message(&self) -> (u8, Option<EditorMessage>) {
+        let counter = self.shared_memory.counter();
+
+        let mut before = counter.load(Ordering::Acquire);
+        for _ in 1..READ_ATTEMPTS {
+            let message = self.read_message();
+
+            // The message is read before checking the counter again
+            atomic::fence(Ordering::Acquire);
+            let after = counter.load(Ordering::Relaxed);
+            if after == before {
+                return (before, message);
+            }
+            before = after;
+        }
+
+        (before, self.read_message())
     }
 
     /// The encoded node tree currently selected in the Node Editor, if the last message is a
@@ -136,7 +162,7 @@ impl NodeEditorIpc {
     pub fn selected_node(&mut self) -> Option<String> {
         self.reconnect();
 
-        match self.read_message()? {
+        match self.read_stable_message().1? {
             EditorMessage::SelectedNode(encoded) => Some(encoded),
             EditorMessage::ImportRequest(_) => None,
         }
