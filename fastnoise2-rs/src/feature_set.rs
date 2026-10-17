@@ -13,9 +13,11 @@ thread_local! {
 
 /// The feature set FastNoise2 picks when detecting it.
 static DETECTED: LazyLock<FeatureSet> = LazyLock::new(|| {
+    // SAFETY: `u32::MAX` detects the feature set, so FastNoise2 creates a node it supports
     let node = unsafe { fnNewFromMetadata(0, u32::MAX) };
     assert!(!node.is_null(), "FastNoise2 has a node with metadata id 0");
 
+    // SAFETY: the node created above, released once
     let bits = unsafe { fnGetActiveFeatureSet(node) };
     unsafe { fnDeleteNodeRef(node) };
 
