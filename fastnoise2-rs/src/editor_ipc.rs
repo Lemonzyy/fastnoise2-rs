@@ -2,9 +2,13 @@
 //!
 //! This implements the protocol of FastNoise2's `NodeEditorIpc` library: a shared memory region
 //! named `/FastNoise2NodeEditor` of 64 KiB, holding a message counter (byte 0), a message type
-//! (byte 1) and a null terminated encoded node tree. Unlike `NodeEditorIpc`, closing it doesn't
-//! remove the region, which would disconnect the processes opening it afterwards from a running
-//! Node Editor, and polling can't lose a message.
+//! (byte 1) and a null terminated encoded node tree. Unlike `NodeEditorIpc`:
+//! - closing it doesn't remove the region, which would disconnect the processes opening it
+//!   afterwards from a running Node Editor, and it reconnects when the Node Editor restarts;
+//! - polling doesn't drop a message for a too small buffer, and reads a message again if it
+//!   changes while being read.
+//!
+//! The region holds a single message: only the last message sent before a poll is received.
 use std::{
     ffi::{CStr, CString, OsStr},
     io,
@@ -111,7 +115,8 @@ impl NodeEditorIpc {
     }
 
     /// Returns the next message, `None` if there is no new message. Only the last message is
-    /// kept, a message sent before the previous one is read is lost.
+    /// kept, a message sent before the previous one is read is lost, and the counter wraps after
+    /// 256 messages, so exactly 256 messages sent between two polls are all missed.
     #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, ret))]
     pub fn poll(&mut self) -> Option<EditorMessage> {
         // A message written before the name was removed is still read from the old region
