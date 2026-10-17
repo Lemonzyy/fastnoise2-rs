@@ -354,11 +354,50 @@ impl SharedMemory {
         };
 
         match shm::open(name, OFlags::RDWR, Mode::empty()) {
-            Ok(fd) => fstat(&fd).is_ok_and(|stat| stat.st_ino == self.inode),
+            Ok(fd) => match fstat(&fd) {
+                Ok(stat) if self.inode != 0 => stat.st_ino == self.inode,
+                // macOS gives no inode number to shared memory (`st_ino` is 0)
+                Ok(_) => self.is_mapped_by(&fd),
+                Err(_) => true,
+            },
             Err(Errno::NOENT) => false,
             // Keeps using the region if the name can't be checked
             Err(_) => true,
         }
+    }
+
+    /// Whether `fd` refers to this region: its last byte, never written by the protocol (a
+    /// message ends at byte 65534 at most), is changed twice and read through a new mapping of
+    /// `fd`, so a value matching by chance is ruled out.
+    #[cfg(unix)]
+    fn is_mapped_by(&self, fd: &rustix::fd::OwnedFd) -> bool {
+        use rustix::mm::{MapFlags, ProtFlags, mmap, munmap};
+
+        let Ok(other) = (unsafe {
+            mmap(
+                ptr::null_mut(),
+                SHARED_MEMORY_SIZE,
+                ProtFlags::READ,
+                MapFlags::SHARED,
+                fd,
+                0,
+            )
+        }) else {
+            return true;
+        };
+
+        let probe = self.probe();
+        let other_probe =
+            unsafe { AtomicU8::from_ptr(other.cast::<u8>().add(SHARED_MEMORY_SIZE - 1)) };
+        let is_same = (0..2).all(|_| {
+            let value = probe.load(Ordering::Relaxed).wrapping_add(1);
+            probe.store(value, Ordering::SeqCst);
+            other_probe.load(Ordering::SeqCst) == value
+        });
+
+        // Can't fail with a region mapped above
+        let _ = unsafe { munmap(other, SHARED_MEMORY_SIZE) };
+        is_same
     }
 
     /// A named file mapping exists as long as a process has it open, Node Editors share it.
@@ -408,6 +447,13 @@ impl SharedMemory {
     #[inline]
     fn message_type(&self) -> &AtomicU8 {
         unsafe { AtomicU8::from_ptr(self.ptr.as_ptr().add(1)) }
+    }
+
+    /// The last byte, never written by the protocol, see [`SharedMemory::is_mapped_by`].
+    #[cfg(unix)]
+    #[inline]
+    fn probe(&self) -> &AtomicU8 {
+        unsafe { AtomicU8::from_ptr(self.ptr.as_ptr().add(SHARED_MEMORY_SIZE - 1)) }
     }
 
     #[inline]
@@ -539,6 +585,24 @@ mod tests {
             next_editor.poll(),
             Some(EditorMessage::ImportRequest("GQ==".to_string()))
         );
+    }
+
+    /// The region identity check used without inode numbers (macOS), run on every Unix.
+    #[cfg(unix)]
+    #[test]
+    fn test_is_mapped_by() {
+        use rustix::shm::{self, Mode, OFlags};
+
+        let region = TestRegion::new("probe");
+        let game = region.open();
+        let open = || shm::open(region.0.as_c_str(), OFlags::RDWR, Mode::empty()).unwrap();
+
+        assert!(game.shared_memory.is_mapped_by(&open()));
+        assert!(game.shared_memory.is_mapped_by(&open()));
+
+        shm::unlink(region.0.as_c_str()).unwrap();
+        let _editor = region.open();
+        assert!(!game.shared_memory.is_mapped_by(&open()));
     }
 
     #[test]
