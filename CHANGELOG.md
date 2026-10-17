@@ -58,6 +58,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8c2d080` (v1.1.1 and later f
 ### Removed
 
 - **Breaking**: `SafeNode`, `GeneratorWrapper`, the `generator` module and its types, replaced by `Node` and the generated `nodes` types
+- **Breaking**: the `unsafe` `Node::gen_*_unchecked` methods (`gen_uniform_grid_2d_unchecked` to `gen_single_4d_unchecked`), use the safe `Node::gen_*` methods, which check sizes and panic instead of reading or writing out of bounds
 - `safe` and `manual` examples, replaced by `nodes` and `node_builder`
 
 ### Fixed
