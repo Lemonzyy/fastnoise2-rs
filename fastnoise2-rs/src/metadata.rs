@@ -210,7 +210,7 @@ fn load_metadata(id: i32) -> Metadata {
             0 => MemberType::Float,
             1 => MemberType::Int,
             2 => MemberType::Enum,
-            _ => MemberType::Hybrid,
+            variable_type => panic!("unknown FastNoise2 variable type {variable_type}"),
         };
 
         let enum_values = match member_type {
