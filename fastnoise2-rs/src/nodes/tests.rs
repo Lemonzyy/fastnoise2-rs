@@ -500,7 +500,7 @@ fn distance_to_point_default() {
         distance_to_point(),
         NodeBuilder::new("DistanceToPoint")
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean"))
+            .set("Distance Function", MemberValue::from("Euclidean Squared"))
             .unwrap()
             .set("Point X", MemberValue::Float(0.0))
             .unwrap()
@@ -518,10 +518,10 @@ fn distance_to_point_default() {
 #[test]
 fn distance_to_point_distance_function() {
     assert_same(
-        distance_to_point().with_distance_function(DistanceFunction::EuclideanSquared),
+        distance_to_point().with_distance_function(DistanceFunction::Manhattan),
         NodeBuilder::new("DistanceToPoint")
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean"))
+            .set("Distance Function", MemberValue::from("Euclidean Squared"))
             .unwrap()
             .set("Point X", MemberValue::Float(0.0))
             .unwrap()
@@ -533,7 +533,7 @@ fn distance_to_point_distance_function() {
             .unwrap()
             .set("Minkowski P", MemberValue::Float(1.5))
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean Squared"))
+            .set("Distance Function", MemberValue::from("Manhattan"))
             .unwrap(),
     );
 }
@@ -544,7 +544,7 @@ fn distance_to_point_point_x() {
         distance_to_point().with_point_x(hybrid()),
         NodeBuilder::new("DistanceToPoint")
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean"))
+            .set("Distance Function", MemberValue::from("Euclidean Squared"))
             .unwrap()
             .set("Point X", MemberValue::Float(0.0))
             .unwrap()
@@ -567,7 +567,7 @@ fn distance_to_point_point_y() {
         distance_to_point().with_point_y(hybrid()),
         NodeBuilder::new("DistanceToPoint")
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean"))
+            .set("Distance Function", MemberValue::from("Euclidean Squared"))
             .unwrap()
             .set("Point X", MemberValue::Float(0.0))
             .unwrap()
@@ -590,7 +590,7 @@ fn distance_to_point_point_z() {
         distance_to_point().with_point_z(hybrid()),
         NodeBuilder::new("DistanceToPoint")
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean"))
+            .set("Distance Function", MemberValue::from("Euclidean Squared"))
             .unwrap()
             .set("Point X", MemberValue::Float(0.0))
             .unwrap()
@@ -613,7 +613,7 @@ fn distance_to_point_point_w() {
         distance_to_point().with_point_w(hybrid()),
         NodeBuilder::new("DistanceToPoint")
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean"))
+            .set("Distance Function", MemberValue::from("Euclidean Squared"))
             .unwrap()
             .set("Point X", MemberValue::Float(0.0))
             .unwrap()
@@ -636,7 +636,7 @@ fn distance_to_point_minkowski_p() {
         distance_to_point().with_minkowski_p(hybrid()),
         NodeBuilder::new("DistanceToPoint")
             .unwrap()
-            .set("Distance Function", MemberValue::from("Euclidean"))
+            .set("Distance Function", MemberValue::from("Euclidean Squared"))
             .unwrap()
             .set("Point X", MemberValue::Float(0.0))
             .unwrap()

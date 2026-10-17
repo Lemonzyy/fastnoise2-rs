@@ -7,12 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Updated FastNoise2 C++ submodule from `3728fde` to `ad93414` (v1.1.1 and later fixes):
+Updated FastNoise2 C++ submodule from `3728fde` to `8c2d080` (v1.1.1 and later fixes), and the bundled FastSIMD to `f7e9ce6`:
 - C API: `fnGetSIMDLevel` renamed to `fnGetActiveFeatureSet`
 - C API: new metadata introspection functions (descriptions, defaults, min/max, groups)
 - C API: fixed `fnSetNodeLookup` and `fnSetHybridNodeLookup`, which now take the node pointer directly
-- Noise fixes changing some outputs: `CellularDistance` Euclidean distances (no double square root, no NaN at distance 0), domain warp seed offset applied once, 4D Simplex domain warp identical across SIMD feature sets
-- No new nodes, members or default values
+- Noise fixes changing some outputs: `CellularDistance` Euclidean distances (no double square root, no NaN at distance 0), `CellularValue` 2D cell ranking, Minkowski distances, `PowFloat` with small bases, domain warp seed offset applied once, 4D Simplex domain warp identical across SIMD feature sets, and FastSIMD math fixes (`Log`, `Pow`, `ATan`, `Trunc`)
+- `DistanceToPoint` distance function defaults to `EuclideanSquared` in metadata, like its C++ default
+- No new nodes or members
 
 ### Added
 
@@ -41,7 +42,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `ad93414` (v1.1.1 and later f
 
 - **Breaking**: `Node` is now the safe, built node. Nodes by name use `NodeBuilder` instead of `Node::from_name` and `Node::set`
 - **Breaking**: names are generated from FastNoise2 names (e.g. `fbm()` is `fractal_f_bm()`, `supersimplex()` is `super_simplex()`), and constructors with positional arguments are replaced by builder methods
-- **Breaking**: default values come from FastNoise2 metadata, `DistanceToPoint` distance function defaults to `Euclidean` like in the Node Editor
+- **Breaking**: default values come from FastNoise2 metadata, like in the Node Editor
 - **Breaking**: `get_simd_level` renamed to `get_active_feature_set`, which returns a `FeatureSet` instead of a `u32`
 - **Breaking**: `FastNoiseError` member errors name the node and member, `Set*Failed` variants are merged into `SetMemberFailed`
 - Errors use FastNoise2 display names in metadata order (e.g. `'Feature Scale'` instead of `'featurescale'`), and invalid type errors include the member description from FastNoise2

@@ -356,7 +356,7 @@ pub struct DistanceToPoint {
 impl Default for DistanceToPoint {
     fn default() -> Self {
         Self {
-            distance_function: DistanceFunction::Euclidean,
+            distance_function: DistanceFunction::EuclideanSquared,
             point_x: Hybrid::Value(0.0),
             point_y: Hybrid::Value(0.0),
             point_z: Hybrid::Value(0.0),
@@ -372,7 +372,7 @@ pub fn distance_to_point() -> DistanceToPoint {
 }
 
 impl DistanceToPoint {
-    /// Default: `DistanceFunction::Euclidean`
+    /// Default: `DistanceFunction::EuclideanSquared`
     pub fn with_distance_function(
         mut self,
         distance_function: DistanceFunction,
