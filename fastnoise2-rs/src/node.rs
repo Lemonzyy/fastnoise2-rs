@@ -20,6 +20,9 @@ use crate::{
 };
 
 /// Owner of a FastNoise2 node reference, released on drop.
+///
+/// `ptr` is a valid node reference owned by the handle from `new` until drop, the invariant every
+/// FastNoise2 call on it relies on.
 pub(crate) struct NodeHandle {
     ptr: NonNull<c_void>,
     metadata_id: i32,
@@ -75,6 +78,7 @@ impl NodeHandle {
     unsafe fn new(ptr: *mut c_void) -> Option<Self> {
         let ptr = NonNull::new(ptr)?;
 
+        // SAFETY: `ptr` is a valid node reference (contract of `new`)
         let metadata_id = unsafe { fnGetMetadataID(ptr.as_ptr()) };
         Some(Self { ptr, metadata_id })
     }
@@ -93,6 +97,7 @@ impl NodeHandle {
 
 impl Drop for NodeHandle {
     fn drop(&mut self) {
+        // SAFETY: the handle owns this reference, released once
         unsafe { fnDeleteNodeRef(self.ptr.as_ptr()) };
     }
 }
@@ -132,9 +137,12 @@ impl Node {
         let description = Description::Encoded(encoded_node_tree.to_string());
         let encoded_node_tree = CString::new(encoded_node_tree)?;
 
+        // SAFETY: the string is null terminated, and the feature set is one FastNoise2 is
+        // compiled for (checked by `with_max_feature_set`)
         let ptr =
             unsafe { fnNewFromEncodedNodeTree(encoded_node_tree.as_ptr(), max_feature_set_bits()) };
 
+        // SAFETY: FastNoise2 returns a new reference owned by the caller, or null
         unsafe { NodeHandle::new(ptr) }
             .map(|handle| {
                 Self(Arc::new(NodeInner {
@@ -180,6 +188,7 @@ impl Node {
 
     /// The SIMD feature set this node generates noise with.
     pub fn get_active_feature_set(&self) -> FeatureSet {
+        // SAFETY: the node is valid
         let bits = unsafe { fnGetActiveFeatureSet(self.as_ptr()) };
         FeatureSet::from_bits(bits).expect("FastNoise2 nodes have a known feature set")
     }
@@ -206,6 +215,8 @@ impl Node {
 
         let mut min_max = [0.0; 2];
 
+        // SAFETY: the node is valid, `noise_out` holds the whole grid (asserted above) and
+        // `min_max` the two values FastNoise2 writes
         unsafe {
             fnGenUniformGrid2D(
                 self.as_ptr(),
@@ -245,6 +256,8 @@ impl Node {
 
         let mut min_max = [0.0; 2];
 
+        // SAFETY: the node is valid, `noise_out` holds the whole grid (asserted above) and
+        // `min_max` the two values FastNoise2 writes
         unsafe {
             fnGenUniformGrid3D(
                 self.as_ptr(),
@@ -290,6 +303,8 @@ impl Node {
 
         let mut min_max = [0.0; 2];
 
+        // SAFETY: the node is valid, `noise_out` holds the whole grid (asserted above) and
+        // `min_max` the two values FastNoise2 writes
         unsafe {
             fnGenUniformGrid4D(
                 self.as_ptr(),
@@ -330,6 +345,8 @@ impl Node {
 
         let mut min_max = [0.0; 2];
 
+        // SAFETY: the node is valid, `noise_out` and the position arrays hold `noise_out.len()`
+        // values (checked above) and `min_max` the two values FastNoise2 writes
         unsafe {
             fnGenPositionArray2D(
                 self.as_ptr(),
@@ -365,6 +382,8 @@ impl Node {
 
         let mut min_max = [0.0; 2];
 
+        // SAFETY: the node is valid, `noise_out` and the position arrays hold `noise_out.len()`
+        // values (checked above) and `min_max` the two values FastNoise2 writes
         unsafe {
             fnGenPositionArray3D(
                 self.as_ptr(),
@@ -407,6 +426,8 @@ impl Node {
 
         let mut min_max = [0.0; 2];
 
+        // SAFETY: the node is valid, `noise_out` and the position arrays hold `noise_out.len()`
+        // values (checked above) and `min_max` the two values FastNoise2 writes
         unsafe {
             fnGenPositionArray4D(
                 self.as_ptr(),
@@ -444,6 +465,8 @@ impl Node {
 
         let mut min_max = [0.0; 2];
 
+        // SAFETY: the node is valid, `noise_out` holds the whole grid (asserted above) and
+        // `min_max` the two values FastNoise2 writes
         unsafe {
             fnGenTileable2D(
                 self.as_ptr(),
@@ -462,16 +485,19 @@ impl Node {
 
     #[inline]
     pub fn gen_single_2d(&self, x: f32, y: f32, seed: i32) -> f32 {
+        // SAFETY: the node is valid
         unsafe { fnGenSingle2D(self.as_ptr(), x, y, seed) }
     }
 
     #[inline]
     pub fn gen_single_3d(&self, x: f32, y: f32, z: f32, seed: i32) -> f32 {
+        // SAFETY: the node is valid
         unsafe { fnGenSingle3D(self.as_ptr(), x, y, z, seed) }
     }
 
     #[inline]
     pub fn gen_single_4d(&self, x: f32, y: f32, z: f32, w: f32, seed: i32) -> f32 {
+        // SAFETY: the node is valid
         unsafe { fnGenSingle4D(self.as_ptr(), x, y, z, w, seed) }
     }
 }
@@ -622,7 +648,10 @@ impl NodeBuilder {
                 found: node_name.to_string(),
             })?;
 
+        // SAFETY: the metadata id comes from FastNoise2 metadata, and the feature set is one
+        // FastNoise2 is compiled for (checked by `with_max_feature_set`)
         let ptr = unsafe { fnNewFromMetadata(metadata_id, max_feature_set_bits()) };
+        // SAFETY: FastNoise2 returns a new reference owned by the caller, or null
         let handle = unsafe { NodeHandle::new(ptr) }.ok_or(FastNoiseError::NodeCreationFailed)?;
 
         let input_count = handle
@@ -661,6 +690,8 @@ impl NodeBuilder {
                     found: member_name.to_string(),
                 })?;
 
+        // SAFETY (setters below): `ptr` is the valid node being built, `member.index` comes from
+        // its metadata, and FastNoise2 takes its own reference on input nodes
         let ptr = self.handle.ptr.as_ptr();
         let index = member.index as usize;
         #[cfg(feature = "encode")]
@@ -803,7 +834,9 @@ fn check_feature_set(
     member: &Member,
     input: &Node,
 ) -> Result<(), FastNoiseError> {
+    // SAFETY: `ptr` is the valid node being built and `input` a valid node
     let feature_set = unsafe { fnGetActiveFeatureSet(ptr) };
+    // SAFETY: as above
     if feature_set == unsafe { fnGetActiveFeatureSet(input.as_ptr()) } {
         return Ok(());
     }
