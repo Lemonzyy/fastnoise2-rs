@@ -168,24 +168,39 @@ impl NodeEditorIpc {
             return None;
         }
 
-        // Copied before looking for the end, the other process may write it meanwhile
-        let mut payload = vec![0; SHARED_MEMORY_SIZE - HEADER_SIZE];
-        unsafe {
-            ptr::copy_nonoverlapping(
-                self.shared_memory.payload(),
-                payload.as_mut_ptr(),
-                payload.len(),
-            );
-        }
-
-        let end = payload.iter().position(|&byte| byte == 0)?;
-        payload.truncate(end);
-        let encoded = String::from_utf8(payload).ok()?;
+        let encoded = String::from_utf8(self.copy_payload()?).ok()?;
 
         Some(match message_type {
             MESSAGE_SELECTED_NODE => EditorMessage::SelectedNode(encoded),
             _ => EditorMessage::ImportRequest(encoded),
         })
+    }
+
+    /// Copies the payload up to its null terminator, `None` if it has none. It is copied by
+    /// chunks before looking for the end, the other process may write it meanwhile.
+    fn copy_payload(&self) -> Option<Vec<u8>> {
+        const CHUNK_SIZE: usize = 1024;
+        const PAYLOAD_SIZE: usize = SHARED_MEMORY_SIZE - HEADER_SIZE;
+
+        let payload = self.shared_memory.payload();
+        let mut bytes = Vec::<u8>::new();
+        while bytes.len() < PAYLOAD_SIZE {
+            let start = bytes.len();
+            let len = CHUNK_SIZE.min(PAYLOAD_SIZE - start);
+
+            bytes.reserve(len);
+            unsafe {
+                ptr::copy_nonoverlapping(payload.add(start), bytes.as_mut_ptr().add(start), len);
+                bytes.set_len(start + len);
+            }
+
+            if let Some(end) = bytes[start..].iter().position(|&byte| byte == 0) {
+                bytes.truncate(start + end);
+                return Some(bytes);
+            }
+        }
+
+        None
     }
 
     fn send(&mut self, message_type: u8, encoded_node_tree: &str) -> io::Result<()> {
@@ -501,8 +516,13 @@ mod tests {
         let mut editor = region.open();
         let mut game = region.open();
 
-        editor.send_selected_node(&"A".repeat(1000)).unwrap();
-        game.poll();
+        // Longer than a chunk of `copy_payload`, and the largest message
+        for len in [5000, SHARED_MEMORY_SIZE - HEADER_SIZE - 2] {
+            let long = "A".repeat(len);
+            editor.send_selected_node(&long).unwrap();
+            assert_eq!(game.poll(), Some(EditorMessage::SelectedNode(long)));
+        }
+
         editor.send_selected_node("DQkGDA==").unwrap();
         assert_eq!(
             game.poll(),
