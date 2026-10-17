@@ -46,6 +46,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8c2d080` (v1.1.1 and later f
 - **Breaking**: `get_simd_level` renamed to `get_active_feature_set`, which returns a `FeatureSet` instead of a `u32`
 - **Breaking**: `FastNoiseError` member errors name the node and member, `Set*Failed` variants are merged into `SetMemberFailed`
 - Errors use FastNoise2 display names in metadata order (e.g. `'Feature Scale'` instead of `'featurescale'`), and invalid type errors include the member description from FastNoise2
+- `trace` feature: node building (`NodeBuilder::new`, `set`, `build`), batch generation, encoding, `with_max_feature_set` and editor IPC are instrumented with `tracing` spans, errors are recorded at debug level
 - Generation functions panic on non-positive counts, grid sizes overflowing an `i32` and empty position arrays
 - `safe_simple_terrain` example renamed `simple_terrain`
 - fastnoise2-sys: cached bindings in `FASTNOISE2_BINDINGS_DIR` are stored per crate version and only reused with an identical C header

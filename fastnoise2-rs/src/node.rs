@@ -123,6 +123,10 @@ impl Node {
     ///
     /// # Errors
     /// Returns an error if the encoded node tree is invalid.
+    #[cfg_attr(
+        feature = "trace",
+        tracing::instrument(level = "trace", err(level = "debug"))
+    )]
     pub fn from_encoded_node_tree(encoded_node_tree: &str) -> Result<Self, FastNoiseError> {
         #[cfg(feature = "encode")]
         let description = Description::Encoded(encoded_node_tree.to_string());
@@ -159,6 +163,7 @@ impl Node {
     /// Returns an error if the tree contains a node created from an encoded node tree, unless it
     /// is the node itself, or if a node is shared after more than 65536 distinct nodes.
     #[cfg(feature = "encode")]
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name()), err(level = "debug")))]
     pub fn encode(&self) -> Result<String, FastNoiseError> {
         crate::encode::encode(self)
     }
@@ -185,6 +190,7 @@ impl Node {
 
     /// # Panics
     /// Panics if a count is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_count * y_count`.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name())))]
     pub fn gen_uniform_grid_2d(
         &self,
         noise_out: &mut [f32],
@@ -220,6 +226,7 @@ impl Node {
 
     /// # Panics
     /// Panics if a count is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_count * y_count * z_count`.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name())))]
     pub fn gen_uniform_grid_3d(
         &self,
         noise_out: &mut [f32],
@@ -261,6 +268,7 @@ impl Node {
 
     /// # Panics
     /// Panics if a count is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_count * y_count * z_count * w_count`.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name())))]
     pub fn gen_uniform_grid_4d(
         &self,
         noise_out: &mut [f32],
@@ -308,6 +316,7 @@ impl Node {
 
     /// # Panics
     /// Panics if `noise_out`, `x_pos_array`, and `y_pos_array` are empty or do not have the same length.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name())))]
     pub fn gen_position_array_2d(
         &self,
         noise_out: &mut [f32],
@@ -340,6 +349,7 @@ impl Node {
 
     /// # Panics
     /// Panics if `noise_out`, `x_pos_array`, `y_pos_array`, and `z_pos_array` are empty or do not have the same length.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name())))]
     pub fn gen_position_array_3d(
         &self,
         noise_out: &mut [f32],
@@ -376,6 +386,7 @@ impl Node {
 
     /// # Panics
     /// Panics if `noise_out`, `x_pos_array`, `y_pos_array`, `z_pos_array` and `w_pos_array` are empty or do not have the same length.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name())))]
     pub fn gen_position_array_4d(
         &self,
         noise_out: &mut [f32],
@@ -419,6 +430,7 @@ impl Node {
 
     /// # Panics
     /// Panics if a size is not positive, if the grid size overflows an `i32`, or if `noise_out.len() < x_size * y_size`.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.name())))]
     pub fn gen_tileable_2d(
         &self,
         noise_out: &mut [f32],
@@ -598,6 +610,10 @@ pub struct NodeBuilder {
 impl NodeBuilder {
     /// # Errors
     /// Returns an error if `node_name` is not a FastNoise2 node name.
+    #[cfg_attr(
+        feature = "trace",
+        tracing::instrument(level = "trace", err(level = "debug"))
+    )]
     pub fn new(node_name: &str) -> Result<Self, FastNoiseError> {
         let metadata_id = *METADATA_NAME_LOOKUP
             .get(&format_lookup(node_name))
@@ -629,6 +645,7 @@ impl NodeBuilder {
     /// # Errors
     /// Returns an error if the member doesn't exist, if the value type doesn't match the member
     /// type, if an enum value doesn't exist, or if an input has another SIMD feature set.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.handle.metadata().name, member = member_name), err(level = "debug")))]
     pub fn set(
         mut self,
         member_name: &str,
@@ -729,6 +746,7 @@ impl NodeBuilder {
     /// # Errors
     /// Returns an error if an input (node lookup member) is not set, generating noise without
     /// it would crash FastNoise2.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(node = self.handle.metadata().name), err(level = "debug")))]
     pub fn build(self) -> Result<Node, FastNoiseError> {
         let metadata = self.handle.metadata();
         let missing_input = metadata

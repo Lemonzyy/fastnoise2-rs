@@ -42,6 +42,10 @@ static DETECTED: LazyLock<FeatureSet> = LazyLock::new(|| {
 /// # Errors
 /// Returns an error if FastNoise2 isn't compiled for `max` or a lower feature set on this target
 /// (e.g. [`FeatureSet::Scalar`], or [`FeatureSet::Neon`] on x86).
+#[cfg_attr(
+    feature = "trace",
+    tracing::instrument(level = "trace", skip(f), err(level = "debug"))
+)]
 pub fn with_max_feature_set<R>(
     max: FeatureSet,
     f: impl FnOnce() -> R,

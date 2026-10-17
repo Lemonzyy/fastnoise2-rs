@@ -63,6 +63,10 @@ impl NodeEditorIpc {
     ///
     /// # Errors
     /// Returns an error if the shared memory can't be created or mapped.
+    #[cfg_attr(
+        feature = "trace",
+        tracing::instrument(level = "trace", err(level = "debug"))
+    )]
     pub fn open() -> io::Result<Self> {
         Self::open_named(SHARED_MEMORY_NAME)
     }
@@ -79,6 +83,7 @@ impl NodeEditorIpc {
 
     /// Returns the next message, `None` if there is no new message. Only the last message is
     /// kept, a message sent before the previous one is read is lost.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, ret))]
     pub fn poll(&mut self) -> Option<EditorMessage> {
         let counter = self.shared_memory.counter().load(Ordering::Acquire);
         if counter == self.last_counter {
@@ -91,6 +96,7 @@ impl NodeEditorIpc {
 
     /// The encoded node tree currently selected in the Node Editor, if the last message is a
     /// selected node.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, ret))]
     pub fn selected_node(&self) -> Option<String> {
         match self.read_message()? {
             EditorMessage::SelectedNode(encoded) => Some(encoded),
@@ -103,6 +109,7 @@ impl NodeEditorIpc {
     /// # Errors
     /// Returns an error if the encoded node tree contains a null character or doesn't fit in the
     /// shared memory.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(len = encoded_node_tree.len()), err(level = "debug")))]
     pub fn send_import_request(&mut self, encoded_node_tree: &str) -> io::Result<()> {
         self.send(MESSAGE_IMPORT_REQUEST, encoded_node_tree)
     }
@@ -112,6 +119,7 @@ impl NodeEditorIpc {
     /// # Errors
     /// Returns an error if the encoded node tree contains a null character or doesn't fit in the
     /// shared memory.
+    #[cfg_attr(feature = "trace", tracing::instrument(level = "trace", skip_all, fields(len = encoded_node_tree.len()), err(level = "debug")))]
     pub fn send_selected_node(&mut self, encoded_node_tree: &str) -> io::Result<()> {
         self.send(MESSAGE_SELECTED_NODE, encoded_node_tree)
     }
