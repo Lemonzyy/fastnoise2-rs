@@ -198,11 +198,15 @@ pub(crate) static METADATA_NAME_LOOKUP: LazyLock<HashMap<String, i32>> = LazyLoc
 });
 
 pub(crate) static NODE_METADATA: LazyLock<Vec<Metadata>> = LazyLock::new(|| {
+    // SAFETY: takes no argument
     let metadata_count = unsafe { fnGetMetadataCount() };
     (0..metadata_count).map(load_metadata).collect()
 });
 
 fn load_metadata(id: i32) -> Metadata {
+    // SAFETY (metadata calls below): FastNoise2 checks the metadata id and the member indices,
+    // returning 0 or an error string when out of range, and returns null terminated strings that
+    // live as long as the program
     let mut members = Vec::new();
 
     for variable_idx in 0..unsafe { fnGetMetadataVariableCount(id) } {
@@ -215,8 +219,8 @@ fn load_metadata(id: i32) -> Metadata {
 
         let enum_values = match member_type {
             MemberType::Enum => (0..unsafe { fnGetMetadataEnumCount(id, variable_idx) })
-                .map(|enum_idx| {
-                    to_string(unsafe { fnGetMetadataEnumName(id, variable_idx, enum_idx) })
+                .map(|enum_idx| unsafe {
+                    to_string(fnGetMetadataEnumName(id, variable_idx, enum_idx))
                 })
                 .collect(),
             _ => Vec::new(),
@@ -224,10 +228,10 @@ fn load_metadata(id: i32) -> Metadata {
 
         members.push(Member {
             name: dimension_member_name(
-                to_string(unsafe { fnGetMetadataVariableName(id, variable_idx) }),
+                unsafe { to_string(fnGetMetadataVariableName(id, variable_idx)) },
                 unsafe { fnGetMetadataVariableDimensionIdx(id, variable_idx) },
             ),
-            description: to_string(unsafe { fnGetMetadataVariableDescription(id, variable_idx) }),
+            description: unsafe { to_string(fnGetMetadataVariableDescription(id, variable_idx)) },
             // The raw bits of the value union, whatever the variable type
             default_bits: unsafe { fnGetMetadataVariableDefaultIntEnum(id, variable_idx) },
             // The C API only returns the float of the value union, its bits are the int of int
@@ -243,12 +247,12 @@ fn load_metadata(id: i32) -> Metadata {
     for node_lookup_idx in 0..unsafe { fnGetMetadataNodeLookupCount(id) } {
         members.push(Member {
             name: dimension_member_name(
-                to_string(unsafe { fnGetMetadataNodeLookupName(id, node_lookup_idx) }),
+                unsafe { to_string(fnGetMetadataNodeLookupName(id, node_lookup_idx)) },
                 unsafe { fnGetMetadataNodeLookupDimensionIdx(id, node_lookup_idx) },
             ),
-            description: to_string(unsafe {
-                fnGetMetadataNodeLookupDescription(id, node_lookup_idx)
-            }),
+            description: unsafe {
+                to_string(fnGetMetadataNodeLookupDescription(id, node_lookup_idx))
+            },
             member_type: MemberType::NodeLookup,
             index: node_lookup_idx,
             enum_values: Vec::new(),
@@ -261,10 +265,10 @@ fn load_metadata(id: i32) -> Metadata {
     for hybrid_idx in 0..unsafe { fnGetMetadataHybridCount(id) } {
         members.push(Member {
             name: dimension_member_name(
-                to_string(unsafe { fnGetMetadataHybridName(id, hybrid_idx) }),
+                unsafe { to_string(fnGetMetadataHybridName(id, hybrid_idx)) },
                 unsafe { fnGetMetadataHybridDimensionIdx(id, hybrid_idx) },
             ),
-            description: to_string(unsafe { fnGetMetadataHybridDescription(id, hybrid_idx) }),
+            description: unsafe { to_string(fnGetMetadataHybridDescription(id, hybrid_idx)) },
             member_type: MemberType::Hybrid,
             index: hybrid_idx,
             enum_values: Vec::new(),
@@ -281,17 +285,20 @@ fn load_metadata(id: i32) -> Metadata {
         .collect();
 
     Metadata {
-        name: to_string(unsafe { fnGetMetadataName(id) }),
-        description: to_string(unsafe { fnGetMetadataDescription(id) }),
+        name: unsafe { to_string(fnGetMetadataName(id)) },
+        description: unsafe { to_string(fnGetMetadataDescription(id)) },
         groups: (0..unsafe { fnGetMetadataGroupCount(id) })
-            .map(|group_idx| to_string(unsafe { fnGetMetadataGroupName(id, group_idx) }))
+            .map(|group_idx| unsafe { to_string(fnGetMetadataGroupName(id, group_idx)) })
             .collect(),
         members,
         member_lookup,
     }
 }
 
-fn to_string(c_str: *const c_char) -> String {
+/// # Safety
+/// `c_str` must be a valid null terminated string.
+unsafe fn to_string(c_str: *const c_char) -> String {
+    // SAFETY: contract of the function
     unsafe { CStr::from_ptr(c_str) }
         .to_string_lossy()
         .into_owned()
