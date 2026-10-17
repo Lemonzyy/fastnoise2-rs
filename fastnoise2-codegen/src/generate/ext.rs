@@ -11,8 +11,9 @@ use crate::metadata::{Input, Member};
 impl Generator<'_> {
     /// Chaining methods: one per node with inputs, called on its first input.
     ///
-    /// Inputs accepting only some node types get a marker trait implemented by those types,
-    /// and the nodes whose first input is restricted get their own extension trait.
+    /// Inputs accepting only some node types get a marker trait implemented by those types and
+    /// by a checked [`Node`] wrapper, and the nodes whose first input is restricted get their
+    /// own extension trait.
     pub(super) fn ext_file(&self) -> TokenStream {
         let mut restricted = BTreeMap::<String, (&Member, &Vec<String>)>::new();
         for (member, input) in self.nodes.iter().flat_map(|node| node.inputs()) {
@@ -62,16 +63,64 @@ impl Generator<'_> {
         }
 
         let marker_traits = restricted.iter().map(|(marker, (member, accepted))| {
+            let marker_node = format_ident!("{marker}Node");
             let marker = format_ident!("{marker}");
             let doc = format!(" Generators accepted by `{}` inputs.", member.name);
-            let accepted = accepted.iter().map(|node| format_ident!("{node}"));
+            let node_doc = format!(
+                " A built [`Node`] accepted by `{}` inputs, to share it. Built from an accepted \
+                 typed node with `From`, or checked with [`TryFrom<Node>`] for a node without \
+                 its type (e.g. decoded).",
+                member.name
+            );
+            let member_name = &member.name;
+            let accepted_types = accepted
+                .iter()
+                .map(|node| format_ident!("{node}"))
+                .collect::<Vec<_>>();
             quote! {
                 #[doc = #doc]
                 pub trait #marker: Generator {}
 
-                #(impl #marker for #accepted {})*
+                #(impl #marker for #accepted_types {})*
 
                 impl<G: #marker + ?Sized> #marker for &G {}
+
+                #[doc = #node_doc]
+                #[derive(Clone, Debug)]
+                pub struct #marker_node(Node);
+
+                impl TryFrom<Node> for #marker_node {
+                    type Error = FastNoiseError;
+
+                    fn try_from(node: Node) -> Result<Self, FastNoiseError> {
+                        const ACCEPTED: &[&str] = &[#(#accepted),*];
+                        if ACCEPTED.contains(&node.name()) {
+                            return Ok(Self(node));
+                        }
+
+                        Err(FastNoiseError::NodeNotAccepted {
+                            member: #member_name.to_string(),
+                            node: node.name().to_string(),
+                            expected: ACCEPTED.iter().map(|name| name.to_string()).collect(),
+                        })
+                    }
+                }
+
+                impl Generator for #marker_node {
+                    fn build(&self) -> Node {
+                        self.0.clone()
+                    }
+                }
+
+                #(
+                    impl From<#accepted_types> for #marker_node {
+                        fn from(node: #accepted_types) -> Self {
+                            Self(node.build())
+                        }
+                    }
+                )*
+
+                impl #marker for #marker_node {}
             }
         });
 
@@ -105,7 +154,10 @@ impl Generator<'_> {
             #![doc = " Chaining methods, creating a node from the generator used as its first input."]
 
             use super::*;
-            use crate::node::Generator;
+            use crate::{
+                FastNoiseError,
+                node::{Generator, Node},
+            };
 
             #(#marker_traits)*
             #(#ext_traits)*

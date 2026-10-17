@@ -2,7 +2,7 @@
 //! Chaining methods, creating a node from the generator used as its first input.
 
 use super::*;
-use crate::node::Generator;
+use crate::{FastNoiseError, node::{Generator, Node}};
 
 /// Generators accepted by `Domain Warp Source` inputs.
 pub trait DomainWarpSource: Generator {}
@@ -10,6 +10,56 @@ impl DomainWarpSource for DomainWarpSimplex {}
 impl DomainWarpSource for DomainWarpSuperSimplex {}
 impl DomainWarpSource for DomainWarpGradient {}
 impl<G: DomainWarpSource + ?Sized> DomainWarpSource for &G {}
+
+/// A built [`Node`] accepted by `Domain Warp Source` inputs, to share it. Built from an accepted typed node with `From`, or checked with [`TryFrom<Node>`] for a node without its type (e.g. decoded).
+#[derive(Clone, Debug)]
+pub struct DomainWarpSourceNode(Node);
+
+impl TryFrom<Node> for DomainWarpSourceNode {
+    type Error = FastNoiseError;
+
+    fn try_from(node: Node) -> Result<Self, FastNoiseError> {
+        const ACCEPTED: &[&str] = &[
+            "DomainWarpSimplex",
+            "DomainWarpSuperSimplex",
+            "DomainWarpGradient",
+        ];
+        if ACCEPTED.contains(&node.name()) {
+            return Ok(Self(node));
+        }
+        Err(FastNoiseError::NodeNotAccepted {
+            member: "Domain Warp Source".to_string(),
+            node: node.name().to_string(),
+            expected: ACCEPTED.iter().map(|name| name.to_string()).collect(),
+        })
+    }
+}
+
+impl Generator for DomainWarpSourceNode {
+    fn build(&self) -> Node {
+        self.0.clone()
+    }
+}
+
+impl From<DomainWarpSimplex> for DomainWarpSourceNode {
+    fn from(node: DomainWarpSimplex) -> Self {
+        Self(node.build())
+    }
+}
+
+impl From<DomainWarpSuperSimplex> for DomainWarpSourceNode {
+    fn from(node: DomainWarpSuperSimplex) -> Self {
+        Self(node.build())
+    }
+}
+
+impl From<DomainWarpGradient> for DomainWarpSourceNode {
+    fn from(node: DomainWarpGradient) -> Self {
+        Self(node.build())
+    }
+}
+
+impl DomainWarpSource for DomainWarpSourceNode {}
 
 /// Chaining methods available on every generator.
 pub trait GeneratorExt: Generator {

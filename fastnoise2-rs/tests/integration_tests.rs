@@ -1,4 +1,4 @@
-use fastnoise2::prelude::*;
+use fastnoise2::{FastNoiseError, prelude::*};
 
 /// Asserts that a generator produces finite, varying noise.
 fn assert_produces_noise(generator: impl Generator) {
@@ -78,4 +78,31 @@ fn test_shared_node_and_operators() {
     let blend = (0.5 + &shared) * (1.0 - &shared) + shared.fractal_f_bm().with_gain(&shared);
 
     assert_produces_noise(blend);
+}
+
+/// A built domain warp node is accepted by the inputs taking only domain warp nodes, from a
+/// typed domain warp node or once checked.
+#[test]
+fn test_domain_warp_source_node() {
+    // Shared by both fractals, checked at compile time
+    let warp = DomainWarpSourceNode::from(perlin().domain_warp_gradient());
+    let progressive = warp.domain_warp_fractal_progressive().build();
+    let independent = warp.domain_warp_fractal_independent().build();
+    assert!(progressive.gen_single_2d(1.0, 2.0, 1337).is_finite());
+    assert!(independent.gen_single_2d(1.0, 2.0, 1337).is_finite());
+
+    let warp = perlin().domain_warp_gradient().build();
+    let node = DomainWarpSourceNode::try_from(warp)
+        .unwrap()
+        .domain_warp_fractal_progressive()
+        .build();
+    assert_eq!(node.name(), "DomainWarpFractalProgressive");
+    assert!(node.gen_single_2d(1.0, 2.0, 1337).is_finite());
+
+    let error = DomainWarpSourceNode::try_from(perlin().build()).unwrap_err();
+    assert!(matches!(
+        error,
+        FastNoiseError::NodeNotAccepted { ref node, ref expected, .. }
+            if node == "Perlin" && expected.iter().any(|name| name == "DomainWarpGradient")
+    ));
 }

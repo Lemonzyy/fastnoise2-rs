@@ -20,7 +20,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8c2d080` (v1.1.1 and later f
 - Typed node API generated from FastNoise2 metadata, in `fastnoise2::nodes` and `fastnoise2::prelude`:
   - A type per FastNoise2 node, with documented `with_*` builder methods and FastNoise2 default values
   - Nodes without inputs are created by functions (`perlin()`), nodes with inputs are chained from their first input (`perlin().fractal_f_bm()`, `GeneratorExt`)
-  - Inputs only accepting domain warp nodes are checked at compile time (`DomainWarpSource`)
+  - Inputs only accepting domain warp nodes are checked at compile time (`DomainWarpSource`), and a built domain warp is shared with `DomainWarpSourceNode`, from a typed domain warp node (`From`, checked at compile time) or from a `Node` without its type, e.g. decoded (`TryFrom`, `FastNoiseError::NodeNotAccepted` otherwise)
   - Operators `+`, `-`, `*`, `/`, `%` and negation, with constants on either side (`0.5 - &node`)
   - Every FastNoise2 member is available, including the ones missing before (e.g. cellular feature scale, domain warp seed offset and amplitude scaling), and hybrid members accept nodes (e.g. `Remap` bounds, `Gradient` offsets)
 - `Node`: a built node, `Send + Sync`, cloning shares the same FastNoise2 node

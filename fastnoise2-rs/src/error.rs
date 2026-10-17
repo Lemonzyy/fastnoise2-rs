@@ -88,6 +88,23 @@ pub enum FastNoiseError {
         input: String,
     },
 
+    /// Indicates that a node type isn't accepted by an input, e.g. when converting a [`Node`]
+    /// to a [`DomainWarpSourceNode`](crate::nodes::DomainWarpSourceNode).
+    ///
+    /// [`Node`]: crate::Node
+    #[error(
+        "node '{node}' is not accepted by '{member}' inputs (expected one of {})",
+        format_slice(expected)
+    )]
+    NodeNotAccepted {
+        /// The name of the input member.
+        member: String,
+        /// The name of the rejected node.
+        node: String,
+        /// The names of the accepted nodes.
+        expected: Vec<String>,
+    },
+
     /// Indicates that an input has another SIMD feature set than its node, see
     /// [`with_max_feature_set`](crate::with_max_feature_set).
     #[error(
