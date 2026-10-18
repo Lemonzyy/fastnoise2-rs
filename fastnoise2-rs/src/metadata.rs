@@ -226,6 +226,21 @@ fn load_metadata(id: i32) -> Metadata {
             _ => Vec::new(),
         };
 
+        let (min_bits, max_bits) = match member_type {
+            MemberType::Int => unsafe {
+                (
+                    fnGetMetadataVariableMinInt(id, variable_idx),
+                    fnGetMetadataVariableMaxInt(id, variable_idx),
+                )
+            },
+            _ => unsafe {
+                (
+                    fnGetMetadataVariableMinFloat(id, variable_idx).to_bits() as i32,
+                    fnGetMetadataVariableMaxFloat(id, variable_idx).to_bits() as i32,
+                )
+            },
+        };
+
         members.push(Member {
             name: dimension_member_name(
                 unsafe { to_string(fnGetMetadataVariableName(id, variable_idx)) },
@@ -234,10 +249,8 @@ fn load_metadata(id: i32) -> Metadata {
             description: unsafe { to_string(fnGetMetadataVariableDescription(id, variable_idx)) },
             // The raw bits of the value union, whatever the variable type
             default_bits: unsafe { fnGetMetadataVariableDefaultIntEnum(id, variable_idx) },
-            // The C API only returns the float of the value union, its bits are the int of int
-            // members
-            min_bits: unsafe { fnGetMetadataVariableMinFloat(id, variable_idx) }.to_bits() as i32,
-            max_bits: unsafe { fnGetMetadataVariableMaxFloat(id, variable_idx) }.to_bits() as i32,
+            min_bits,
+            max_bits,
             member_type,
             index: variable_idx,
             enum_values,

@@ -80,18 +80,19 @@ fn load_node(id: i32, names: &[String], instances: &[*mut c_void]) -> Node {
     let mut members = Vec::new();
 
     for index in 0..unsafe { fnGetMetadataVariableCount(id) } {
-        // The C API only returns the float of the value union, its bits are the int of int
-        // members. Like the Node Editor (ImGui), bounds only apply if min < max.
-        let min = unsafe { fnGetMetadataVariableMinFloat(id, index) };
-        let max = unsafe { fnGetMetadataVariableMaxFloat(id, index) };
-
+        // Like the Node Editor (ImGui), bounds only apply if min < max
         let kind = match unsafe { fnGetMetadataVariableType(id, index) } {
-            0 => MemberKind::Float {
-                default: unsafe { fnGetMetadataVariableDefaultFloat(id, index) },
-                range: (min < max).then_some(min..=max),
-            },
+            0 => {
+                let min = unsafe { fnGetMetadataVariableMinFloat(id, index) };
+                let max = unsafe { fnGetMetadataVariableMaxFloat(id, index) };
+                MemberKind::Float {
+                    default: unsafe { fnGetMetadataVariableDefaultFloat(id, index) },
+                    range: (min < max).then_some(min..=max),
+                }
+            }
             1 => {
-                let (min, max) = (min.to_bits() as i32, max.to_bits() as i32);
+                let min = unsafe { fnGetMetadataVariableMinInt(id, index) };
+                let max = unsafe { fnGetMetadataVariableMaxInt(id, index) };
                 MemberKind::Int {
                     default: unsafe { fnGetMetadataVariableDefaultIntEnum(id, index) },
                     range: (min < max).then_some(min..=max),
