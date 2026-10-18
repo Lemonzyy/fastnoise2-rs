@@ -157,11 +157,7 @@ fn encode_node(
 
 /// Compresses runs of 'A' (zero bits) of a base64 string like FastNoise2: 3 or more are written
 /// as '@' followed by the run length minus 3, as a base64 digit.
-///
-/// Like FastNoise2, a run reaching 66 'A' is written as '@/' (66 'A') followed by an extra 'A',
-/// which decodes to one 'A' too many. It can't happen with a node tree: the longest run of zero
-/// bytes is a reference to node 0 followed by a node with id 0 setting its first variable to 0
-/// (8 bytes, about 11 'A'), every other byte of the format is not zero.
+/// A run reaching 66 'A' is written as '@/' and the next 'A' starts a new run.
 fn compress_as(base64: &str) -> String {
     let alphabet = alphabet::STANDARD;
     let digits = alphabet.as_str().as_bytes();
@@ -185,8 +181,7 @@ fn compress_as(base64: &str) -> String {
                 out.push('A');
             } else if consecutive_as >= digits.len() + 2 {
                 end_run(&mut out, consecutive_as);
-                out.push('A');
-                consecutive_as = 1;
+                consecutive_as = 0;
             }
         } else {
             if consecutive_as >= 3 {
@@ -446,17 +441,17 @@ mod tests {
     }
 
     /// Same output as FastNoise2's `Base64::Encode` for 0x01, zero bytes, then 0x01, including
-    /// the extra 'A' after a run of 66.
+    /// runs longer than 66 'A'.
     #[test]
     fn test_compress_as_matches_fast_noise() {
         let cases = [
             (47, "AQ@8Q=="),
             (48, "AQ@9E="),
             (49, "AQ@+B"),
-            (50, "AQ@/AAQ=="),
-            (96, "AQ@/@8E="),
-            (97, "AQ@/@9B"),
-            (100, "AQ@/@/@AB"),
+            (50, "AQ@/AQ=="),
+            (96, "AQ@/@7E="),
+            (97, "AQ@/@8B"),
+            (100, "AQ@/@/AB"),
         ];
 
         for (zeros, expected) in cases {
