@@ -7,12 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Updated FastNoise2 C++ submodule from `3728fde` to `8c2d080` (v1.1.1 and later fixes), and the bundled FastSIMD to `f7e9ce6`:
+Updated FastNoise2 C++ submodule from `3728fde` to `8bb74c7` (v1.1.1 and later fixes), and the bundled FastSIMD to `f7e9ce6`:
 - C API: `fnGetSIMDLevel` renamed to `fnGetActiveFeatureSet`
 - C API: new metadata introspection functions (descriptions, defaults, min/max, groups)
+- C API: int variable min/max getters, the float getters returned the bits of int ranges
 - C API: fixed `fnSetNodeLookup` and `fnSetHybridNodeLookup`, which now take the node pointer directly
 - Noise fixes changing some outputs: `CellularDistance` Euclidean distances (no double square root, no NaN at distance 0), `CellularValue` 2D cell ranking, Minkowski distances, `PowFloat` with small bases, domain warp seed offset applied once, 4D Simplex domain warp identical across SIMD feature sets, and FastSIMD math fixes (`Log`, `Pow`, `ATan`, `Trunc`)
 - `DistanceToPoint` distance function defaults to `EuclideanSquared` in metadata, like its C++ default
+- Encoded node trees: a run of 66 'A' is no longer followed by an extra 'A' (unreachable from real node trees)
 - No new nodes or members
 
 ### Added
