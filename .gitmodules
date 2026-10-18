@@ -1,3 +1,6 @@
 [submodule "fastnoise2-sys/build/FastNoise2"]
 	path = fastnoise2-sys/build/FastNoise2
 	url = https://github.com/Auburn/FastNoise2
+[submodule "fastnoise2-sys/build/FastSIMD"]
+	path = fastnoise2-sys/build/FastSIMD
+	url = https://github.com/Auburn/FastSIMD
