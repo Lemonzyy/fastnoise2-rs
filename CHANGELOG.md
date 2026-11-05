@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Updated FastNoise2 C++ submodule from `3728fde` to `8bb74c7` (v1.1.1 and later fixes), and the bundled FastSIMD to `f7e9ce6`:
+Updated FastNoise2 C++ submodule from `3728fde` to `c35d604` (v1.1.1 and later fixes), and the bundled FastSIMD to `f7e9ce6`:
 - C API: `fnGetSIMDLevel` renamed to `fnGetActiveFeatureSet`
 - C API: new metadata introspection functions (descriptions, defaults, min/max, groups)
 - C API: int variable min/max getters, the float getters returned the bits of int ranges
-- C API: fixed `fnSetNodeLookup` and `fnSetHybridNodeLookup`, which now take the node pointer directly
+- C API: fixed `fnSetNodeLookup` and `fnSetHybridNodeLookup`, which now take the node pointer directly, and reject an input with another SIMD feature set than the node
+- C API: `fnDeleteNodeRef` frees nodes, every node leaked before, and node memory pools are thread safe
 - Noise fixes changing some outputs: `CellularDistance` Euclidean distances (no double square root, no NaN at distance 0), `CellularValue` 2D cell ranking, Minkowski distances, `PowFloat` with small bases, domain warp seed offset applied once, 4D Simplex domain warp identical across SIMD feature sets, and FastSIMD math fixes (`Log`, `Pow`, `ATan`, `Trunc`)
 - `DistanceToPoint` distance function defaults to `EuclideanSquared` in metadata, like its C++ default
 - Encoded node trees: a run of 66 'A' is no longer followed by an extra 'A' (unreachable from real node trees)
@@ -29,7 +30,7 @@ Updated FastNoise2 C++ submodule from `3728fde` to `8bb74c7` (v1.1.1 and later f
 - `Node`: a built node, `Send + Sync`, cloning shares the same FastNoise2 node
 - `Metadata` and `Member`: FastNoise2 metadata of every node type (`Metadata::all`, `Metadata::by_name`, `Node::metadata`), with names, descriptions, groups, member types, enum values, default values and the ranges the Node Editor clamps members to (`MemberRange`, not enforced by FastNoise2)
 - `FeatureSet` and `with_max_feature_set`: creates nodes with at most a SIMD feature set on the current thread (lowered to `FeatureSet::detected`), returning `FastNoiseError::FeatureSetNotAvailable` for a feature set FastNoise2 is not compiled for instead of crashing
-- `FastNoiseError::FeatureSetMismatch`: an input with another SIMD feature set than its node is rejected, FastNoise2 only asserts it and generating noise crashed
+- `FastNoiseError::FeatureSetMismatch`: an input with another SIMD feature set than its node is rejected with a precise error
 - `Generator` trait, implemented by `Node`, typed nodes and references to them
 - `Hybrid` and `MemberValue` value types
 - `NodeBuilder`: nodes by FastNoise2 name, rejecting a missing input (`FastNoiseError::MissingInput`) or an input not accepting a node (`FastNoiseError::InputNotAccepted`)
