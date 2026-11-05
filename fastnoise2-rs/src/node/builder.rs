@@ -202,8 +202,8 @@ impl NodeBuilder {
     }
 }
 
-/// FastNoise2 only asserts that an input has the feature set of its node, generating noise with
-/// another one crashes.
+/// FastNoise2 rejects an input with another feature set than its node without saying why, checked
+/// first to return a precise error.
 #[inline]
 fn check_feature_set(
     ptr: *mut c_void,

@@ -289,7 +289,7 @@ mod tests {
         assert!(noise.iter().all(|value| value.is_finite()));
     }
 
-    /// Generating noise with an input of another feature set crashes FastNoise2.
+    /// An input of another feature set than its node is rejected with a precise error.
     #[test]
     fn test_input_feature_set_mismatch() {
         use crate::{Hybrid, NodeBuilder};
