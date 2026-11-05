@@ -33,6 +33,12 @@ source ./emsdk_env.sh
 
 **Note**: You need to run `source ./emsdk_env.sh` in each new terminal session before building for WASM.
 
+Any Emscripten installation works as long as `emcc` and `emcmake` are in `PATH`, e.g. the `emscripten` package of Nix:
+
+```bash
+nix shell nixpkgs#emscripten
+```
+
 #### 2. Build for WASM
 
 ```bash
@@ -54,17 +60,16 @@ cargo build --target wasm32-unknown-emscripten
 
 | Variable | Purpose | Required |
 |----------|---------|----------|
-| `EMSDK` | Path to Emscripten SDK | Yes (WASM only) |
 | `EMCC_CFLAGS` | Custom flags for emcc | No |
 | `FASTNOISE2_SOURCE_DIR` | Override FastNoise2 source path | No |
-| `FASTNOISE2_LIB_DIR` | Use precompiled library | No |
+| `FASTNOISE2_LIB_DIR` | Use precompiled library, which must export every function of the bundled C header | No |
 | `FASTNOISE2_BINDINGS_DIR` | Cache directory for bindings | No |
 
 ## Troubleshooting
 
-### Error: "EMSDK environment variable required for WASM builds"
+### Error: "emcmake" not found when building for WASM
 
-You need to install and activate the Emscripten SDK (see instructions above), then source the environment:
+Emscripten is not in `PATH`. Install it (see instructions above), then source the environment:
 
 ```bash
 source /path/to/emsdk/emsdk_env.sh
@@ -72,7 +77,7 @@ source /path/to/emsdk/emsdk_env.sh
 
 ### Slow bindgen compilation
 
-Set `FASTNOISE2_BINDINGS_DIR` to cache generated bindings:
+Set `FASTNOISE2_BINDINGS_DIR` to cache generated bindings. Cached files are keyed by crate version and C header content, so they are regenerated after an update:
 
 ```bash
 export FASTNOISE2_BINDINGS_DIR=~/.cache/fastnoise2-bindings
